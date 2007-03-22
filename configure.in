@@ -1,0 +1,24 @@
+AC_INIT(bgpq3.c)
+AC_CONFIG_HEADER(config.h)
+AC_PROG_CC
+
+if test -d "../libsxreport" ; then 
+	CFLAGS="$CFLAGS -I../libsxreport"
+	CPPFLAGS="$CPPFLAGS -I../libsxreport"
+	LDFLAGS="$LDFLAGS -L../libsxreport"
+fi
+
+AC_CHECK_HEADERS(sx_report.h,,[AC_MSG_ERROR([no sx_report.h])])
+AC_CHECK_LIB(sxreport,sx_report,,[AC_MSG_ERROR([no -lsxreport])])
+
+if test -d "../libptree" ; then 
+	CFLAGS="$CFLAGS -I../libptree"
+	CPPFLAGS="$CPPFLAGS -I../libptree"
+	LDFLAGS="$LDFLAGS -L../libptree"
+fi
+
+AC_CHECK_HEADERS(sx_prefix.h,,[AC_MSG_ERROR([no sx_prefix.h])])
+AC_CHECK_LIB(sxprefix,sx_prefix_new,,[AC_MSG_ERROR([no -lsxprefix])])
+
+AC_OUTPUT(Makefile)
+

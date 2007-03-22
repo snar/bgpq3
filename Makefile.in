@@ -1,0 +1,18 @@
+CC=@CC@
+CFLAGS=@CFLAGS@ @DEFS@ -g -Wall -I. -O0
+LDADD=@LDFLAGS@ @LIBS@
+
+OBJECTS=bgpq3.o sx_report.o bgpq_expander.o sx_slentry.o bgpq3_printer.o
+
+
+all: bgpq3
+
+bgpq3: ${OBJECTS}
+	${CC} ${CFLAGS} -o bgpq3 ${OBJECTS} ${LDADD}
+
+.c.o: 
+	${CC} ${CFLAGS} -c $<
+
+clean: 
+	rm -rf Makefile autom4te.cache bgpq3 config.h config.log config.status
+	rm -rf *.o *.core core.* core
