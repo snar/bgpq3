@@ -98,18 +98,41 @@ bgpq3_print_jprefix(struct sx_radix_node* n, void* ff)
 { 
 	char prefix[128];
 	FILE* f=(FILE*)ff;
+	if(n->isGlue) return;
 	if(!f) f=stdout;
-
 	sx_prefix_snprintf(&n->prefix,prefix,sizeof(prefix));
-	fprintf(f,"    %s; (%i)\n",prefix,n->isGlue);
+	fprintf(f,"    %s;\n",prefix);
 };
-	
+
+static char* bname=NULL;
+
+void
+bgpq3_print_cprefix(struct sx_radix_node* n, void* ff)
+{ 
+	char prefix[128];
+	FILE* f=(FILE*)ff;
+	if(n->isGlue) return;
+	if(!f) f=stdout;
+	sx_prefix_snprintf(&n->prefix,prefix,sizeof(prefix));
+	fprintf(f,"ip prefix-list %s permit %s\n",bname?bname:"UNKNOWN",prefix);
+};
 
 int
 bgpq3_print_juniper_prefixlist(FILE* f, struct bgpq_expander* b)
 { 
-	printf("prefix-printer called\n");
-	sx_radix_tree_foreach(b->tree,bgpq3_print_jprefix,stdout);
+	fprintf(f,"policy-options {\nreplace:\n prefix-list %s {\n",
+		b->name?b->name:"UNKNOWN");
+	sx_radix_tree_foreach(b->tree,bgpq3_print_jprefix,f);
+	fprintf(f,"  }\n}\n");
+	return 0;
+};
+
+int
+bgpq3_print_cisco_prefixlist(FILE* f, struct bgpq_expander* b)
+{ 
+	bname=b->name;
+	fprintf(f,"no ip prefix-list %s\n", bname);
+	sx_radix_tree_foreach(b->tree,bgpq3_print_cprefix,f);
 	return 0;
 };
 
@@ -118,6 +141,7 @@ bgpq3_print_prefixlist(FILE* f, struct bgpq_expander* b)
 { 
 	switch(b->vendor) { 
 		case V_JUNIPER: return bgpq3_print_juniper_prefixlist(f,b);
+		case V_CISCO: return bgpq3_print_cisco_prefixlist(f,b);
 	};
 	return 0;
 };

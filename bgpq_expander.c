@@ -17,6 +17,8 @@
 #include "bgpq3.h"
 #include "sx_report.h"
 
+int debug_expander=1;
+
 int
 bgpq_expander_init(struct bgpq_expander* b, int af)
 { 
@@ -30,6 +32,7 @@ bgpq_expander_init(struct bgpq_expander* b, int af)
 
 	b->family=af;
 	b->sources="ripe,radb,apnic";
+	b->name="UNKNOWN";
 	b->aswidth=8;
 
 	return 1;
@@ -113,7 +116,6 @@ bgpq_expanded_prefix(char* as, void* udata)
 { 
 	struct bgpq_expander* ex=(struct bgp_expander*)udata;
 	if(!ex) return 0;
-printf("expanded prefix %s\n", as);
 	bgpq_expander_add_prefix(ex,as);
 	return 1;
 };
@@ -129,6 +131,8 @@ bgpq_expand_radb(int fd, int (*callback)(char*, void*), void* udata,
 	va_start(ap,fmt);
 	vsnprintf(request,sizeof(request),fmt,ap);
 	va_end(ap);
+
+	SX_DEBUG(debug_expander,"expander: sending '%s'\n", request);
 
 	write(fd,request,strlen(request));
 	memset(request,0,sizeof(request));

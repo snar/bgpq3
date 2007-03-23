@@ -33,5 +33,11 @@ int bgpq_expander_add_asset(struct bgpq_expander* b, char* set);
 int bgpq_expander_add_as(struct bgpq_expander* b, char* as);
 int bgpq_expander_add_prefix(struct bgpq_expander* b, char* prefix);
 
+int bgpq_expand(struct bgpq_expander* b);
+
+int bgpq3_print_prefixlist(FILE* f, struct bgpq_expander* b);
+int bgpq3_print_aspath(FILE* f, struct bgpq_expander* b);
+
+
 #endif
 	
