@@ -136,6 +136,7 @@ bgpq_expand_radb(int fd, int (*callback)(char*, void*), void* udata,
 
 	write(fd,request,strlen(request));
 	memset(request,0,sizeof(request));
+nread:
 	ret=read(fd,request,sizeof(request)-1);
 	if(ret<0) { 
 		sx_report(SX_ERROR,"Error reading data from radb: %s\n", 
@@ -146,6 +147,9 @@ bgpq_expand_radb(int fd, int (*callback)(char*, void*), void* udata,
 		sx_report(SX_ERROR,"Connection with radb closed inexpeced\n");
 		exit(1);
 	};
+	SX_DEBUG(debug_expander>2,"expander: initially got %i bytes, '%s'\n",
+		ret,request);
+	if(ret==1 && request[0]=='\n') goto nread;
 	if(request[0]=='A') { 
 		char* eon, *c;
 		long togot=strtol(request+1,&eon,10);
