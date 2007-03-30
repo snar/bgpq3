@@ -18,7 +18,7 @@
 #include "bgpq3.h"
 #include "sx_report.h"
 
-int debug_expander=1;
+int debug_expander=0;
 
 int
 bgpq_expander_init(struct bgpq_expander* b, int af)
@@ -100,7 +100,7 @@ bgpq_expander_add_prefix(struct bgpq_expander* b, char* prefix)
 		return 0;
 	};
 	sx_radix_tree_insert(b->tree,&p);
-	return 0;
+	return 1;
 };
 
 int
@@ -135,9 +135,11 @@ bgpq_expand_ripe(FILE* f, int (*callback)(char*, void*), void* udata,
 	char* fmt, ...)
 {
 	char  request[128];
-	char* otype=NULL, *object=NULL;
+	char* otype=NULL, *object=NULL, *origin=NULL;
 	int sawNL=0, nObjects=0;
 	va_list ap;
+	struct bgpq_expander* b=(struct bgpq_expander*)udata;
+
 	if(!f) { 
 		sx_report(SX_FATAL,"Invalid argments\n");
 		exit(1);
@@ -154,9 +156,18 @@ bgpq_expand_ripe(FILE* f, int (*callback)(char*, void*), void* udata,
 	sawNL=0;
 	while(fgets(request,sizeof(request),f)) { 
 		if(request[0]=='\n') { 
-printf("ok, got object '%s': '%s'\n",otype,object); 
+			if(b->family==AF_INET && otype && !strcmp(otype,"route")) { 
+				SX_DEBUG(debug_expander,"expander(ripe): got route: %s\n",
+					object);
+				callback(object,udata);
+			} else if(b->family==AF_INET6 && otype&&!strcmp(otype,"route6")) { 
+				SX_DEBUG(debug_expander,"expander(ripe): got route6: %s\n",
+					object);
+				callback(object,udata);
+			};
 			if(otype) free(otype); otype=NULL;
 			if(object) free(object); object=NULL;
+			if(origin) free(origin); origin=NULL;
 			nObjects++;
 			sawNL++;
 			if(sawNL==2) { 
@@ -164,6 +175,7 @@ printf("ok, got object '%s': '%s'\n",otype,object);
 				return nObjects;
 			};
 		} else { 
+			sawNL=0;
 			if(!otype) { 
 				/* that's the first line of object */
 				char* c=strchr(request,':');
@@ -176,7 +188,9 @@ printf("ok, got object '%s': '%s'\n",otype,object);
 					c=strchr(object,'\n');
 					if(c) *c=0;
 				};
-				printf("parsed request as '%s': '%s'\n", otype, object);
+			} else if(!strncmp(request,"origin",6)) { 
+				if(origin) free(origin);
+				origin=strdup(request);
 			};
 		};
 	};
@@ -191,7 +205,7 @@ printf("ok, got object '%s': '%s'\n",otype,object);
 
 
 int
-bgpq_expand_radb(int fd, int (*callback)(char*, void*), void* udata,
+bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 	char* fmt, ...)
 { 
 	char request[128];
@@ -204,91 +218,59 @@ bgpq_expand_radb(int fd, int (*callback)(char*, void*), void* udata,
 
 	SX_DEBUG(debug_expander,"expander: sending '%s'\n", request);
 
-	write(fd,request,strlen(request));
-	memset(request,0,sizeof(request));
-nread:
-	ret=read(fd,request,sizeof(request)-1);
-	if(ret<0) { 
-		sx_report(SX_ERROR,"Error reading data from radb: %s\n", 
-			strerror(errno));
+	ret=fwrite(request,1,strlen(request),f);
+	if(ret!=strlen(request)) { 
+		sx_report(SX_FATAL,"Partial write to radb, only %i bytes written: %s\n",
+			ret,strerror(errno));
 		exit(1);
 	};
-	if(ret==0) { 
-		sx_report(SX_ERROR,"Connection with radb closed inexpeced\n");
+	memset(request,0,sizeof(request));
+	if(!fgets(request,sizeof(request),f)) { 
+		if(ferror(f)) { 
+			sx_report(SX_FATAL,"Error reading data from radb: %s\n", 
+				strerror(errno));
+			exit(1);
+		};
+		sx_report(SX_FATAL,"EOF from radb\n");
 		exit(1);
 	};
 	SX_DEBUG(debug_expander>2,"expander: initially got %i bytes, '%s'\n",
 		ret,request);
-	if(ret==1 && request[0]=='\n') goto nread;
 	if(request[0]=='A') { 
 		char* eon, *c;
-		long togot=strtol(request+1,&eon,10);
-		char  recvbuffer[togot+128];
-		char* recvto;
+		long togot=strtoul(request+1,&eon,10);
+		char recvbuffer[togot+1];
+
 		if(eon && *eon!='\n') { 
-			sx_report(SX_ERROR,"Number ends at wrong character: '%c'(%s)\n"
-				,*eon,request);
+			sx_report(SX_ERROR,"A-code finised with wrong char '%c' (%s)\n",
+				*eon,request);
 			exit(1);
 		};
-		eon++;
-		memset(recvbuffer,0,togot+128);
-		memcpy(recvbuffer,eon,ret-(eon-request));
-		recvto=recvbuffer+ret-(eon-request);
-		togot-=ret-(eon-request);
-		while(togot>0) { 
-			ret=read(fd,recvto,togot);
-			if(ret<0) { 
-				sx_report(SX_ERROR,"Error reading data: %s\n", 
-					strerror(errno));
-				exit(1);
-			};
-			if(ret==0) { 
-				sx_report(SX_ERROR,"Server unexpectedly closed the"
-					" connection\n");
-				exit(1);
-			};
-			togot-=ret;
-			recvto+=ret;
-		};
-		if(togot==0) { 
-			memset(request,0,sizeof(request));
-			ret=read(fd,request,sizeof(request)-1);
-			if(ret>0) { 
-				if(request[0]!='C') { 
-					sx_report(SX_ERROR,"Wrong character after reply: %s\n",
-						request);
-					exit(0);
-				};
+
+		if(fgets(recvbuffer,togot,f)==NULL) { 
+			if(feof(f)) { 
+				sx_report(SX_FATAL,"EOF from radb\n");
 			} else { 
-				if(ret==0) { 
-					sx_report(SX_ERROR,"Server inexpectedly closed"
-						" connection\n");
-					exit(0);
-				} else { 
-					sx_report(SX_ERROR,"Error reading data from server:"
-						" %s\n",
-						strerror(errno));
-				};
+				sx_report(SX_FATAL,"Error reading radb: %s\n", strerror(errno));
 			};
-		} else { 
-			/* togot < 0, initially. */
-			if(recvto[togot]=='C') { 
-				/* ok, finised */
-			} else if(recvto[togot]=='D') { 
-				/* nodata */
-			} else if(recvto[togot]=='E') { 
-			} else if(recvto[togot]=='F') { 
-				sx_report(SX_FATAL,"Error from server: %s", recvto+togot);
-				exit(1);
-			};
-			recvto[togot]=0;
+			exit(1);
 		};
-		for(c=recvbuffer; c<recvto;) { 
+			
+		for(c=recvbuffer; c<recvbuffer+togot;) { 
 			size_t spn=strcspn(c," \n");
 			if(spn) c[spn]=0;
 			if(c[0]==0) break;
 			if(callback) callback(c,udata);
 			c+=spn+1;
+		};
+
+		if(fgets(recvbuffer,togot,f)==NULL) { 
+			if(feof(f)) { 
+				sx_report(SX_FATAL,"EOF from radb\n");
+			} else { 
+				sx_report(SX_FATAL,"ERROR from radb: %s\n", strerror(errno));
+			};
+			exit(1);
 		};
 	} else if(request[0]=='C') { 
 		/* no data */
@@ -308,9 +290,10 @@ nread:
 int
 bgpq_expand(struct bgpq_expander* b)
 { 
-	int fd=-1, err;
+	int fd=-1, err, ret;
 	struct sx_slentry* mc;
 	struct addrinfo hints, *res=NULL, *rp;
+	FILE* f=NULL;
 	memset(&hints,0,sizeof(struct addrinfo));
 
 	hints.ai_socktype=SOCK_STREAM;
@@ -337,30 +320,41 @@ bgpq_expand(struct bgpq_expander* b)
 			fd=-1;
 			continue;
 		};
+		f=fdopen(fd,"a+");
+		if(!f) { 
+			shutdown(fd,SHUT_RDWR);
+			close(fd);
+			fd=-1;
+			f=NULL;
+			continue;
+		};
 		break;
 	};
 	freeaddrinfo(res);
 
-	if(fd==-1) { 
+	if(!f) { 
 		/* all our attempts to connect failed */
 		sx_report(SX_ERROR,"All attempts to connect failed\n");
 		exit(1);
 	};
-
-	write(fd,"!!\n",3);
+	
+	if((ret=fwrite("!!\n",1,3,f))!=3) { 
+		sx_report(SX_ERROR,"Partial fwrite to radb: %i bytes, %s\n", 
+			ret, strerror(errno));
+		exit(1);
+	};
 
 	if(b->sources && b->sources[0]!=0) { 
 		char sources[128];
 		snprintf(sources,sizeof(sources),"!s%s\n", b->sources);
-		write(fd,sources,strlen(sources));
+		fwrite(sources,strlen(sources),1,f);
 	};
 
 	for(mc=b->macroses;mc;mc=mc->next) { 
-		bgpq_expand_radb(fd,bgpq_expanded_macro,b,"!i%s,1\n",mc->text);
+		bgpq_expand_radb(f,bgpq_expanded_macro,b,"!i%s,1\n",mc->text);
 	};
 	if(b->generation>=T_PREFIXLIST) { 
 		int i, j;
-		FILE* f=fdopen(fd,"rw");
 		for(i=0;i<sizeof(b->asnumbers);i++) { 
 			for(j=0;j<8;j++) { 
 				if(b->asnumbers[i]&(0x80>>j)) { 
@@ -368,7 +362,7 @@ bgpq_expand(struct bgpq_expander* b)
 						bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
 							"-i origin as%i\r\n",i*8+j);
 					} else { 
-						bgpq_expand_radb(fd,bgpq_expanded_prefix,b,"!gas%i\n",
+						bgpq_expand_radb(f,bgpq_expanded_prefix,b,"!gas%i\n",
 							i*8+j);
 					};
 				};

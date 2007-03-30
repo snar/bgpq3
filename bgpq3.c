@@ -16,6 +16,8 @@
 #include "bgpq3.h"
 #include "sx_report.h"
 
+extern int debug_expander;
+
 int
 usage(int ecode)
 { 
@@ -39,10 +41,13 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"6hS:Jf:l:W:P"))!=EOF) { 
+	while((c=getopt(argc,argv,"6dhS:Jf:l:W:P"))!=EOF) { 
 	switch(c) { 
 		case '6': af=AF_INET6;
 			expander.family=AF_INET6;
+			expander.tree->family=AF_INET6;
+			break;
+		case 'd': debug_expander++;
 			break;
 		case 'J': expander.vendor=V_JUNIPER;
 			break;
