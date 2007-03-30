@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
 #include <string.h>
@@ -119,6 +120,75 @@ bgpq_expanded_prefix(char* as, void* udata)
 	bgpq_expander_add_prefix(ex,as);
 	return 1;
 };
+
+int
+bgpq_expanded_v6prefix(char* prefix, void* udata)
+{ 
+	struct bgpq_expander* ex=(struct bgp_expander*)udata;
+	if(!ex) return 0;
+	bgpq_expander_add_prefix(ex,prefix);
+	return 1;
+};
+
+int
+bgpq_expand_ripe(FILE* f, int (*callback)(char*, void*), void* udata,
+	char* fmt, ...)
+{
+	char  request[128];
+	char* otype=NULL, *object=NULL;
+	int sawNL=0, nObjects=0;
+	va_list ap;
+	if(!f) { 
+		sx_report(SX_FATAL,"Invalid argments\n");
+		exit(1);
+	};
+
+	va_start(ap,fmt);
+	vsnprintf(request,sizeof(request),fmt,ap);
+	va_end(ap);
+
+	SX_DEBUG(debug_expander,"expander(ripe): sending '%s'\n", request);
+	fwrite(request,1,strlen(request),f);
+	fflush(f);
+
+	sawNL=0;
+	while(fgets(request,sizeof(request),f)) { 
+		if(request[0]=='\n') { 
+printf("ok, got object '%s': '%s'\n",otype,object); 
+			if(otype) free(otype); otype=NULL;
+			if(object) free(object); object=NULL;
+			nObjects++;
+			sawNL++;
+			if(sawNL==2) { 
+				/* ok, that's end of input */
+				return nObjects;
+			};
+		} else { 
+			if(!otype) { 
+				/* that's the first line of object */
+				char* c=strchr(request,':');
+				if(c) { 
+					*c=0;
+					otype=strdup(request);
+					c++;
+					while((isspace(*c))) c++;
+					object=strdup(c);
+					c=strchr(object,'\n');
+					if(c) *c=0;
+				};
+				printf("parsed request as '%s': '%s'\n", otype, object);
+			};
+		};
+	};
+	if(feof(f)) { 
+		sx_report(SX_FATAL,"EOF from server\n");
+	} else { 
+		sx_report(SX_FATAL,"Error reading server: %s\n", strerror(errno));
+	};
+	return 0;
+};
+
+
 
 int
 bgpq_expand_radb(int fd, int (*callback)(char*, void*), void* udata,
@@ -290,11 +360,17 @@ bgpq_expand(struct bgpq_expander* b)
 	};
 	if(b->generation>=T_PREFIXLIST) { 
 		int i, j;
+		FILE* f=fdopen(fd,"rw");
 		for(i=0;i<sizeof(b->asnumbers);i++) { 
 			for(j=0;j<8;j++) { 
 				if(b->asnumbers[i]&(0x80>>j)) { 
-					bgpq_expand_radb(fd,bgpq_expanded_prefix,b,"!gas%i\n",
-						i*8+j);
+					if(b->family==AF_INET6) { 
+						bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
+							"-i origin as%i\r\n",i*8+j);
+					} else { 
+						bgpq_expand_radb(fd,bgpq_expanded_prefix,b,"!gas%i\n",
+							i*8+j);
+					};
 				};
 			};
 		};
