@@ -33,7 +33,7 @@ bgpq_expander_init(struct bgpq_expander* b, int af)
 
 	b->family=af;
 	b->sources="ripe,radb,apnic";
-	b->name="UNKNOWN";
+	b->name="NN";
 	b->aswidth=8;
 
 	return 1;

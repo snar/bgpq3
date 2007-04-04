@@ -21,13 +21,26 @@ extern int debug_expander;
 int
 usage(int ecode)
 { 
-	printf("Usage: bgpq3 [-h] [-S sources] <OBJECTS>...\n");
-	printf(" -h  : this help\n");
-	printf(" -J  : use Juniper replace formatted output\n");
-	printf(" -l  : use specified name for generated access/prefix/.. list\n");
+	printf("Usage: bgpq3 [-h] [-S sources] [-P|G <number>|f <number>] <OBJECTS>"
+		"...\n");
+	printf(" -f number : generate input as-path access-list\n");
+	printf(" -G number : generate output as-path access-list\n");
+	printf(" -h        : this help\n");
+	printf(" -J        : use Juniper replace formatted output\n");
+	printf(" -l        : use specified name for generated access/prefix/.."
+		" list\n");
+	printf(" -P        : generate prefix-list (default)\n");
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
+	printf("\nCopyright(c) Alexandre Snarskii <snar@paranoia.ru>, 2007\n\n");
 	exit(ecode);
+};
+
+void
+exclusive()
+{ 
+	fprintf(stderr,"-f <asnum>, -P are mutually exclusive\n");
+	exit(1);
 };
 
 int
@@ -41,7 +54,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"6dhS:Jf:l:W:P"))!=EOF) { 
+	while((c=getopt(argc,argv,"6dhS:Jf:l:W:PG:"))!=EOF) { 
 	switch(c) { 
 		case '6': af=AF_INET6;
 			expander.family=AF_INET6;
@@ -56,9 +69,20 @@ main(int argc, char* argv[])
 				sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
 				exit(1);
 			};
+			if(expander.generation) exclusive();
 			expander.generation=T_ASPATH;
 			break;
-		case 'P': expander.generation=T_PREFIXLIST;
+		case 'G': expander.asnumber=atoi(optarg);
+			if(expander.asnumber<0 || expander.asnumber>65535) { 
+				sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
+				exit(1);
+			};
+			if(expander.generation) exclusive();
+			expander.generation=T_OASPATH;
+			break;
+		case 'P': 
+			if(expander.generation) exclusive();
+			expander.generation=T_PREFIXLIST;
 			break;
 		case 'l': expander.name=optarg;
 			break;
@@ -95,6 +119,10 @@ main(int argc, char* argv[])
 		};
 	};
 
+	if(!expander.generation) { 
+		expander.generation=T_PREFIXLIST;
+	};
+
 	if(!argv[0]) usage(1);
 
 	while(argv[0]) { 
@@ -115,11 +143,13 @@ main(int argc, char* argv[])
 	};
 
 	switch(expander.generation) { 
+		case T_NONE: sx_report(SX_FATAL,"Unreachable point... call snar\n");
+			exit(1);
 		case T_ASPATH: bgpq3_print_aspath(stdout,&expander);
 			break;
-		case T_PREFIXLIST: bgpq3_print_prefixlist(stdout,&expander);
-		default : 
+		case T_OASPATH: bgpq3_print_oaspath(stdout,&expander);
 			break;
+		case T_PREFIXLIST: bgpq3_print_prefixlist(stdout,&expander);
 	};
 
 	return 0;

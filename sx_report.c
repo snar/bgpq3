@@ -51,7 +51,7 @@ sx_report(sx_report_t t, char* fmt, ...)
 				syslog(LOG_ERR,"ERROR: %s", buffer);
 				break;
 			case SX_NOTICE: 
-				syslog(LOG_WARNING,"Warning: %s", buffer);
+				syslog(LOG_WARNING,"Notice: %s", buffer);
 				break;
 			case SX_DEBUG: 
 				syslog(LOG_DEBUG,"Debug: %s", buffer);

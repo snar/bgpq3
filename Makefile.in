@@ -2,8 +2,10 @@ CC=@CC@
 CFLAGS=@CFLAGS@ @DEFS@ -g -Wall -I. -O0
 LDADD=@LDFLAGS@ @LIBS@
 
-OBJECTS=bgpq3.o sx_report.o bgpq_expander.o sx_slentry.o bgpq3_printer.o
-SRCS=bgpq3.c bgpq_expander.c sx_slentry.c bgpq3_printer.c
+OBJECTS=bgpq3.o sx_report.o bgpq_expander.o sx_slentry.o bgpq3_printer.o 
+OBJECTS+=sx_prefix.o 
+SRCS=bgpq3.c sx_report.c bgpq_expander.c sx_slentry.c bgpq3_printer.c 
+SRCS+=sx_prefix.c 
 
 
 all: bgpq3

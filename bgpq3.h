@@ -37,6 +37,7 @@ int bgpq_expand(struct bgpq_expander* b);
 
 int bgpq3_print_prefixlist(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_aspath(FILE* f, struct bgpq_expander* b);
+int bgpq3_print_oaspath(FILE* f, struct bgpq_expander* b);
 
 
 #endif
