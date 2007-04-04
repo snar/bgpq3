@@ -106,7 +106,7 @@ bgpq_expander_add_prefix(struct bgpq_expander* b, char* prefix)
 int
 bgpq_expanded_macro(char* as, void* udata)
 { 
-	struct bgpq_expander* ex=(struct bgp_expander*)udata;
+	struct bgpq_expander* ex=(struct bgpq_expander*)udata;
 	if(!ex) return 0;
 	bgpq_expander_add_as(ex,as);
 	return 1;
@@ -115,7 +115,7 @@ bgpq_expanded_macro(char* as, void* udata)
 int
 bgpq_expanded_prefix(char* as, void* udata)
 { 
-	struct bgpq_expander* ex=(struct bgp_expander*)udata;
+	struct bgpq_expander* ex=(struct bgpq_expander*)udata;
 	if(!ex) return 0;
 	bgpq_expander_add_prefix(ex,as);
 	return 1;
@@ -124,7 +124,7 @@ bgpq_expanded_prefix(char* as, void* udata)
 int
 bgpq_expanded_v6prefix(char* prefix, void* udata)
 { 
-	struct bgpq_expander* ex=(struct bgp_expander*)udata;
+	struct bgpq_expander* ex=(struct bgpq_expander*)udata;
 	if(!ex) return 0;
 	bgpq_expander_add_prefix(ex,prefix);
 	return 1;
