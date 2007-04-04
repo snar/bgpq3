@@ -150,11 +150,14 @@ bgpq_expand_ripe(FILE* f, int (*callback)(char*, void*), void* udata,
 	va_end(ap);
 
 	SX_DEBUG(debug_expander,"expander(ripe): sending '%s'\n", request);
+	fseek(f,0,SEEK_END);
 	fwrite(request,1,strlen(request),f);
 	fflush(f);
 
 	sawNL=0;
+	fseek(f,0,SEEK_END);
 	while(fgets(request,sizeof(request),f)) { 
+		fseek(f,0,SEEK_END);
 		if(request[0]=='\n') { 
 			if(b->family==AF_INET && otype && !strcmp(otype,"route")) { 
 				SX_DEBUG(debug_expander,"expander(ripe): got route: %s\n",
@@ -183,7 +186,7 @@ bgpq_expand_ripe(FILE* f, int (*callback)(char*, void*), void* udata,
 					*c=0;
 					otype=strdup(request);
 					c++;
-					while((isspace(*c))) c++;
+					while((isspace((int)*c))) c++;
 					object=strdup(c);
 					c=strchr(object,'\n');
 					if(c) *c=0;
@@ -219,6 +222,7 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 	SX_DEBUG(debug_expander,"expander: sending '%s'\n", request);
 
 	ret=fwrite(request,1,strlen(request),f);
+	fseek(f,0,SEEK_END);
 	if(ret!=strlen(request)) { 
 		sx_report(SX_FATAL,"Partial write to radb, only %i bytes written: %s\n",
 			ret,strerror(errno));
@@ -235,7 +239,7 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 		exit(1);
 	};
 	SX_DEBUG(debug_expander>2,"expander: initially got %i bytes, '%s'\n",
-		ret,request);
+		strlen(request),request);
 	if(request[0]=='A') { 
 		char* eon, *c;
 		long togot=strtoul(request+1,&eon,10);
@@ -255,6 +259,8 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 			};
 			exit(1);
 		};
+		SX_DEBUG(debug_expander>2,"expander: final reply of %i bytes, '%s'\n",
+			strlen(recvbuffer),recvbuffer);
 			
 		for(c=recvbuffer; c<recvbuffer+togot;) { 
 			size_t spn=strcspn(c," \n");
@@ -338,6 +344,7 @@ bgpq_expand(struct bgpq_expander* b)
 		exit(1);
 	};
 	
+	fseek(f,0,SEEK_END);
 	if((ret=fwrite("!!\n",1,3,f))!=3) { 
 		sx_report(SX_ERROR,"Partial fwrite to radb: %i bytes, %s\n", 
 			ret, strerror(errno));
@@ -347,6 +354,7 @@ bgpq_expand(struct bgpq_expander* b)
 	if(b->sources && b->sources[0]!=0) { 
 		char sources[128];
 		snprintf(sources,sizeof(sources),"!s%s\n", b->sources);
+		fseek(f,0,SEEK_END);
 		fwrite(sources,strlen(sources),1,f);
 	};
 

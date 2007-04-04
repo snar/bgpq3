@@ -2,5 +2,8 @@ AC_INIT(bgpq3.c)
 AC_CONFIG_HEADER(config.h)
 AC_PROG_CC
 
+AC_CHECK_LIB(socket,socket)
+AC_CHECK_LIB(nsl,getaddrinfo)
+
 AC_OUTPUT(Makefile)
 
