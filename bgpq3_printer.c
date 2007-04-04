@@ -194,7 +194,8 @@ bgpq3_print_cprefix(struct sx_radix_node* n, void* ff)
 	if(n->isGlue) return;
 	if(!f) f=stdout;
 	sx_prefix_snprintf(&n->prefix,prefix,sizeof(prefix));
-	fprintf(f,"ip prefix-list %s permit %s\n",bname?bname:"NN",prefix);
+	fprintf(f,"%s prefix-list %s permit %s\n",
+		(n->prefix.family==AF_INET)?"ip":"ipv6",bname?bname:"NN",prefix);
 };
 
 int
@@ -211,7 +212,8 @@ int
 bgpq3_print_cisco_prefixlist(FILE* f, struct bgpq_expander* b)
 { 
 	bname=b->name;
-	fprintf(f,"no ip prefix-list %s\n", bname);
+	fprintf(f,"no %s prefix-list %s\n",
+		(b->family==AF_INET)?"ip":"ipv6",bname?bname:"NN");
 	sx_radix_tree_foreach(b->tree,bgpq3_print_cprefix,f);
 	return 0;
 };
