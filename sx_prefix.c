@@ -198,7 +198,7 @@ sx_prefix_isbitset(struct sx_prefix* p, int n)
 	unsigned char s;
 	/* bits outside the prefix considered unset */
 	if(p->family==AF_INET && (n<0 || n>32)) return 0;
-	else if(p->family==AF_INET6 && (n<0 || n>32)) return 0;
+	else if(p->family==AF_INET6 && (n<0 || n>128)) return 0;
 	s=p->addr.addrs[(n-1)/8];
 	return (s&(0x80>>((n-1)%8)))?1:0;
 };
