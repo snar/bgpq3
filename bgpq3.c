@@ -21,8 +21,10 @@ extern int debug_expander;
 int
 usage(int ecode)
 { 
-	printf("Usage: bgpq3 [-h] [-S sources] [-P|G <number>|f <number>] <OBJECTS>"
-		"...\n");
+	printf("Usage: bgpq3 [-h] [-S sources] [-P|G <number>|f <number>] [-6]"
+		" <OBJECTS>...\n");
+	printf(" -6        : generate IPv6 access/prefix-lists\n");
+	printf(" -d        : generate some debugging output\n");
 	printf(" -f number : generate input as-path access-list\n");
 	printf(" -G number : generate output as-path access-list\n");
 	printf(" -h        : this help\n");
@@ -32,14 +34,14 @@ usage(int ecode)
 	printf(" -P        : generate prefix-list (default)\n");
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
-	printf("\nCopyright(c) Alexandre Snarskii <snar@paranoia.ru>, 2007\n\n");
+	printf("\nCopyright(c) Alexandre Snarskii <snar@paranoia.ru>,2007,2008\n\n");
 	exit(ecode);
 };
 
 void
 exclusive()
 { 
-	fprintf(stderr,"-f <asnum>, -P are mutually exclusive\n");
+	fprintf(stderr,"-f <asnum>, -G <asnum> and -P are mutually exclusive\n");
 	exit(1);
 };
 
