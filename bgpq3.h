@@ -26,6 +26,7 @@ struct bgpq_expander {
 	char* name;
 	bgpq_vendor_t vendor;
 	bgpq_gen_t    generation;
+	int identify;
 };
 
 int bgpq_expander_init(struct bgpq_expander* b, int af);

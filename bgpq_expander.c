@@ -358,6 +358,13 @@ bgpq_expand(struct bgpq_expander* b)
 		fwrite(sources,strlen(sources),1,f);
 	};
 
+	if(b->identify) { 
+		char ident[128];
+		snprintf(ident,sizeof(ident),"!n" PACKAGE_STRING "\n");
+		fseek(f,0,SEEK_END);
+		fwrite(ident,strlen(ident),1,f);
+	};
+
 	for(mc=b->macroses;mc;mc=mc->next) { 
 		bgpq_expand_radb(f,bgpq_expanded_macro,b,"!i%s,1\n",mc->text);
 	};

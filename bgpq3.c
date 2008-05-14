@@ -131,7 +131,11 @@ main(int argc, char* argv[])
 		if(!strncasecmp(argv[0],"AS-",3)) { 
 			bgpq_expander_add_asset(&expander,argv[0]);
 		} else if(!strncasecmp(argv[0],"AS",2)) { 
-			bgpq_expander_add_as(&expander,argv[0]);
+			if(strchr(argv[0],':')) { 
+				bgpq_expander_add_asset(&expander,argv[0]);
+			} else { 
+				bgpq_expander_add_as(&expander,argv[0]);
+			};
 		} else { 
 			if(!bgpq_expander_add_prefix(&expander,argv[0]))
 				exit(1);
