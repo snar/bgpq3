@@ -21,7 +21,7 @@ extern int debug_expander;
 int
 usage(int ecode)
 { 
-	printf("Usage: bgpq3 [-h] [-S sources] [-P|G <number>|f <number>] [-36]"
+	printf("\nUsage: bgpq3 [-h] [-S sources] [-P|G <number>|f <number>] [-36]"
 		" <OBJECTS>...\n");
 	printf(" -3        : assume that your device is asn32-safe\n"); 
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
@@ -35,7 +35,8 @@ usage(int ecode)
 	printf(" -P        : generate prefix-list (default)\n");
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
-	printf("\nCopyright(c) Alexandre Snarskii <snar@paranoia.ru>,2007,2008\n\n");
+	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@paranoia.ru> 2007, 2008\n\n");
 	exit(ecode);
 };
 
