@@ -1,0 +1,7 @@
+0.1.1 (2008-05-16): 
+	- initial support for asn32 added (flag -3). By default it's off, 
+	and when bgpq sees 32-bit asn in resolver queue, it either replaces
+	it with AS23456 (in as-path generation mode) or queries radb for
+	prefixes with that origin. 
+	Note: for now only JunOS 9.1 can handle asn32, not Cisco IOS..
+
