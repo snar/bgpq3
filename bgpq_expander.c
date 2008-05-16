@@ -35,6 +35,7 @@ bgpq_expander_init(struct bgpq_expander* b, int af)
 	b->sources="ripe,radb,apnic";
 	b->name="NN";
 	b->aswidth=8;
+	b->asn32s[0]=malloc(8192);
 
 	return 1;
 fixups:
@@ -77,7 +78,31 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 	};
 
 	if(*eoa=='.') { 
-		sx_report(SX_ERROR,"32-bit as numbers is not supported yet (%s)\n",as);
+		if(b->asn32 || b->generation>=T_PREFIXLIST) { 
+			uint32_t asn1=strtoul(eoa+1,&eoa,10);
+			if(eoa && *eoa!=0) { 
+				sx_report(SX_ERROR,"Invalid symbol in AS number: '%c' in %s\n",
+					*eoa, as);
+				return 0;
+			};
+			if(asn1<1 || asn1>65535) { 
+				sx_report(SX_ERROR,"Invalid AS number in %s\n", as);
+				return 0;
+			};
+			if(!b->asn32s[asno]) { 
+				b->asn32s[asno]=malloc(8192);
+				if(!b->asn32s[asno]) { 
+					sx_report(SX_ERROR, "Unable to allocate 8192 bytes: %s."
+						" Unable to add asn32 %s to future expansion\n", 
+						strerror(errno), as);
+					return 0;
+				};
+				memset(b->asn32s[asno],0,8192);
+			};
+			b->asn32s[asno][asn1/8]|=(0x80>>(asn1%8));
+		} else if(!b->asn32) { 
+			b->asn32s[0][23456/8]|=(0x80>>(23456%8));
+		};
 		return 0;
 	};
 
@@ -86,7 +111,7 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 		return 0;
 	};
 
-	b->asnumbers[asno/8]|=(0x80>>(asno%8));
+	b->asn32s[0][asno/8]|=(0x80>>(asno%8));
 
 	return 1;
 };
@@ -369,16 +394,28 @@ bgpq_expand(struct bgpq_expander* b)
 		bgpq_expand_radb(f,bgpq_expanded_macro,b,"!i%s,1\n",mc->text);
 	};
 	if(b->generation>=T_PREFIXLIST) { 
-		int i, j;
-		for(i=0;i<sizeof(b->asnumbers);i++) { 
-			for(j=0;j<8;j++) { 
-				if(b->asnumbers[i]&(0x80>>j)) { 
-					if(b->family==AF_INET6) { 
-						bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
-							"-i origin as%i\r\n",i*8+j);
-					} else { 
-						bgpq_expand_radb(f,bgpq_expanded_prefix,b,"!gas%i\n",
-							i*8+j);
+		unsigned i, j, k;
+		for(k=0;k<sizeof(b->asn32s)/sizeof(unsigned char*);k++) { 
+			if(!b->asn32s[k]) continue;
+			for(i=0;i<8192;i++) { 
+				for(j=0;j<8;j++) { 
+					if(b->asn32s[k][i]&(0x80>>j)) { 
+						if(b->family==AF_INET6) { 
+							if(k>0) 
+								bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
+									"-i origin as%u.%u\r\n", k, i*8+j);
+							else 
+								bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
+									"-i origin as%u\r\n", i*8+j);
+
+						} else { 
+							if(k>0) 
+								bgpq_expand_radb(f,bgpq_expanded_prefix,b,
+									"!gas%u.%u\n", k, i*8+j);
+							else 
+								bgpq_expand_radb(f,bgpq_expanded_prefix,b,
+									"!gas%u\n", i*8+j);
+						};
 					};
 				};
 			};

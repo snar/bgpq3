@@ -17,13 +17,13 @@ bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 { 
 	int nc=0, i, j;
 	fprintf(f,"no ip as-path access-list %s\n", b->name?b->name:"NN");
-	if(b->asnumbers[b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
+	if(b->asn32s[0][b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
 		fprintf(f,"ip as-path access-list %s permit ^%i(_%i)*$\n",
 			b->name?b->name:"NN",b->asnumber,b->asnumber);
 	};
-	for(i=0;i<sizeof(b->asnumbers);i++) { 
+	for(i=0;i<8192;i++) { 
 		for(j=0;j<8;j++) { 
-			if(b->asnumbers[i]&(0x80>>j)) { 
+			if(b->asn32s[0][i]&(0x80>>j)) { 
 				if(i*8+j==b->asnumber) continue;
 				if(!nc) { 
 					fprintf(f,"ip as-path access-list %s permit"
@@ -48,13 +48,13 @@ bgpq3_print_cisco_oaspath(FILE* f, struct bgpq_expander* b)
 { 
 	int nc=0, i, j;
 	fprintf(f,"no ip as-path access-list %s\n", b->name?b->name:"NN");
-	if(b->asnumbers[b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
+	if(b->asn32s[0][b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
 		fprintf(f,"ip as-path access-list %s permit ^(_%i)*$\n",
 			b->name?b->name:"NN",b->asnumber);
 	};
-	for(i=0;i<sizeof(b->asnumbers);i++) { 
+	for(i=0;i<8192;i++) { 
 		for(j=0;j<8;j++) { 
-			if(b->asnumbers[i]&(0x80>>j)) { 
+			if(b->asn32s[0][i]&(0x80>>j)) { 
 				if(i*8+j==b->asnumber) continue;
 				if(!nc) { 
 					fprintf(f,"ip as-path access-list %s permit"
@@ -78,30 +78,42 @@ bgpq3_print_cisco_oaspath(FILE* f, struct bgpq_expander* b)
 int
 bgpq3_print_juniper_aspath(FILE* f, struct bgpq_expander* b)
 { 
-	int nc=0, lineNo=0, i, j;
+	int nc=0, lineNo=0, i, j, k;
 	fprintf(f,"policy-options {\nreplace:\n as-path-group %s {\n", 
 		b->name?b->name:"NN");
 
-	if(b->asnumbers[b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
+	if(b->asn32s[0][b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
 		fprintf(f,"  as-path a%i \"^%i(%i)*$\";\n", lineNo, b->asnumber,
 			b->asnumber);
 		lineNo++;
 	};
-	for(i=0;i<sizeof(b->asnumbers);i++) { 
-		for(j=0;j<8;j++) { 
-			if(b->asnumbers[i]&(0x80>>j)) { 
-				if(i*8+j==b->asnumber) continue;
-				if(!nc) { 
-					fprintf(f,"  as-path a%i \"^%i(.)*(%i",
-						lineNo,b->asnumber,i*8+j);
-				} else { 
-					fprintf(f,"|%i",i*8+j);
-				}
-				nc++;
-				if(nc==b->aswidth) { 
-					fprintf(f,")$\";\n");
-					nc=0;
-					lineNo++;
+	for(k=0;k<65536;k++) { 
+		if(!b->asn32s[k]) continue;
+		for(i=0;i<8192;i++) { 
+			for(j=0;j<8;j++) { 
+				if(b->asn32s[k][i]&(0x80>>j)) { 
+					if(i*8+j==b->asnumber) continue;
+					if(!nc) { 
+						if(k) { 
+							fprintf(f,"  as-path a%i \"^%i(.)*(%u.%u",
+								lineNo,b->asnumber,k,i*8+j);
+						} else { 
+							fprintf(f,"  as-path a%i \"^%i(.)*(%u",
+								lineNo,b->asnumber,i*8+j);
+						};
+					} else { 
+						if(k) { 
+							fprintf(f,"|%u.%u",k,i*8+j);
+						} else { 
+							fprintf(f,"|%u",i*8+j);
+						};
+					};
+					nc++;
+					if(nc==b->aswidth) { 
+						fprintf(f,")$\";\n");
+						nc=0;
+						lineNo++;
+					};
 				};
 			};
 		};
@@ -118,14 +130,14 @@ bgpq3_print_juniper_oaspath(FILE* f, struct bgpq_expander* b)
 	fprintf(f,"policy-options {\nreplace:\n as-path-group %s {\n", 
 		b->name?b->name:"NN");
 
-	if(b->asnumbers[b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
+	if(b->asn32s[0][b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
 		fprintf(f,"  as-path a%i \"^%i(%i)*$\";\n", lineNo, b->asnumber,
 			b->asnumber);
 		lineNo++;
 	};
-	for(i=0;i<sizeof(b->asnumbers);i++) { 
+	for(i=0;i<8192;i++) { 
 		for(j=0;j<8;j++) { 
-			if(b->asnumbers[i]&(0x80>>j)) { 
+			if(b->asn32s[0][i]&(0x80>>j)) { 
 				if(i*8+j==b->asnumber) continue;
 				if(!nc) { 
 					fprintf(f,"  as-path a%i \"^(.)*(%i",
@@ -204,7 +216,7 @@ bgpq3_print_juniper_prefixlist(FILE* f, struct bgpq_expander* b)
 	fprintf(f,"policy-options {\nreplace:\n prefix-list %s {\n",
 		b->name?b->name:"NN");
 	sx_radix_tree_foreach(b->tree,bgpq3_print_jprefix,f);
-	fprintf(f,"  }\n}\n");
+	fprintf(f," }\n}\n");
 	return 0;
 };
 

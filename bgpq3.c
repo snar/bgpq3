@@ -21,14 +21,15 @@ extern int debug_expander;
 int
 usage(int ecode)
 { 
-	printf("Usage: bgpq3 [-h] [-S sources] [-P|G <number>|f <number>] [-6]"
+	printf("Usage: bgpq3 [-h] [-S sources] [-P|G <number>|f <number>] [-36]"
 		" <OBJECTS>...\n");
-	printf(" -6        : generate IPv6 access/prefix-lists\n");
+	printf(" -3        : assume that your device is asn32-safe\n"); 
+	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -d        : generate some debugging output\n");
 	printf(" -f number : generate input as-path access-list\n");
 	printf(" -G number : generate output as-path access-list\n");
 	printf(" -h        : this help\n");
-	printf(" -J        : use Juniper replace formatted output\n");
+	printf(" -J        : generate config for JunOS (Cisco IOS by default)\n");
 	printf(" -l        : use specified name for generated access/prefix/.."
 		" list\n");
 	printf(" -P        : generate prefix-list (default)\n");
@@ -56,8 +57,11 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"6dhS:Jf:l:W:PG:"))!=EOF) { 
+	while((c=getopt(argc,argv,"36dhS:Jf:l:W:PG:"))!=EOF) { 
 	switch(c) { 
+		case '3': 
+			expander.asn32=1;
+			break;
 		case '6': af=AF_INET6;
 			expander.family=AF_INET6;
 			expander.tree->family=AF_INET6;
@@ -124,6 +128,13 @@ main(int argc, char* argv[])
 	if(!expander.generation) { 
 		expander.generation=T_PREFIXLIST;
 	};
+
+	if(expander.vendor==V_CISCO && expander.asn32 && 
+		expander.generation<T_PREFIXLIST) { 
+		sx_report(SX_FATAL,"Sorry, AS32-safety is not yet ready for Cisco\n");
+	};
+	
+		
 
 	if(!argv[0]) usage(1);
 

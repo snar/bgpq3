@@ -18,7 +18,6 @@ typedef enum {
 
 struct bgpq_expander { 
 	struct sx_radix_tree* tree;
-	unsigned char asnumbers[8192];
 	struct sx_slentry* macroses;
 	int family;
 	char* sources;
@@ -27,6 +26,8 @@ struct bgpq_expander {
 	bgpq_vendor_t vendor;
 	bgpq_gen_t    generation;
 	int identify;
+	unsigned char asn32;
+	unsigned char* asn32s[65536];
 };
 
 int bgpq_expander_init(struct bgpq_expander* b, int af);
