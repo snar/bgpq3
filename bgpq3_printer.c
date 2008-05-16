@@ -126,7 +126,7 @@ bgpq3_print_juniper_aspath(FILE* f, struct bgpq_expander* b)
 int
 bgpq3_print_juniper_oaspath(FILE* f, struct bgpq_expander* b)
 { 
-	int nc=0, lineNo=0, i, j;
+	int nc=0, lineNo=0, i, j, k;
 	fprintf(f,"policy-options {\nreplace:\n as-path-group %s {\n", 
 		b->name?b->name:"NN");
 
@@ -135,21 +135,34 @@ bgpq3_print_juniper_oaspath(FILE* f, struct bgpq_expander* b)
 			b->asnumber);
 		lineNo++;
 	};
-	for(i=0;i<8192;i++) { 
-		for(j=0;j<8;j++) { 
-			if(b->asn32s[0][i]&(0x80>>j)) { 
-				if(i*8+j==b->asnumber) continue;
-				if(!nc) { 
-					fprintf(f,"  as-path a%i \"^(.)*(%i",
-						lineNo,i*8+j);
-				} else { 
-					fprintf(f,"|%i",i*8+j);
-				}
-				nc++;
-				if(nc==b->aswidth) { 
-					fprintf(f,")$\";\n");
-					nc=0;
-					lineNo++;
+	for(k=0;k<65536;k++) { 
+		if(!b->asn32s[k]) continue;
+
+		for(i=0;i<8192;i++) { 
+			for(j=0;j<8;j++) { 
+				if(b->asn32s[k][i]&(0x80>>j)) { 
+					if(i*8+j==b->asnumber) continue;
+					if(!nc) { 
+						if(!k) { 
+							fprintf(f,"  as-path a%i \"^(.)*(%u",
+								lineNo,i*8+j);
+						} else { 
+							fprintf(f,"  as-path a%i \"^(.)*(%u.%u",
+								lineNo,k,i*8+j);
+						};
+					} else { 
+						if(!k) { 
+							fprintf(f,"|%u",i*8+j);
+						} else { 
+							fprintf(f,"|%u.%u",k,i*8+j);
+						};
+					}
+					nc++;
+					if(nc==b->aswidth) { 
+						fprintf(f,")$\";\n");
+						nc=0;
+						lineNo++;
+					};
 				};
 			};
 		};

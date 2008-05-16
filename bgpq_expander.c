@@ -92,7 +92,7 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 			if(!b->asn32s[asno]) { 
 				b->asn32s[asno]=malloc(8192);
 				if(!b->asn32s[asno]) { 
-					sx_report(SX_ERROR, "Unable to allocate 8192 bytes: %s."
+					sx_report(SX_FATAL, "Unable to allocate 8192 bytes: %s."
 						" Unable to add asn32 %s to future expansion\n", 
 						strerror(errno), as);
 					return 0;

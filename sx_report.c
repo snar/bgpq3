@@ -15,7 +15,7 @@
 
 static int reportStderr=1;
 
-static char const* const
+static char const* 
 sx_report_name(sx_report_t t)
 { 
 	switch(t) { 
