@@ -70,7 +70,7 @@ sx_prefix_parse(struct sx_prefix* p, int af, char* text)
 	};
 
 	if(inet_pton(af,text,&p->addr)!=1) { 
-		*c='/';
+		if(c) *c='/';
 		sx_report(SX_ERROR,"Unable to parse prefix %s, af=%i\n",text,af);
 		goto fixups;
 	};
