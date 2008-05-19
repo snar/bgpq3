@@ -3,6 +3,7 @@
 	- final support for asn32, now with correct syntax for Juniper. 
 	- experimental 'pipelining' mode (flag -T), much faster when 
 	working with big as-set's. 
+	- RIPE-style query (-i origin) now requests only route6 objects. 
 
 0.1.1 (2008-05-16): 
 	- initial support for asn32 added (flag -3). By default it's off, 

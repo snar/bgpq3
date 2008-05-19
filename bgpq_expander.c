@@ -528,10 +528,10 @@ bgpq_expand(struct bgpq_expander* b)
 						if(b->family==AF_INET6) { 
 							if(k>0) 
 								bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
-									"-i origin as%u.%u\r\n", k, i*8+j);
+									"-T route6 -i origin as%u.%u\r\n", k,i*8+j);
 							else 
 								bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
-									"-i origin as%u\r\n", i*8+j);
+									"-T route6 -i origin as%u\r\n", i*8+j);
 
 						} else { 
 							if(!pipelining) { 
