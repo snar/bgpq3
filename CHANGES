@@ -1,3 +1,6 @@
+0.1.2 (2008-05-19): 
+	- final support for asn32, now with correct syntax for Juniper. 
+
 0.1.1 (2008-05-16): 
 	- initial support for asn32 added (flag -3). By default it's off, 
 	and when bgpq sees 32-bit asn in resolver queue, it either replaces

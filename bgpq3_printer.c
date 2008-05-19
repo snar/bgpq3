@@ -82,8 +82,10 @@ bgpq3_print_juniper_aspath(FILE* f, struct bgpq_expander* b)
 	fprintf(f,"policy-options {\nreplace:\n as-path-group %s {\n", 
 		b->name?b->name:"NN");
 
-	if(b->asn32s[0][b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
-		fprintf(f,"  as-path a%i \"^%i(%i)*$\";\n", lineNo, b->asnumber,
+	if(b->asn32s[b->asnumber/65536] && 
+		b->asn32s[b->asnumber/65535][(b->asnumber/65536)/8]&
+		(0x80>>(b->asnumber%8))) { 
+		fprintf(f,"  as-path a%i \"^%u(%u)*$\";\n", lineNo, b->asnumber,
 			b->asnumber);
 		lineNo++;
 	};
@@ -92,21 +94,12 @@ bgpq3_print_juniper_aspath(FILE* f, struct bgpq_expander* b)
 		for(i=0;i<8192;i++) { 
 			for(j=0;j<8;j++) { 
 				if(b->asn32s[k][i]&(0x80>>j)) { 
-					if(i*8+j==b->asnumber) continue;
+					if(k*65536+i*8+j==b->asnumber) continue;
 					if(!nc) { 
-						if(k) { 
-							fprintf(f,"  as-path a%i \"^%i(.)*(%u.%u",
-								lineNo,b->asnumber,k,i*8+j);
-						} else { 
-							fprintf(f,"  as-path a%i \"^%i(.)*(%u",
-								lineNo,b->asnumber,i*8+j);
-						};
+						fprintf(f,"  as-path a%i \"^%u(.)*(%u",
+							lineNo,b->asnumber,k*65536+i*8+j);
 					} else { 
-						if(k) { 
-							fprintf(f,"|%u.%u",k,i*8+j);
-						} else { 
-							fprintf(f,"|%u",i*8+j);
-						};
+						fprintf(f,"|%u",k*65536+i*8+j);
 					};
 					nc++;
 					if(nc==b->aswidth) { 
@@ -130,8 +123,10 @@ bgpq3_print_juniper_oaspath(FILE* f, struct bgpq_expander* b)
 	fprintf(f,"policy-options {\nreplace:\n as-path-group %s {\n", 
 		b->name?b->name:"NN");
 
-	if(b->asn32s[0][b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
-		fprintf(f,"  as-path a%i \"^%i(%i)*$\";\n", lineNo, b->asnumber,
+	if(b->asn32s[b->asnumber/65536] && 
+		b->asn32s[b->asnumber/65536][(b->asnumber/65536)/8]&
+		(0x80>>(b->asnumber%8))) { 
+		fprintf(f,"  as-path a%i \"^%u(%u)*$\";\n", lineNo, b->asnumber,
 			b->asnumber);
 		lineNo++;
 	};
@@ -141,21 +136,12 @@ bgpq3_print_juniper_oaspath(FILE* f, struct bgpq_expander* b)
 		for(i=0;i<8192;i++) { 
 			for(j=0;j<8;j++) { 
 				if(b->asn32s[k][i]&(0x80>>j)) { 
-					if(i*8+j==b->asnumber) continue;
+					if(k*65536+i*8+j==b->asnumber) continue;
 					if(!nc) { 
-						if(!k) { 
-							fprintf(f,"  as-path a%i \"^(.)*(%u",
-								lineNo,i*8+j);
-						} else { 
-							fprintf(f,"  as-path a%i \"^(.)*(%u.%u",
-								lineNo,k,i*8+j);
-						};
+						fprintf(f,"  as-path a%i \"^(.)*(%u",
+							lineNo,k*65536+i*8+j);
 					} else { 
-						if(!k) { 
-							fprintf(f,"|%u",i*8+j);
-						} else { 
-							fprintf(f,"|%u.%u",k,i*8+j);
-						};
+						fprintf(f,"|%u",k*65536+i*8+j);
 					}
 					nc++;
 					if(nc==b->aswidth) { 

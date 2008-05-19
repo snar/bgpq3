@@ -48,6 +48,41 @@ exclusive()
 };
 
 int
+parseasnumber(struct bgpq_expander* expander, char* optarg)
+{ 
+	char* eon=NULL;
+	expander->asnumber=strtoul(optarg,&eon,10);
+	if(expander->asnumber<0 || expander->asnumber>(65535ul*65535)) { 
+		sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
+		exit(1);
+	};
+	if(eon && *eon=='.') { 
+		/* -f 3.3, for example */
+		uint32_t loas=strtoul(eon+1,&eon,10);
+		if(expander->asnumber>65535) { 
+			/* should prevent incorrect numbers like 65537.1 */
+			sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
+			exit(1);
+		};
+		if(loas<0 || loas>65536) { 
+			sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
+			exit(1);
+		};
+		if(eon && *eon) { 
+			sx_report(SX_FATAL,"Invalid symbol in AS number: %c (%s)\n",
+				*eon, optarg);
+			exit(1);
+		};
+		expander->asnumber=(expander->asnumber<<16)+loas;
+	} else if(eon && *eon) { 
+		sx_report(SX_FATAL,"Invalid symbol in AS number: %c (%s)\n",
+			*eon, optarg);
+		exit(1);
+	};
+	return 0;
+};
+
+int
 main(int argc, char* argv[])
 { 
 	int c;
@@ -71,21 +106,15 @@ main(int argc, char* argv[])
 			break;
 		case 'J': expander.vendor=V_JUNIPER;
 			break;
-		case 'f': expander.asnumber=atoi(optarg);
-			if(expander.asnumber<0 || expander.asnumber>65535) { 
-				sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
-				exit(1);
-			};
+		case 'f': 
 			if(expander.generation) exclusive();
 			expander.generation=T_ASPATH;
+			parseasnumber(&expander,optarg);
 			break;
-		case 'G': expander.asnumber=atoi(optarg);
-			if(expander.asnumber<0 || expander.asnumber>65535) { 
-				sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
-				exit(1);
-			};
+		case 'G': 
 			if(expander.generation) exclusive();
 			expander.generation=T_OASPATH;
+			parseasnumber(&expander,optarg);
 			break;
 		case 'P': 
 			if(expander.generation) exclusive();
@@ -134,8 +163,10 @@ main(int argc, char* argv[])
 		expander.generation<T_PREFIXLIST) { 
 		sx_report(SX_FATAL,"Sorry, AS32-safety is not yet ready for Cisco\n");
 	};
-	
-		
+
+	if(!expander.asn32 && expander.asnumber>=65536) { 
+		expander.asnumber=23456;
+	};
 
 	if(!argv[0]) usage(1);
 
