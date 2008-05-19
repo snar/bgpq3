@@ -16,6 +16,13 @@ typedef enum {
 	T_PREFIXLIST
 } bgpq_gen_t;
 
+struct bgpq_prequest { 
+	struct bgpq_prequest* next;
+	char request[128];
+	int (*callback)(char*, void*);
+	void *udata;
+};
+
 struct bgpq_expander { 
 	struct sx_radix_tree* tree;
 	struct sx_slentry* macroses;
@@ -28,7 +35,10 @@ struct bgpq_expander {
 	int identify;
 	unsigned char asn32;
 	unsigned char* asn32s[65536];
+	struct bgpq_prequest* firstpipe, *lastpipe;
+	int piped;
 };
+
 
 int bgpq_expander_init(struct bgpq_expander* b, int af);
 int bgpq_expander_add_asset(struct bgpq_expander* b, char* set);

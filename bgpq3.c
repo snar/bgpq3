@@ -17,6 +17,7 @@
 #include "sx_report.h"
 
 extern int debug_expander;
+extern int pipelining;
 
 int
 usage(int ecode)
@@ -33,6 +34,7 @@ usage(int ecode)
 	printf(" -l        : use specified name for generated access/prefix/.."
 		" list\n");
 	printf(" -P        : generate prefix-list (default)\n");
+	printf(" -T        : pipelining (experimental, faster mode)\n");
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
@@ -93,7 +95,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36dhS:Jf:l:W:PG:"))!=EOF) { 
+	while((c=getopt(argc,argv,"36dhS:Jf:l:W:PG:T"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -121,6 +123,8 @@ main(int argc, char* argv[])
 			expander.generation=T_PREFIXLIST;
 			break;
 		case 'l': expander.name=optarg;
+			break;
+		case 'T': pipelining=1;
 			break;
 		case 'S': expander.sources=optarg;
 			break;

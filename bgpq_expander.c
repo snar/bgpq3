@@ -19,6 +19,7 @@
 #include "sx_report.h"
 
 int debug_expander=0;
+int pipelining=0;
 
 int
 bgpq_expander_init(struct bgpq_expander* b, int af)
@@ -230,7 +231,131 @@ bgpq_expand_ripe(FILE* f, int (*callback)(char*, void*), void* udata,
 	return 0;
 };
 
+int
+bgpq_pipeline(FILE* f, int (*callback)(char*, void*), void* udata,
+	char* fmt, ...)
+{ 
+	char request[128];
+	int ret;
+	struct bgpq_prequest* bp=NULL;
+	struct bgpq_expander* d=(struct bgpq_expander*)udata;
+	va_list ap;
+	va_start(ap,fmt);
+	vsnprintf(request,sizeof(request),fmt,ap);
+	va_end(ap);
 
+	SX_DEBUG(debug_expander,"expander: sending '%s'\n", request);
+
+	bp=malloc(sizeof(struct bgpq_prequest));
+	if(!bp) { 
+		sx_report(SX_FATAL,"Unable to allocate %i bytes: %s\n", 
+			sizeof(struct bgpq_prequest),strerror(errno));
+		exit(1);
+	};
+	memset(bp,0,sizeof(bp));
+
+	ret=fwrite(request,1,strlen(request),f);
+	fseek(f,0,SEEK_END);
+
+	if(ret!=strlen(request)) { 
+		sx_report(SX_FATAL,"Partial write to radb, only %i bytes written: %s\n",
+			ret,strerror(errno));
+		exit(1);
+	};
+
+	strlcpy(bp->request,request,sizeof(bp->request));
+	bp->callback=callback;
+	bp->udata=udata;
+
+	if(d->lastpipe) { 
+		d->lastpipe->next=bp;
+		d->lastpipe=bp;
+	} else { 
+		d->firstpipe=d->lastpipe=bp;
+	};
+	d->piped++;
+
+	return 0;
+};
+
+int
+bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
+{ 
+	while(b->piped>0) { 
+		char request[128];
+		struct bgpq_prequest* pipe;
+		memset(request,0,sizeof(request));
+		if(!fgets(request,sizeof(request),f)) { 
+			if(ferror(f)) { 
+				sx_report(SX_FATAL,"Error reading data from RADB: %s\n", 
+					strerror(errno));
+			} else { 
+				sx_report(SX_FATAL,"EOF from RADB\n");
+			};
+			exit(1);
+		};
+
+		if(request[0]=='A') { 
+			char* eon, *c;
+			unsigned long togot=strtoul(request+1,&eon,10);
+			char recvbuffer[togot+2];
+
+			if(eon && *eon!='\n') { 
+				sx_report(SX_ERROR,"A-code finished with wrong char '%c'(%s)\n",
+					*eon,request);
+				exit(1);
+			};
+			if(fgets(recvbuffer,togot+1,f)==NULL) { 
+				if(ferror(f)) { 
+					sx_report(SX_FATAL,"Error reading RADB: %s\n", 
+						strerror(errno));
+				} else { 
+					sx_report(SX_FATAL,"EOF from RADB\n");
+				};
+				exit(1);
+			};
+
+			for(c=recvbuffer; c<recvbuffer+togot;) { 
+				size_t spn=strcspn(c," \n");
+				if(spn) c[spn]=0;
+				if(c[0]==0) break;
+				if(b->firstpipe->callback) { 
+					b->firstpipe->callback(c,b->firstpipe->udata);
+				};
+				c+=spn+1;
+			};
+
+			/* Final code */
+			if(fgets(recvbuffer,togot,f)==NULL) { 
+				if(ferror(f)) { 
+					sx_report(SX_FATAL,"Error reading RADB: %s\n", 
+						strerror(errno));
+				} else { 
+					sx_report(SX_FATAL,"EOF from RADB\n");
+				};
+				exit(1);
+			};
+		} else if(request[0]=='C') { 
+			/* No data */
+		} else if(request[0]=='D') { 
+			/* .... */
+		} else if(request[0]=='E') { 
+			/* XXXXX */
+		} else if(request[0]=='F') { 
+			/* XXXXX */
+		} else { 
+			sx_report(SX_ERROR,"Wrong reply: %s to %s\n", request, 
+				b->firstpipe->request);
+		};
+
+		pipe=b->firstpipe;
+		b->firstpipe=b->firstpipe->next;
+		b->piped--;
+		free(pipe);
+				
+	};
+	return 0;
+};
 
 int
 bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
@@ -409,16 +534,28 @@ bgpq_expand(struct bgpq_expander* b)
 									"-i origin as%u\r\n", i*8+j);
 
 						} else { 
-							if(k>0) 
-								bgpq_expand_radb(f,bgpq_expanded_prefix,b,
-									"!gas%u.%u\n", k, i*8+j);
-							else 
-								bgpq_expand_radb(f,bgpq_expanded_prefix,b,
-									"!gas%u\n", i*8+j);
+							if(!pipelining) { 
+								if(k>0) 
+									bgpq_expand_radb(f,bgpq_expanded_prefix,b,
+										"!gas%u.%u\n", k, i*8+j);
+								else 
+									bgpq_expand_radb(f,bgpq_expanded_prefix,b,
+										"!gas%u\n", i*8+j);
+							} else { 
+								if(k>0) 
+									bgpq_pipeline(f,bgpq_expanded_prefix,b,
+										"!gas%u.%u\n", k, i*8+j);
+								else 
+									bgpq_pipeline(f,bgpq_expanded_prefix,b,
+										"!gas%u\n", i*8+j);
+							};
 						};
 					};
 				};
 			};
+		};
+		if(pipelining) { 
+			bgpq_pipeline_dequeue(f,b);
 		};
 	};
 				
