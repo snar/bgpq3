@@ -3,6 +3,7 @@
 	- pipelining now can be enabled for RIPE-style queries too (ipv6). 
 	- more-specific routes (-R len) feature ported from bgpq
 	- pipelining now set by default. -T flag now disables pipelining.
+	- strlcpy.c imported into sources. Not found on Linux :) 
 
 0.1.2 (2008-05-19): 
 	- final support for asn32, now with correct syntax for Juniper. 
