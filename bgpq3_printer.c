@@ -202,11 +202,26 @@ bgpq3_print_cprefix(struct sx_radix_node* n, void* ff)
 { 
 	char prefix[128];
 	FILE* f=(FILE*)ff;
-	if(n->isGlue) return;
 	if(!f) f=stdout;
+	if(n->isGlue) goto checkSon;
 	sx_prefix_snprintf(&n->prefix,prefix,sizeof(prefix));
-	fprintf(f,"%s prefix-list %s permit %s\n",
-		(n->prefix.family==AF_INET)?"ip":"ipv6",bname?bname:"NN",prefix);
+	if(n->isAggregate) { 
+		if(n->aggregateLow>n->prefix.masklen) { 
+			fprintf(f,"%s prefix-list %s permit %s ge %u le %u\n",
+				n->prefix.family==AF_INET?"ip":"ipv6",bname?bname:"NN",prefix,
+				n->aggregateLow,n->aggregateHi);
+		} else { 
+			fprintf(f,"%s prefix-list %s permit %s le %u\n",
+				n->prefix.family==AF_INET?"ip":"ipv6",bname?bname:"NN",prefix,
+				n->aggregateHi);
+		};
+	} else { 
+		fprintf(f,"%s prefix-list %s permit %s\n",
+			(n->prefix.family==AF_INET)?"ip":"ipv6",bname?bname:"NN",prefix);
+	};
+checkSon:
+	if(n->son) 
+		bgpq3_print_cprefix(n->son,ff);
 };
 
 int

@@ -11,6 +11,8 @@
 #include "sx_prefix.h"
 #include "sx_report.h"
 
+int debug_aggregation=0;
+
 struct sx_prefix* 
 sx_prefix_alloc(struct sx_prefix* p)
 { 
@@ -449,6 +451,174 @@ sx_radix_tree_foreach(struct sx_radix_tree* tree,
 { 
 	if(!func || !tree || !tree->head) return 0;
 	sx_radix_node_foreach(tree->head,func,udata);
+	return 0;
+};
+
+int
+sx_radix_node_aggregate(struct sx_radix_node* node)
+{ 
+	if(node->l) 
+		sx_radix_node_aggregate(node->l);
+	if(node->r) 
+		sx_radix_node_aggregate(node->r);
+
+	if(debug_aggregation) { 
+		printf("Aggregating on node: ");
+		sx_prefix_fprint(stdout,&node->prefix);
+		printf(" %s%s%u,%u\n", node->isGlue?"Glue ":"", 
+			node->isAggregate?"Aggregate ":"",node->aggregateLow,
+			node->aggregateHi);
+		if(node->r) { 
+			printf("R-Tree: ");
+			sx_prefix_fprint(stdout,&node->r->prefix);
+			printf(" %s%s%u,%u\n", (node->r->isGlue)?"Glue ":"", 
+				(node->r->isAggregate)?"Aggregate ":"", 
+				node->r->aggregateLow,node->r->aggregateHi);
+			if(node->r->son) { 
+			printf("R-Son: ");
+			sx_prefix_fprint(stdout,&node->r->son->prefix);
+			printf(" %s%s%u,%u\n",node->r->son->isGlue?"Glue ":"", 
+				node->r->son->isAggregate?"Aggregate ":"", 
+				node->r->son->aggregateLow,node->r->son->aggregateHi);
+			};
+		};
+		if(node->l) { 
+			printf("L-Tree: ");
+			sx_prefix_fprint(stdout,&node->l->prefix);
+			printf(" %s%s%u,%u\n",node->l->isGlue?"Glue ":"", 
+				node->l->isAggregate?"Aggregate ":"", 
+				node->l->aggregateLow,node->l->aggregateHi);
+			if(node->l->son) { 
+			printf("L-Son: ");
+			sx_prefix_fprint(stdout,&node->l->son->prefix);
+			printf(" %s%s%u,%u\n",node->l->son->isGlue?"Glue ":"", 
+				node->l->son->isAggregate?"Aggregate ":"", 
+				node->l->son->aggregateLow,node->l->son->aggregateHi);
+			};
+		};
+	};
+
+	if(node->r && node->l) { 
+		if(!node->r->isAggregate && !node->l->isAggregate && 
+			!node->r->isGlue && !node->l->isGlue && 
+			node->r->prefix.masklen==node->l->prefix.masklen) { 
+			if(node->r->prefix.masklen==node->prefix.masklen+1) { 
+				node->isAggregate=1;
+				node->r->isGlue=1;
+				node->l->isGlue=1;
+				node->aggregateHi=node->r->prefix.masklen;
+				if(node->isGlue) { 
+					node->isGlue=0;
+					node->aggregateLow=node->r->prefix.masklen;
+				} else { 
+					node->aggregateLow=node->prefix.masklen;
+				};
+			};
+			if(node->r->son && node->l->son && 
+				node->r->son->isAggregate && node->l->son->isAggregate && 
+				node->r->son->aggregateHi==node->l->son->aggregateHi &&
+				node->r->son->aggregateLow==node->l->son->aggregateLow)
+			{ 
+				node->son=sx_radix_node_new(&node->prefix);
+				node->son->isGlue=0;
+				node->son->isAggregate=1;
+				node->son->aggregateHi=node->r->son->aggregateHi;
+				node->son->aggregateLow=node->r->son->aggregateLow;
+				node->r->son->isGlue=1;
+				node->l->son->isGlue=1;
+			};
+		} else if(node->r->isAggregate && node->l->isAggregate && 
+			node->r->aggregateHi==node->l->aggregateHi && 
+			node->r->aggregateLow==node->l->aggregateLow) { 
+			if(node->r->prefix.masklen==node->prefix.masklen+1) { 
+				if(node->isGlue) { 
+					node->r->isGlue=1;
+					node->l->isGlue=1;
+					node->isAggregate=1;
+					node->isGlue=0;
+					node->aggregateHi=node->r->aggregateHi;
+					node->aggregateLow=node->r->aggregateLow;
+				} else if(node->r->prefix.masklen==node->r->aggregateLow) { 
+					node->r->isGlue=1;
+					node->l->isGlue=1;
+					node->isAggregate=1;
+					node->aggregateHi=node->r->aggregateHi;
+					node->aggregateLow=node->prefix.masklen;
+				} else { 
+					node->son=sx_radix_node_new(&node->prefix);
+					node->son->isGlue=0;
+					node->son->isAggregate=1;
+					node->son->aggregateHi=node->r->aggregateHi;
+					node->son->aggregateLow=node->r->aggregateLow;
+					node->r->isGlue=1;
+					node->l->isGlue=1;
+					if(node->r->son && node->l->son && 
+						node->r->son->aggregateHi==node->l->son->aggregateHi &&
+						node->r->son->aggregateLow==node->l->son->aggregateLow)
+					{ 
+						node->son->son=sx_radix_node_new(&node->prefix);
+						node->son->son->isGlue=0;
+						node->son->son->isAggregate=1;
+						node->son->son->aggregateHi=node->r->son->aggregateHi;
+						node->son->son->aggregateLow=node->r->son->aggregateLow;
+						node->r->son->isGlue=1;
+						node->l->son->isGlue=1;
+					};
+				};
+			};
+		} else if(node->l->son && 
+			node->r->isAggregate && node->l->son->isAggregate && 
+			node->r->aggregateHi==node->l->son->aggregateHi && 
+			node->r->aggregateLow==node->l->son->aggregateLow) { 
+			if(node->r->prefix.masklen==node->prefix.masklen+1) { 
+				if(node->isGlue) { 
+					node->r->isGlue=1;
+					node->l->son->isGlue=1;
+					node->isAggregate=1;
+					node->isGlue=0;
+					node->aggregateHi=node->r->aggregateHi;
+					node->aggregateLow=node->r->aggregateLow;
+				} else { 
+					node->son=sx_radix_node_new(&node->prefix);
+					node->son->isGlue=0;
+					node->son->isAggregate=1;
+					node->son->aggregateHi=node->r->aggregateHi;
+					node->son->aggregateLow=node->r->aggregateLow;
+					node->r->isGlue=1;
+					node->l->son->isGlue=1;
+				};
+			};
+		} else if(node->r->son && 
+			node->l->isAggregate && node->r->son->isAggregate && 
+			node->l->aggregateHi==node->r->son->aggregateHi && 
+			node->l->aggregateLow==node->r->son->aggregateLow) { 
+			if(node->l->prefix.masklen==node->prefix.masklen+1) { 
+				if(node->isGlue) { 
+					node->l->isGlue=1;
+					node->r->son->isGlue=1;
+					node->isAggregate=1;
+					node->isGlue=0;
+					node->aggregateHi=node->l->aggregateHi;
+					node->aggregateLow=node->l->aggregateLow;
+				} else { 
+					node->son=sx_radix_node_new(&node->prefix);
+					node->son->isGlue=0;
+					node->son->isAggregate=1;
+					node->son->aggregateHi=node->l->aggregateHi;
+					node->son->aggregateLow=node->l->aggregateLow;
+					node->l->isGlue=1;
+					node->r->son->isGlue=1;
+				};
+			};
+		};
+	};
+	return 0;
+};
+
+int
+sx_radix_tree_aggregate(struct sx_radix_tree* tree)
+{ 
+	if(tree && tree->head) return sx_radix_node_aggregate(tree->head);
 	return 0;
 };
 	

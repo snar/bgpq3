@@ -17,9 +17,13 @@ typedef struct sx_prefix {
 } sx_prefix_t;
 
 typedef struct sx_radix_node { 
-	struct sx_radix_node* parent, *l, *r;
+	struct sx_radix_node* parent, *l, *r, *son;
 	void* payload;
-	int   isGlue;
+	unsigned int isGlue:1;
+	unsigned int isAggregated:1;
+	unsigned int isAggregate:1;
+	unsigned int aggregateLow;
+	unsigned int aggregateHi;
 	struct sx_prefix prefix;
 } sx_radix_node_t;
 
@@ -52,5 +56,7 @@ int  sx_radix_node_foreach(struct sx_radix_node* node,
 	void (*func)(struct sx_radix_node*, void*), void* udata);
 int sx_radix_tree_foreach(struct sx_radix_tree* tree, 
 	void (*func)(struct sx_radix_node*, void*), void* udata);
+int sx_radix_tree_aggregate(struct sx_radix_tree* tree);
+
 
 #endif

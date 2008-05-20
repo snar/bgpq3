@@ -17,15 +17,18 @@
 #include "sx_report.h"
 
 extern int debug_expander;
+extern int debug_aggregation;
 extern int pipelining;
 
 int
 usage(int ecode)
 { 
-	printf("\nUsage: bgpq3 [-h] [-S sources] [-P|G <number>|f <number>] [-36]"
+	printf("\nUsage: bgpq3 [-h] [-S sources] [-P|G <number>|f <number>] [-36A]"
 		" <OBJECTS>...\n");
 	printf(" -3        : assume that your device is asn32-safe\n"); 
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
+	printf(" -A        : try to aggregate prefix-lists as much as possible"
+		" (Cisco only)\n");
 	printf(" -d        : generate some debugging output\n");
 	printf(" -f number : generate input as-path access-list\n");
 	printf(" -G number : generate output as-path access-list\n");
@@ -90,12 +93,12 @@ main(int argc, char* argv[])
 	int c;
 	struct bgpq_expander expander;
 	int af=AF_INET;
-	int widthSet=0;
+	int widthSet=0, aggregate=0;
 
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36dhS:Jf:l:W:PG:T"))!=EOF) { 
+	while((c=getopt(argc,argv,"36AdhS:Jf:l:W:PG:T"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -103,6 +106,10 @@ main(int argc, char* argv[])
 		case '6': af=AF_INET6;
 			expander.family=AF_INET6;
 			expander.tree->family=AF_INET6;
+			break;
+		case 'A': 
+			if(aggregate) debug_aggregation++;
+			aggregate=1;
 			break;
 		case 'd': debug_expander++;
 			break;
@@ -172,6 +179,12 @@ main(int argc, char* argv[])
 		expander.asnumber=23456;
 	};
 
+	if(aggregate && expander.vendor==V_JUNIPER) { 
+		sx_report(SX_FATAL, "Sorry, aggregation (-A) does not work with"
+			" Juniper\n");
+		exit(1);
+	};
+
 	if(!argv[0]) usage(1);
 
 	while(argv[0]) { 
@@ -194,6 +207,9 @@ main(int argc, char* argv[])
 	if(!bgpq_expand(&expander)) { 
 		exit(1);
 	};
+
+	if(aggregate) 
+		sx_radix_tree_aggregate(expander.tree);
 
 	switch(expander.generation) { 
 		case T_NONE: sx_report(SX_FATAL,"Unreachable point... call snar\n");

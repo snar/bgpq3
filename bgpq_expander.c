@@ -506,6 +506,7 @@ bgpq_expand(struct bgpq_expander* b)
 		snprintf(sources,sizeof(sources),"!s%s\n", b->sources);
 		fseek(f,0,SEEK_END);
 		fwrite(sources,strlen(sources),1,f);
+		fgets(sources,sizeof(sources),f);
 	};
 
 	if(b->identify) { 
@@ -513,6 +514,7 @@ bgpq_expand(struct bgpq_expander* b)
 		snprintf(ident,sizeof(ident),"!n" PACKAGE_STRING "\n");
 		fseek(f,0,SEEK_END);
 		fwrite(ident,strlen(ident),1,f);
+		fgets(ident,sizeof(ident),f);
 	};
 
 	for(mc=b->macroses;mc;mc=mc->next) { 
