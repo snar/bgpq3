@@ -51,6 +51,9 @@ int bgpq3_print_prefixlist(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_aspath(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_oaspath(FILE* f, struct bgpq_expander* b);
 
+#ifndef HAVE_STRLCPY
+size_t strlcpy(char* dst, const char* src, size_t size);
+#endif
 
 #endif
 	

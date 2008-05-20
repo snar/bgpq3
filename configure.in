@@ -2,6 +2,8 @@ AC_INIT(bgpq3,0.1.3,snar@paranoia.ru)
 AC_CONFIG_HEADER(config.h)
 AC_PROG_CC
 
+AC_CHECK_FUNCS(strlcpy)
+
 AC_CHECK_LIB(socket,socket)
 AC_CHECK_LIB(nsl,getaddrinfo)
 
