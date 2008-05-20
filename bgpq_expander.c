@@ -221,9 +221,10 @@ bgpq_pipeline_dequeue_ripe(FILE* f, struct bgpq_expander* b)
 		fseek(f,0,SEEK_END);
 	};
 	if(feof(f)) { 
-		sx_report(SX_FATAL,"EOF from RADB\n");
+		sx_report(SX_FATAL,"EOF from RADB (dequeue, ripe)\n");
 	} else { 
-		sx_report(SX_FATAL,"Error from RADB: %s\n", strerror(errno));
+		sx_report(SX_FATAL,"Error from RADB: %s (dequeue, ripe)\n", 
+			strerror(errno));
 	};
 	return 0;
 };
@@ -296,9 +297,10 @@ bgpq_expand_ripe(FILE* f, int (*callback)(char*, void*), void* udata,
 		};
 	};
 	if(feof(f)) { 
-		sx_report(SX_FATAL,"EOF from server\n");
+		sx_report(SX_FATAL,"EOF from server (expand, ripe)\n");
 	} else { 
-		sx_report(SX_FATAL,"Error reading server: %s\n", strerror(errno));
+		sx_report(SX_FATAL,"Error reading server: %s (expand, ripe)\n", 
+			strerror(errno));
 	};
 	return 0;
 };
@@ -358,12 +360,13 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 		char request[128];
 		struct bgpq_prequest* pipe;
 		memset(request,0,sizeof(request));
+		fseek(f,0,SEEK_END);
 		if(!fgets(request,sizeof(request),f)) { 
 			if(ferror(f)) { 
-				sx_report(SX_FATAL,"Error reading data from RADB: %s\n", 
-					strerror(errno));
+				sx_report(SX_FATAL,"Error reading data from RADB: %s (dequeue)"
+					"\n", strerror(errno));
 			} else { 
-				sx_report(SX_FATAL,"EOF from RADB\n");
+				sx_report(SX_FATAL,"EOF from RADB (dequeue)\n");
 			};
 			exit(1);
 		};
@@ -379,12 +382,13 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 					*eon,request);
 				exit(1);
 			};
+			fseek(f,0,SEEK_END);
 			if(fgets(recvbuffer,togot+1,f)==NULL) { 
 				if(ferror(f)) { 
-					sx_report(SX_FATAL,"Error reading RADB: %s\n", 
-						strerror(errno));
+					sx_report(SX_FATAL,"Error reading RADB: %s (dequeue, "
+						"result)\n", strerror(errno));
 				} else { 
-					sx_report(SX_FATAL,"EOF from RADB\n");
+					sx_report(SX_FATAL,"EOF from RADB (dequeue, result)\n");
 				};
 				exit(1);
 			};
@@ -401,12 +405,13 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 			};
 
 			/* Final code */
+			fseek(f,0,SEEK_END);
 			if(fgets(recvbuffer,togot,f)==NULL) { 
 				if(ferror(f)) { 
-					sx_report(SX_FATAL,"Error reading RADB: %s\n", 
-						strerror(errno));
+					sx_report(SX_FATAL,"Error reading RADB: %s (dequeue,final)"
+						")\n", strerror(errno));
 				} else { 
-					sx_report(SX_FATAL,"EOF from RADB\n");
+					sx_report(SX_FATAL,"EOF from RADB (dequeue,final)\n");
 				};
 				exit(1);
 			};
@@ -459,11 +464,11 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 	memset(request,0,sizeof(request));
 	if(!fgets(request,sizeof(request),f)) { 
 		if(ferror(f)) { 
-			sx_report(SX_FATAL,"Error reading data from radb: %s\n", 
-				strerror(errno));
+			sx_report(SX_FATAL,"Error reading data from radb: %s (expand,radb)"
+				"\n", strerror(errno));
 			exit(1);
 		};
-		sx_report(SX_FATAL,"EOF from radb\n");
+		sx_report(SX_FATAL,"EOF from radb (expand,radb)\n");
 		exit(1);
 	};
 	SX_DEBUG(debug_expander>2,"expander: initially got %i bytes, '%s'\n",
@@ -480,11 +485,13 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 			exit(1);
 		};
 
-		if(fgets(recvbuffer,togot,f)==NULL) { 
+		fseek(f,0,SEEK_END);
+		if(fgets(recvbuffer,togot+1,f)==NULL) { 
 			if(feof(f)) { 
-				sx_report(SX_FATAL,"EOF from radb\n");
+				sx_report(SX_FATAL,"EOF from radb (expand,radb,result)\n");
 			} else { 
-				sx_report(SX_FATAL,"Error reading radb: %s\n", strerror(errno));
+				sx_report(SX_FATAL,"Error reading radb: %s (expand,radb,"
+					"result)\n", strerror(errno));
 			};
 			exit(1);
 		};
@@ -500,9 +507,10 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 			c+=spn+1;
 		};
 
+		fseek(f,0,SEEK_END);
 		if(fgets(recvbuffer,togot,f)==NULL) { 
 			if(feof(f)) { 
-				sx_report(SX_FATAL,"EOF from radb\n");
+				sx_report(SX_FATAL,"EOF from radb (expand,radb,final)\n");
 			} else { 
 				sx_report(SX_FATAL,"ERROR from radb: %s\n", strerror(errno));
 			};

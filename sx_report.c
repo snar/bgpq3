@@ -31,7 +31,7 @@ sx_report_name(sx_report_t t)
 int
 sx_report(sx_report_t t, char* fmt, ...)
 { 
-	char buffer[1024];
+	char buffer[8192];
 	va_list ap;
 	va_start(ap,fmt);
 
@@ -68,8 +68,8 @@ int
 sx_debug(char const* const file, char const* const func, int const line, 
 	char* fmt, ...)
 {
-	char buffer[1024];
-	char bline[1024];
+	char buffer[8192];
+	char bline[8192];
 
 	va_list ap;
 	va_start(ap,fmt);
