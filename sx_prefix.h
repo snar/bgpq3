@@ -57,6 +57,7 @@ int  sx_radix_node_foreach(struct sx_radix_node* node,
 int sx_radix_tree_foreach(struct sx_radix_tree* tree, 
 	void (*func)(struct sx_radix_node*, void*), void* udata);
 int sx_radix_tree_aggregate(struct sx_radix_tree* tree);
+int sx_radix_tree_refine(struct sx_radix_tree* tree, unsigned refine);
 
 
 #endif

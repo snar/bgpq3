@@ -19,7 +19,7 @@
 #include "sx_report.h"
 
 int debug_expander=0;
-int pipelining=0;
+int pipelining=1;
 
 int
 bgpq_expander_init(struct bgpq_expander* b, int af)
@@ -154,6 +154,71 @@ bgpq_expanded_v6prefix(char* prefix, void* udata)
 	if(!ex) return 0;
 	bgpq_expander_add_prefix(ex,prefix);
 	return 1;
+};
+
+int 
+bgpq_pipeline_dequeue_ripe(FILE* f, struct bgpq_expander* b)
+{ 
+	int sawNL=0;
+	char buffer[128];
+	char* otype=NULL, *object=NULL;
+
+	if(!f || !b) { 
+		sx_report(SX_FATAL, "Invalid arguments\n");
+		exit(1);
+	};
+	if(!b->firstpipe) { 
+		sx_report(SX_FATAL, "No piped requests\n");
+		exit(1);
+	};
+	while(fgets(buffer,sizeof(buffer),f)) { 
+		if(buffer[0]=='\n') { 
+			if(b->family==AF_INET && otype && !strcmp(otype,"route")) {
+				SX_DEBUG(debug_expander,"dequeuer(ripe): got route %s\n",
+					object);
+				if(b->firstpipe->callback) 
+					b->firstpipe->callback(object,b->firstpipe->udata);
+			} else if(b->family==AF_INET6 && otype && !strcmp(otype,"route6")){
+				SX_DEBUG(debug_expander,"dequeuer(ripe): got route6 %s\n",
+					object);
+				if(b->firstpipe->callback) 
+					b->firstpipe->callback(object,b->firstpipe->udata);
+			};
+			if(otype) free(otype); otype=NULL;
+			if(object) free(object); object=NULL;
+			sawNL++;
+			if(sawNL==2) { 
+				/* end of object */
+				struct bgpq_prequest* p=b->firstpipe;
+				b->firstpipe=b->firstpipe->next;
+				free(p);
+				b->piped--;
+				if(!b->piped) { 
+					return 0;
+				};
+			};
+		} else { 
+			sawNL=0;
+			if(!otype) { 
+				char* c=strchr(buffer,':');
+				if(c) { 
+					*c=0;
+					otype=strdup(buffer);
+					c++;
+					while(isspace((int)*c)) c++;
+					object=strdup(c);
+					c=strchr(object,'\n');
+					if(c) *c=0;
+				};
+			};
+		};
+	};
+	if(feof(f)) { 
+		sx_report(SX_FATAL,"EOF from RADB\n");
+	} else { 
+		sx_report(SX_FATAL,"Error from RADB: %s\n", strerror(errno));
+	};
+	return 0;
 };
 
 int
@@ -528,13 +593,23 @@ bgpq_expand(struct bgpq_expander* b)
 				for(j=0;j<8;j++) { 
 					if(b->asn32s[k][i]&(0x80>>j)) { 
 						if(b->family==AF_INET6) { 
-							if(k>0) 
-								bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
-									"-T route6 -i origin as%u.%u\r\n", k,i*8+j);
-							else 
-								bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
-									"-T route6 -i origin as%u\r\n", i*8+j);
-
+							if(!pipelining) { 
+								if(k>0) 
+									bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
+										"-T route6 -i origin as%u.%u\r\n", k,
+										i*8+j);
+								else 
+									bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
+										"-T route6 -i origin as%u\r\n", i*8+j);
+							} else { 
+								if(k>0) 
+									bgpq_pipeline(f,bgpq_expanded_v6prefix,b,
+										"-T route6 -i origin as%u.%u\r\n", k,
+										i*8+j);
+								else 
+									bgpq_pipeline(f,bgpq_expanded_v6prefix,b,
+										"-T route6 -i origin as%u\r\n", i*8+j);
+							};
 						} else { 
 							if(!pipelining) { 
 								if(k>0) 
@@ -557,7 +632,11 @@ bgpq_expand(struct bgpq_expander* b)
 			};
 		};
 		if(pipelining) { 
-			bgpq_pipeline_dequeue(f,b);
+			if(b->family==AF_INET6) { 
+				bgpq_pipeline_dequeue_ripe(f,b);
+			} else { 
+				bgpq_pipeline_dequeue(f,b);
+			};
 		};
 	};
 				

@@ -23,8 +23,8 @@ extern int pipelining;
 int
 usage(int ecode)
 { 
-	printf("\nUsage: bgpq3 [-h] [-S sources] [-P|G <number>|f <number>] [-36A]"
-		" <OBJECTS>...\n");
+	printf("\nUsage: bgpq3 [-h] [-S sources] [-P|G <num>|f <num>] [-36A]"
+		" [-R len] <OBJECTS>...\n");
 	printf(" -3        : assume that your device is asn32-safe\n"); 
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -A        : try to aggregate prefix-lists as much as possible"
@@ -37,9 +37,10 @@ usage(int ecode)
 	printf(" -l        : use specified name for generated access/prefix/.."
 		" list\n");
 	printf(" -P        : generate prefix-list (default)\n");
-	printf(" -T        : pipelining (experimental, faster mode)\n");
+	printf(" -R len    : allow specific routes up to masklen specified\n");
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
+	printf(" -T        : disable pipelining (experimental, faster mode)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
 	printf("Copyright(c) Alexandre Snarskii <snar@paranoia.ru> 2007, 2008\n\n");
 	exit(ecode);
@@ -93,12 +94,12 @@ main(int argc, char* argv[])
 	int c;
 	struct bgpq_expander expander;
 	int af=AF_INET;
-	int widthSet=0, aggregate=0;
+	int widthSet=0, aggregate=0, refine=0;
 
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36AdhS:Jf:l:W:PG:T"))!=EOF) { 
+	while((c=getopt(argc,argv,"36AdhS:Jf:l:W:PR:G:T"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -128,6 +129,13 @@ main(int argc, char* argv[])
 		case 'P': 
 			if(expander.generation) exclusive();
 			expander.generation=T_PREFIXLIST;
+			break;
+		case 'R': 
+			refine=strtoul(optarg,NULL,10);
+			if(!refine) { 
+				sx_report(SX_FATAL,"Invalid refine length: %s\n", optarg);
+				exit(1);
+			};
 			break;
 		case 'l': expander.name=optarg;
 			break;
@@ -180,10 +188,34 @@ main(int argc, char* argv[])
 	};
 
 	if(aggregate && expander.vendor==V_JUNIPER) { 
-		sx_report(SX_FATAL, "Sorry, aggregation (-A) does not work with"
-			" Juniper\n");
+		sx_report(SX_FATAL, "Sorry, aggregation (-A) does not work in"
+			" Juniper prefix-lists\n");
 		exit(1);
 	};
+	if(aggregate && expander.generation<T_PREFIXLIST) { 
+		sx_report(SX_FATAL, "Sorry, aggregation (-A) used only for prefix-"
+			"lists\n");
+		exit(1);
+	};
+
+	if(refine) { 
+		if(expander.family==AF_INET6 && (refine>128)) { 
+			sx_report(SX_FATAL, "Invalid value for refinement: %u (1-128 for"
+				" IPv6)\n", refine);
+		} else if(expander.family==AF_INET && refine>32) { 
+			sx_report(SX_FATAL, "Invalid value for refinement: %u (1-32 for"
+				" IPv4)\n", refine);
+		};
+		if(expander.vendor==V_JUNIPER) { 
+			sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
+				"is not supported for Juniper prefix-lists\n", refine);
+		};
+		if(expander.generation<T_PREFIXLIST) { 
+			sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
+				"supported only with prefix-list generation\n", refine);
+		};
+	};
+
 
 	if(!argv[0]) usage(1);
 
@@ -210,6 +242,9 @@ main(int argc, char* argv[])
 
 	if(aggregate) 
 		sx_radix_tree_aggregate(expander.tree);
+
+	if(refine) 
+		sx_radix_tree_refine(expander.tree,refine);
 
 	switch(expander.generation) { 
 		case T_NONE: sx_report(SX_FATAL,"Unreachable point... call snar\n");

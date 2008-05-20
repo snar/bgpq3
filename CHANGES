@@ -1,5 +1,8 @@
 0.1.3 (2008-05-20): 
 	- aggregation (-A) now supported for Cisco prefix-lists. 
+	- pipelining now can be enabled for RIPE-style queries too (ipv6). 
+	- more-specific routes (-R len) feature ported from bgpq
+	- pipelining now set by default. -T flag now disables pipelining.
 
 0.1.2 (2008-05-19): 
 	- final support for asn32, now with correct syntax for Juniper. 
