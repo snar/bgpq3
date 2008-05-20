@@ -37,6 +37,12 @@ bgpq_expander_init(struct bgpq_expander* b, int af)
 	b->name="NN";
 	b->aswidth=8;
 	b->asn32s[0]=malloc(8192);
+	if(!b->asn32s[0]) { 
+		sx_report(SX_FATAL,"Unable to allocate 8192 bytes: %s\n", 
+			strerror(errno));
+		exit(1);
+	};
+	memset(b->asn32s[0],0,8192);
 
 	return 1;
 fixups:
@@ -212,6 +218,7 @@ bgpq_pipeline_dequeue_ripe(FILE* f, struct bgpq_expander* b)
 				};
 			};
 		};
+		fseek(f,0,SEEK_END);
 	};
 	if(feof(f)) { 
 		sx_report(SX_FATAL,"EOF from RADB\n");
@@ -319,6 +326,7 @@ bgpq_pipeline(FILE* f, int (*callback)(char*, void*), void* udata,
 	};
 	memset(bp,0,sizeof(bp));
 
+	fseek(f,0,SEEK_END);
 	ret=fwrite(request,1,strlen(request),f);
 	fseek(f,0,SEEK_END);
 
@@ -359,6 +367,7 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 			};
 			exit(1);
 		};
+		fseek(f,0,SEEK_END);
 
 		if(request[0]=='A') { 
 			char* eon, *c;
@@ -379,6 +388,7 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 				};
 				exit(1);
 			};
+			fseek(f,0,SEEK_END);
 
 			for(c=recvbuffer; c<recvbuffer+togot;) { 
 				size_t spn=strcspn(c," \n");
@@ -400,6 +410,7 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 				};
 				exit(1);
 			};
+			fseek(f,0,SEEK_END);
 		} else if(request[0]=='C') { 
 			/* No data */
 		} else if(request[0]=='D') { 
@@ -418,6 +429,7 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 		b->piped--;
 		free(pipe);
 				
+		fseek(f,0,SEEK_END);
 	};
 	return 0;
 };
@@ -436,6 +448,7 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 
 	SX_DEBUG(debug_expander,"expander: sending '%s'\n", request);
 
+	fseek(f,0,SEEK_END);
 	ret=fwrite(request,1,strlen(request),f);
 	fseek(f,0,SEEK_END);
 	if(ret!=strlen(request)) { 
@@ -455,6 +468,7 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 	};
 	SX_DEBUG(debug_expander>2,"expander: initially got %i bytes, '%s'\n",
 		strlen(request),request);
+	fseek(f,0,SEEK_END);
 	if(request[0]=='A') { 
 		char* eon, *c;
 		long togot=strtoul(request+1,&eon,10);
@@ -476,6 +490,7 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 		};
 		SX_DEBUG(debug_expander>2,"expander: final reply of %i bytes, '%s'\n",
 			strlen(recvbuffer),recvbuffer);
+		fseek(f,0,SEEK_END);
 			
 		for(c=recvbuffer; c<recvbuffer+togot;) { 
 			size_t spn=strcspn(c," \n");
@@ -493,6 +508,7 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 			};
 			exit(1);
 		};
+		fseek(f,0,SEEK_END);
 	} else if(request[0]=='C') { 
 		/* no data */
 	} else if(request[0]=='D') { 
@@ -571,6 +587,7 @@ bgpq_expand(struct bgpq_expander* b)
 		snprintf(sources,sizeof(sources),"!s%s\n", b->sources);
 		fseek(f,0,SEEK_END);
 		fwrite(sources,strlen(sources),1,f);
+		fseek(f,0,SEEK_END);
 		fgets(sources,sizeof(sources),f);
 	};
 
