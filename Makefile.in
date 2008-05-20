@@ -1,6 +1,7 @@
 CC=@CC@
 CFLAGS=@CFLAGS@ @DEFS@ -g -Wall -I. -O0
 LDADD=@LDFLAGS@ @LIBS@
+INSTALL=@INSTALL@
 
 OBJECTS=bgpq3.o sx_report.o bgpq_expander.o sx_slentry.o bgpq3_printer.o \
 	sx_prefix.o strlcpy.o
@@ -19,6 +20,9 @@ bgpq3: ${OBJECTS}
 clean: 
 	rm -rf Makefile autom4te.cache bgpq3 config.h config.log config.status
 	rm -rf *.o *.core core.* core
+
+install: bgpq3
+	${INSTALL} -c -s -m 755 bgpq3 @prefix@@bindir@
 
 depend: 
 	 makedepend -- $(CFLAGS) -- $(SRCS)
