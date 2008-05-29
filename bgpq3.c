@@ -139,7 +139,7 @@ main(int argc, char* argv[])
 			break;
 		case 'l': expander.name=optarg;
 			break;
-		case 'T': pipelining=1;
+		case 'T': pipelining=0;
 			break;
 		case 'S': expander.sources=optarg;
 			break;
