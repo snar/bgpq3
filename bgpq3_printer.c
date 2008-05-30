@@ -83,7 +83,7 @@ bgpq3_print_juniper_aspath(FILE* f, struct bgpq_expander* b)
 		b->name?b->name:"NN");
 
 	if(b->asn32s[b->asnumber/65536] && 
-		b->asn32s[b->asnumber/65535][(b->asnumber/65536)/8]&
+		b->asn32s[b->asnumber/65535][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) { 
 		fprintf(f,"  as-path a%i \"^%u(%u)*$\";\n", lineNo, b->asnumber,
 			b->asnumber);
@@ -124,7 +124,7 @@ bgpq3_print_juniper_oaspath(FILE* f, struct bgpq_expander* b)
 		b->name?b->name:"NN");
 
 	if(b->asn32s[b->asnumber/65536] && 
-		b->asn32s[b->asnumber/65536][(b->asnumber/65536)/8]&
+		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) { 
 		fprintf(f,"  as-path a%i \"^%u(%u)*$\";\n", lineNo, b->asnumber,
 			b->asnumber);
