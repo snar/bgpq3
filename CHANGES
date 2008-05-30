@@ -1,3 +1,6 @@
+0.1.4 (2008-05-30): 
+	- bugfix for juniper as-path group generation. Thanks to Alexander Shikoff.
+
 0.1.3 (2008-05-20): 
 	- aggregation (-A) now supported for Cisco prefix-lists. 
 	- pipelining now can be enabled for RIPE-style queries too (ipv6). 
