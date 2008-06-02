@@ -1,3 +1,10 @@
+0.1.5 (2008-06-02): 
+	- route-set's expansion added. Fully functional for IPv4 prefixes, but
+	not for IPv6 - only those prefixes explicitely marked as 'member-of: RS..'
+	will be expanded. This is due to limitation in IRRd.
+	- extended access-lists (Cisco) and route-filters (Juniper) generation
+	is supported now with new -E key. 
+
 0.1.4 (2008-05-30): 
 	- bugfix for juniper as-path group generation. Thanks to Alexander Shikoff.
 

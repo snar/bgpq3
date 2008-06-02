@@ -23,6 +23,7 @@ clean:
 
 install: bgpq3
 	${INSTALL} -c -s -m 755 bgpq3 @prefix@@bindir@
+	${INSTALL} -m 644 bgpq3.8 @prefix@@mandir@/man8
 
 depend: 
 	 makedepend -- $(CFLAGS) -- $(SRCS)

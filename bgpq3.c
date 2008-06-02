@@ -23,13 +23,15 @@ extern int pipelining;
 int
 usage(int ecode)
 { 
-	printf("\nUsage: bgpq3 [-h] [-S sources] [-P|G <num>|f <num>] [-36A]"
+	printf("\nUsage: bgpq3 [-h] [-S sources] [-P|E|G <num>|f <num>] [-36A]"
 		" [-R len] <OBJECTS>...\n");
 	printf(" -3        : assume that your device is asn32-safe\n"); 
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -A        : try to aggregate prefix-lists as much as possible"
 		" (Cisco only)\n");
 	printf(" -d        : generate some debugging output\n");
+	printf(" -E        : generate extended access-list(Cisco) or "
+		"route-filter(Juniper)\n");
 	printf(" -f number : generate input as-path access-list\n");
 	printf(" -G number : generate output as-path access-list\n");
 	printf(" -h        : this help\n");
@@ -49,7 +51,8 @@ usage(int ecode)
 void
 exclusive()
 { 
-	fprintf(stderr,"-f <asnum>, -G <asnum> and -P are mutually exclusive\n");
+	fprintf(stderr,"-E, -f <asnum>, -G <asnum> and -P are mutually "
+		"exclusive\n");
 	exit(1);
 };
 
@@ -99,7 +102,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36AdhS:Jf:l:W:PR:G:T"))!=EOF) { 
+	while((c=getopt(argc,argv,"36AdEhS:Jf:l:W:PR:G:T"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -113,6 +116,9 @@ main(int argc, char* argv[])
 			aggregate=1;
 			break;
 		case 'd': debug_expander++;
+			break;
+		case 'E': if(expander.generation) exclusive();
+			expander.generation=T_EACL;
 			break;
 		case 'J': expander.vendor=V_JUNIPER;
 			break;
@@ -187,14 +193,15 @@ main(int argc, char* argv[])
 		expander.asnumber=23456;
 	};
 
-	if(aggregate && expander.vendor==V_JUNIPER) { 
+	if(aggregate && expander.vendor==V_JUNIPER && 
+		expander.generation==T_PREFIXLIST) { 
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) does not work in"
 			" Juniper prefix-lists\n");
 		exit(1);
 	};
 	if(aggregate && expander.generation<T_PREFIXLIST) { 
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) used only for prefix-"
-			"lists\n");
+			"lists, extended access-lists and route-filters\n");
 		exit(1);
 	};
 
@@ -206,7 +213,7 @@ main(int argc, char* argv[])
 			sx_report(SX_FATAL, "Invalid value for refinement: %u (1-32 for"
 				" IPv4)\n", refine);
 		};
-		if(expander.vendor==V_JUNIPER) { 
+		if(expander.vendor==V_JUNIPER && expander.generation==T_PREFIXLIST) { 
 			sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
 				"is not supported for Juniper prefix-lists\n", refine);
 		};
@@ -223,8 +230,16 @@ main(int argc, char* argv[])
 		if(!strncasecmp(argv[0],"AS-",3)) { 
 			bgpq_expander_add_asset(&expander,argv[0]);
 		} else if(!strncasecmp(argv[0],"AS",2)) { 
-			if(strchr(argv[0],':')) { 
-				bgpq_expander_add_asset(&expander,argv[0]);
+			char* c;
+			if((c=strchr(argv[0],':'))) { 
+				if(!strncasecmp(c+1,"AS-",3)) { 
+					bgpq_expander_add_asset(&expander,argv[0]);
+				} else if(!strncasecmp(c+1,"RS-",3)) { 
+					bgpq_expander_add_rset(&expander,argv[0]);
+				} else { 
+					SX_DEBUG(debug_expander,"Unknown sub-as object %s\n",
+						argv[0]);
+				};
 			} else { 
 				bgpq_expander_add_as(&expander,argv[0]);
 			};
@@ -247,6 +262,7 @@ main(int argc, char* argv[])
 		sx_radix_tree_refine(expander.tree,refine);
 
 	switch(expander.generation) { 
+		default    :
 		case T_NONE: sx_report(SX_FATAL,"Unreachable point... call snar\n");
 			exit(1);
 		case T_ASPATH: bgpq3_print_aspath(stdout,&expander);
@@ -254,6 +270,9 @@ main(int argc, char* argv[])
 		case T_OASPATH: bgpq3_print_oaspath(stdout,&expander);
 			break;
 		case T_PREFIXLIST: bgpq3_print_prefixlist(stdout,&expander);
+			break;
+		case T_EACL: bgpq3_print_eacl(stdout,&expander);
+			break;
 	};
 
 	return 0;

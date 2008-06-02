@@ -69,6 +69,23 @@ bgpq_expander_add_asset(struct bgpq_expander* b, char* as)
 	return 1;
 };
 
+int 
+bgpq_expander_add_rset(struct bgpq_expander* b, char* rs)
+{ 
+	struct sx_slentry* le;
+	if(!b || !rs) return 0;
+	le=sx_slentry_new(rs);
+	if(!le) return 0;
+	if(!b->rsets) { 
+		b->rsets=le;
+	} else { 
+		struct sx_slentry* ln=b->rsets;
+		while(ln->next) ln=ln->next;
+		ln->next=le;
+	};
+	return 1;
+};
+
 int
 bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 { 
@@ -127,8 +144,12 @@ int
 bgpq_expander_add_prefix(struct bgpq_expander* b, char* prefix)
 { 
 	struct sx_prefix p;
-	if(!sx_prefix_parse(&p,b->family,prefix)) { 
+	if(!sx_prefix_parse(&p,0,prefix)) { 
 		sx_report(SX_ERROR,"Unable to parse prefix %s\n", prefix);
+		return 0;
+	} else if(p.family!=b->family) { 
+		SX_DEBUG(debug_expander,"Ignoring prefix %s with wrong address family\n"
+			,prefix);
 		return 0;
 	};
 	sx_radix_tree_insert(b->tree,&p);
@@ -612,6 +633,19 @@ bgpq_expand(struct bgpq_expander* b)
 	};
 	if(b->generation>=T_PREFIXLIST) { 
 		unsigned i, j, k;
+		for(mc=b->rsets;mc;mc=mc->next) { 
+			if(b->family==AF_INET) { 
+				bgpq_expand_radb(f,bgpq_expanded_prefix,b,"!i%s,1\n",mc->text);
+			} else { 
+				if(!pipelining) { 
+					bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
+						"-T route6 -i member-of %s\n",mc->text);
+				} else { 
+					bgpq_pipeline(f,bgpq_expanded_v6prefix,b,
+						"-T route6 -i member-of %s\n", mc->text);
+				};
+			};
+		};
 		for(k=0;k<sizeof(b->asn32s)/sizeof(unsigned char*);k++) { 
 			if(!b->asn32s[k]) continue;
 			for(i=0;i<8192;i++) { 
@@ -656,7 +690,7 @@ bgpq_expand(struct bgpq_expander* b)
 				};
 			};
 		};
-		if(pipelining) { 
+		if(pipelining && b->firstpipe) { 
 			if(b->family==AF_INET6) { 
 				bgpq_pipeline_dequeue_ripe(f,b);
 			} else { 
