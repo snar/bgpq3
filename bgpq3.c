@@ -196,7 +196,8 @@ main(int argc, char* argv[])
 	if(aggregate && expander.vendor==V_JUNIPER && 
 		expander.generation==T_PREFIXLIST) { 
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) does not work in"
-			" Juniper prefix-lists\n");
+			" Juniper prefix-lists\nYou can try route-filters (-E) instead"
+			" of prefix-lists (-P, default)\n");
 		exit(1);
 	};
 	if(aggregate && expander.generation<T_PREFIXLIST) { 
@@ -221,6 +222,12 @@ main(int argc, char* argv[])
 			sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
 				"supported only with prefix-list generation\n", refine);
 		};
+	};
+
+	if(expander.generation==T_EACL && expander.vendor==V_CISCO && 
+		expander.family==AF_INET6) { 
+		sx_report(SX_FATAL,"Sorry, ipv6 access-lists not supported for Cisco"
+			" yet.\n");
 	};
 
 

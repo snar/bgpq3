@@ -3,7 +3,8 @@
 	not for IPv6 - only those prefixes explicitely marked as 'member-of: RS..'
 	will be expanded. This is due to limitation in IRRd.
 	- extended access-lists (Cisco) and route-filters (Juniper) generation
-	is supported now with new -E key. 
+	is supported now with new -E key. For Cisco ipv6 access-lists is not
+	yet supported. 
 
 0.1.4 (2008-05-30): 
 	- bugfix for juniper as-path group generation. Thanks to Alexander Shikoff.
