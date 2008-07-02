@@ -4,9 +4,9 @@ LDADD=@LDFLAGS@ @LIBS@
 INSTALL=@INSTALL@
 
 OBJECTS=bgpq3.o sx_report.o bgpq_expander.o sx_slentry.o bgpq3_printer.o \
-	sx_prefix.o strlcpy.o
+	sx_prefix.o strlcpy.o sx_maxsockbuf.o
 SRCS=bgpq3.c sx_report.c bgpq_expander.c sx_slentry.c bgpq3_printer.c \
-	sx_prefix.c strlcpy.c
+	sx_prefix.c strlcpy.c sx_maxsockbuf.c
 
 
 all: bgpq3
