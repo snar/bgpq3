@@ -36,9 +36,11 @@ usage(int ecode)
 	printf(" -G number : generate output as-path access-list\n");
 	printf(" -h        : this help\n");
 	printf(" -J        : generate config for JunOS (Cisco IOS by default)\n");
-	printf(" -l        : use specified name for generated access/prefix/.."
+	printf(" -M match  : extra match conditions for JunOS route-filters\n");
+	printf(" -l name   : use specified name for generated access/prefix/.."
 		" list\n");
-	printf(" -P        : generate prefix-list (default)\n");
+	printf(" -P        : generate prefix-list (default, just for backward"
+		" compatibility)\n");
 	printf(" -R len    : allow specific routes up to masklen specified\n");
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
@@ -102,7 +104,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36AdEhS:Jf:l:W:PR:G:T"))!=EOF) { 
+	while((c=getopt(argc,argv,"36AdEhS:Jf:l:M:W:PR:G:T"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -145,6 +147,35 @@ main(int argc, char* argv[])
 			break;
 		case 'l': expander.name=optarg;
 			break;
+		case 'M': { 
+			char* c, *d;
+			expander.match=strdup(optarg);
+			c=d=expander.match; 
+			while(*c) { 
+				if(*c=='\\') { 
+					if(*(c+1)=='n') { 
+						*d='\n';
+						d++;
+						c+=2;
+					} else if(*(c+1)=='r') { 
+						*d='\r';
+						d++;
+						c+=2;
+					} else if(*(c+1)=='\\') { 
+						*d='\\';
+						d++;
+						c+=2;
+					};
+				} else { 
+					if(c!=d) { 
+						*d=*c;
+					};
+					d++;
+					c++;
+				};
+			};
+			*d=0;
+		};
 		case 'T': pipelining=0;
 			break;
 		case 'S': expander.sources=optarg;
@@ -262,11 +293,11 @@ main(int argc, char* argv[])
 		exit(1);
 	};
 
-	if(aggregate) 
-		sx_radix_tree_aggregate(expander.tree);
-
 	if(refine) 
 		sx_radix_tree_refine(expander.tree,refine);
+
+	if(aggregate) 
+		sx_radix_tree_aggregate(expander.tree);
 
 	switch(expander.generation) { 
 		default    :

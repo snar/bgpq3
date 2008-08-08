@@ -1,3 +1,23 @@
+0.1.6 (2008-08-08): 
+	- maxsockbuf call added, that can help with pipelining of really large
+	as-sets.
+	- new key -M <extra match condition> for juniper route-filters, f.e.: 
+    bgpq3 -JEM "protocol bgp;\n    community no-export" -l PolicyName/TermName 
+	will generate term with additional match conditions, like: 
+
+	policy-options {
+	 policy-statement PolicyName {
+	  term TermName {
+	replace:
+	   from {
+	    protocol bgp;
+	    community no-export;
+	    route-filter 10.0.0.0/24 exact;
+	   }
+	  }
+	 }
+	}
+
 0.1.5 (2008-06-02): 
 	- route-set's expansion added. Fully functional for IPv4 prefixes, but
 	not for IPv6 - only those prefixes explicitely marked as 'member-of: RS..'

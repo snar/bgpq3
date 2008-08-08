@@ -622,10 +622,13 @@ sx_radix_tree_aggregate(struct sx_radix_tree* tree)
 	return 0;
 };
 
-static void
-setGlue(struct sx_radix_node* node, void* udata)
+static void 
+setGlueUpTo(struct sx_radix_node* node, void* udata)
 { 
-	if(node) node->isGlue=1;
+	unsigned refine=(unsigned)udata;
+	if(node && node->prefix.masklen <= refine) {
+		node->isGlue=1;
+	};
 };
 
 int 
@@ -635,12 +638,18 @@ sx_radix_node_refine(struct sx_radix_node* node, unsigned refine)
 		node->isAggregate=1;
 		node->aggregateLow=node->prefix.masklen;
 		node->aggregateHi=refine;
-		if(node->l) sx_radix_node_foreach(node->l, setGlue, NULL);
-		if(node->r) sx_radix_node_foreach(node->r, setGlue, NULL);
+		if(node->l) { 
+			sx_radix_node_foreach(node->l, setGlueUpTo, (void*)refine);
+			sx_radix_node_refine(node->l, refine);
+		};
+		if(node->r) { 
+			sx_radix_node_foreach(node->r, setGlueUpTo, (void*)refine);
+			sx_radix_node_refine(node->r, refine);
+		};
 	} else if(!node->isGlue && node->prefix.masklen==refine) { 
 		/* not setting aggregate in this case */
-		if(node->l) sx_radix_node_foreach(node->l, setGlue, NULL);
-		if(node->r) sx_radix_node_foreach(node->r, setGlue, NULL);
+		if(node->l) sx_radix_node_refine(node->l, refine);
+		if(node->r) sx_radix_node_refine(node->r, refine);
 	} else if(node->isGlue) { 
 		if(node->r) sx_radix_node_refine(node->r, refine);
 		if(node->l) sx_radix_node_refine(node->l, refine);

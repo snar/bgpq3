@@ -267,6 +267,7 @@ bgpq3_print_ceacl(struct sx_radix_node* n, void* ff)
 		netmask=0;
 	} else { 
 	 	netmask<<=(32-n->prefix.masklen);
+		netmask&=0xfffffffful;
 	};
 	netmask=htonl(netmask);
 
@@ -282,7 +283,7 @@ bgpq3_print_ceacl(struct sx_radix_node* n, void* ff)
 		wildaddr=wildaddr&(~wild2addr);
 
 		if(masklen==32) mask=0xfffffffful;
-		else mask=0xfffffffful<<(32-masklen);
+		else mask=0xfffffffful & (0xfffffffful<<(32-masklen));
 
 		if(n->aggregateHi==32) wild2addr=0;
 		else wild2addr=0xfffffffful>>n->aggregateHi;
@@ -331,10 +332,14 @@ bgpq3_print_juniper_routefilter(FILE* f, struct bgpq_expander* b)
 	if(b->name && (c=strchr(b->name,'/'))) { 
 		*c=0;
 		fprintf(f,"policy-options {\n policy-statement %s {\n  term %s {\n"
-			"replace:\n   from {\n    protocol bgp;\n", b->name, c+1);
+			"replace:\n   from {\n", b->name, c+1);
+		if(b->match) 
+			fprintf(f,"    %s;\n",b->match);
 	} else { 
 		fprintf(f,"policy-options {\n policy-statement %s { \n"
-			"replace:\n  from {\n    protocol bgp;\n", b->name?b->name:"NN");
+			"replace:\n  from {\n", b->name?b->name:"NN");
+		if(b->match) 
+			fprintf(f,"    %s;\n",b->match);
 	};
 	sx_radix_tree_foreach(b->tree,bgpq3_print_jrfilter,f);
 	if(c) { 

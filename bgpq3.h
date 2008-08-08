@@ -39,6 +39,7 @@ struct bgpq_expander {
 	unsigned char* asn32s[65536];
 	struct bgpq_prequest* firstpipe, *lastpipe;
 	int piped;
+	char* match;
 };
 
 

@@ -44,6 +44,7 @@ bgpq_expander_init(struct bgpq_expander* b, int af)
 		exit(1);
 	};
 	memset(b->asn32s[0],0,8192);
+	b->identify=1;
 
 	return 1;
 fixups:
