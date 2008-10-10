@@ -239,6 +239,7 @@ next:
 		} else { 
 			sx_report(SX_ERROR,"Unlinking node with no parent and not root\n");
 		};
+		return;
 	} else if(node->l) { 
 		if(node->parent) { 
 			if(node->parent->r==node) { 
@@ -257,6 +258,7 @@ next:
 		} else { 
 			sx_report(SX_ERROR,"Unlinking node with no parent and not root\n");
 		};
+		return;
 	} else { 
 		/* the only case - node does not have descendants */
 		if(node->parent) { 
@@ -272,7 +274,10 @@ next:
 			};
 		} else if(tree->head==node) { 
 			tree->head=NULL;
+		} else { 
+			sx_report(SX_ERROR,"Unlinking node with no parent and not root\n");
 		};
+		return;
 	};
 };
 	
@@ -382,6 +387,7 @@ next:
 		} else { 
 			ret->l=chead;
 		};
+		ret->parent=chead->parent;
 		chead->parent=ret;
 		*candidate=ret;
 		return ret;
