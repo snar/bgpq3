@@ -226,7 +226,7 @@ next:
 				node->parent->r=node->r;
 				node->r->parent=node->parent;
 			} else if(node->parent->l==node) { 
-				node->parent->l=node->l;
+				node->parent->l=node->r;
 				node->r->parent=node->parent;
 			} else { 
 				sx_report(SX_ERROR,"Unlinking node which is not descendant "
@@ -369,6 +369,7 @@ next:
 			rn->l=ret;
 			rn->r=chead;
 		};
+		rn->parent=chead->parent;
 		chead->parent=rn;
 		ret->parent=rn;
 		rn->isGlue=1;
