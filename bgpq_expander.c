@@ -45,6 +45,7 @@ bgpq_expander_init(struct bgpq_expander* b, int af)
 	};
 	memset(b->asn32s[0],0,8192);
 	b->identify=1;
+	b->server="whois.radb.net";
 
 	return 1;
 fixups:
@@ -549,10 +550,10 @@ bgpq_expand(struct bgpq_expander* b)
 
 	hints.ai_socktype=SOCK_STREAM;
 
-	err=getaddrinfo("whois.radb.net","43",&hints,&res);
+	err=getaddrinfo(b->server,"43",&hints,&res);
 	if(err) { 
-		sx_report(SX_ERROR,"Unable to resolve whois.radb.net: %s\n",
-			gai_strerror(err));
+		sx_report(SX_ERROR,"Unable to resolve %s: %s\n",
+			b->server, gai_strerror(err));
 		exit(1);
 	};
 

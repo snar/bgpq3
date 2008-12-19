@@ -1,38 +1,223 @@
-.Dd June 2, 2008
+.\" Copyright (c) [year] [your name]
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" "$Id: bgpq3.8,v 1.2 2008/12/19 17:39:15 snar Exp $
+.\"
+.Dd Oct 27, 2008
 .Dt BGPQ3 8
+.Os
 .Sh NAME
 .Nm bgpq3
-.Nd bgp filtering automation for cisco and juniper routers
+.Nd "bgp filtering automation for cisco and juniper routers"
 .Sh SYNOPSIS
-.Nm bgpq3
+.Nm
 .Op Fl h
 .Op Fl S Ar sources
+.Op Fl EP
 .Oo
-.Fl E |
-.Fl f Ar asnumber |
-.Fl G Ar asnumber |
-.Fl P
+.Fl f Ar asn |
+.Fl G Ar asn 
 .Oc
-.Oo
-.Fl 3
-.Fl 6
-.Fl A
-.Oc
+.Op Fl 36A
 .Op Fl R Ar len
-OBJECTS
+.Ar OBJECTS
 .Op "..."
 .Sh DESCRIPTION
 The
 .Nm 
 ultility used to generate Cisco and Juniper prefix-lists, extended
-access-lists, policy-statements and as-path lists based on RADB data.
+access-lists, policy-statement terms and as-path lists based on RADB data.
 .Pp
 The options are as follows: 
+.Bl -tag -width Ds
+.It Fl 3
+assume that your device is asn32-safe.
+.It Fl 6 
+generate IPv6 prefix/access-lists (IPv4 by default).
+.It Fl A
+try to aggregate prefix-lists as much as possible (Cisco only).
+.It Fl d
+enable some debugging output.
+.It Fl E
+generate extended access-list (Cisco) or policy-statement term using 
+route-filters (Juniper).
+.It Fl f Ar number
+generate input as-path access-list.
+.It Fl G Ar number
+generate output as-path access-list.
+.It Fl h
+print usage information.
+.It Fl J
+generate config for Juniper (Cisco by default).
+.It Fl M Ar match 
+extra match conditions for Juniper route-filters.
+.It Fl l Ar name 
+name of generated entry.
+.It Fl P
+generate prefix-list (default, backward compatibility).
+.It Fl R Ar len
+allow specific routes up to specified masklen too. 
+.It Fl S Ar sources
+use specified sources only (default: RADB,RIPE,APNIC).
+.It Fl T
+disable pipelining. 
+.It Ar OBJECTS 
+means networks (in prefix format), autonomous systems and as-macros. 
+.El
+.Sh EXAMPLES
+Generating named juniper prefix-filter for AS20597: 
+.nf
+.RS
+~>bgpq3 -Jl eltel AS20597
+policy-options {
+replace:
+ prefix-list eltel {
+    81.9.0.0/20;
+    81.9.32.0/20;
+    81.9.96.0/20;
+    81.222.128.0/20;
+    81.222.192.0/18;
+    85.249.8.0/21;
+    85.249.224.0/19;
+    89.112.0.0/19;
+    89.112.4.0/22;
+    89.112.32.0/19;
+    89.112.64.0/19;
+    217.170.64.0/20;
+    217.170.80.0/20;
+ }
+}
+.RE
+.fi
+.Lp
+For Cisco we can use aggregation (-A) flag to make this prefix-filter
+more compact: 
+.nf
+.RS
+~>bgpq3 -Al eltel AS20597
+no ip prefix-list eltel
+ip prefix-list eltel permit 81.9.0.0/20
+ip prefix-list eltel permit 81.9.32.0/20
+ip prefix-list eltel permit 81.9.96.0/20
+ip prefix-list eltel permit 81.222.128.0/20
+ip prefix-list eltel permit 81.222.192.0/18
+ip prefix-list eltel permit 85.249.8.0/21
+ip prefix-list eltel permit 85.249.224.0/19
+ip prefix-list eltel permit 89.112.0.0/18 ge 19 le 19
+ip prefix-list eltel permit 89.112.4.0/22
+ip prefix-list eltel permit 89.112.64.0/19
+ip prefix-list eltel permit 217.170.64.0/19 ge 20 le 20
+.RE
+.fi
+- you see, prefixes 89.112.32.0/19 and 89.112.64.0/19 now aggregated
+into single entry 89.112.0.0/18 ge 19 le 19. 
+.Lp
+Well, for Juniper we can generate even more interesting policy-options,
+using -M <extra match conditions>, -R <len> and hierarchical names: 
+.nf
+.RS
+~>bgpq3 -AJEl eltel/specifics -R 32 -M "community blackhole" AS20597
+policy-options {
+ policy-statement eltel {
+  term specifics {
+replace:
+   from {
+    community blackhole;
+    route-filter 81.9.0.0/20 upto /32;
+    route-filter 81.9.32.0/20 upto /32;
+    route-filter 81.9.96.0/20 upto /32;
+    route-filter 81.222.128.0/20 upto /32;
+    route-filter 81.222.192.0/18 upto /32;
+    route-filter 85.249.8.0/21 upto /32;
+    route-filter 85.249.224.0/19 upto /32;
+    route-filter 89.112.0.0/18 prefix-length-range /19-/32;
+    route-filter 89.112.64.0/19 upto /32;
+    route-filter 217.170.64.0/19 prefix-length-range /20-/32;
+   }
+  }
+ }
+}
+.RE
+.fi
+generated policy-option term now allows all specifics for eltel networks
+if they match with special community 'blackhole'.
+.Lp
+Of course, this version supports IPv6 (-6): 
+.nf
+.RS
+~>bgpq3 -6l as-retn-6 AS-RETN6
+no ipv6 prefix-list as-retn-6
+ipv6 prefix-list as-retn-6 permit 2001:7fb:fe00::/48
+ipv6 prefix-list as-retn-6 permit 2001:7fb:fe01::/48
+[....]
+.RE
+.fi
+and initial support for ASN 32 is also here (however, now only for
+Juniper JunOS 9.1+ - Cisco IOS is not (as of yet) supports it): 
+.nf
+.RS
+~>bgpq3 -J3f 112 AS-SPACENET
+policy-options {
+replace:
+ as-path-group NN {
+  as-path a0 "^112(112)*$";
+  as-path a1 "^112(.)*(1898|5539|8495|8763|8878|12136|12931|15909)$";
+  as-path a2 "^112(.)*(21358|23456|23600|24151|25152|31529|34127|34906)$";
+  as-path a3 "^112(.)*(35052|41720|43628|44450|196611)$";
+ }
+}
+.RE
+.fi
+see AS196611 in the end of the list ? That's AS3.3 in 'asplain' notation. 
+.Lp
+For Cisco and old versions of JunOS you should not use switch -3, 
+and the result will be next: 
+.nf
+.RS
+~>bgpq3 -f 112 AS-SPACENET
+no ip as-path access-list NN
+ip as-path access-list NN permit ^112(_112)*$
+ip as-path access-list NN permit ^112(_[0-9]+)*_(1898|5539|8495|8763)$
+ip as-path access-list NN permit ^112(_[0-9]+)*_(8878|12136|12931|15909)$
+ip as-path access-list NN permit ^112(_[0-9]+)*_(21358|23456|23600|24151)$
+ip as-path access-list NN permit ^112(_[0-9]+)*_(25152|31529|34127|34906)$
+ip as-path access-list NN permit ^112(_[0-9]+)*_(35052|41720|43628|44450)$
+.RE
+.fi
+.Lp
+AS196611 is no more in the list, however, AS23456 (transition AS)
+would be added to list if it were not present. 
 .Sh DIAGNOSTICS
 When everyting is ok, 
 .Nm
 generates access-list to standard output and exits with status == 0. 
 In case of errors they are printed to stderr and program exits with 
 non-zero status. 
+.Sh SEE ALSO
+.Sy http://www.radb.net/
+Routing Arbiter project
+.Sy http://www.ietf.org/internet-drafts/
+.Sy draft-michaelson-4byte-as-representation-05.txt
+for information on 'asdot' and 'asplain' notations. 
 .Sh AUTHOR
-Alexandre Snarskii, <snar@paranoia.ru>
+.An Alexandre Snarskii Aq snar@snar.spb.ru

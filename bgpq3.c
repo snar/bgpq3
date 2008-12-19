@@ -23,8 +23,8 @@ extern int pipelining;
 int
 usage(int ecode)
 { 
-	printf("\nUsage: bgpq3 [-h] [-S sources] [-P|E|G <num>|f <num>] [-36A]"
-		" [-R len] <OBJECTS>...\n");
+	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
+		" [-36A] [-R len] <OBJECTS>...\n");
 	printf(" -3        : assume that your device is asn32-safe\n"); 
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -A        : try to aggregate prefix-lists as much as possible"
@@ -34,7 +34,8 @@ usage(int ecode)
 		"route-filter(Juniper)\n");
 	printf(" -f number : generate input as-path access-list\n");
 	printf(" -G number : generate output as-path access-list\n");
-	printf(" -h        : this help\n");
+	printf(" -h host   : host running IRRD software (whois.radb.net by "
+		"default)\n");
 	printf(" -J        : generate config for JunOS (Cisco IOS by default)\n");
 	printf(" -M match  : extra match conditions for JunOS route-filters\n");
 	printf(" -l name   : use specified name for generated access/prefix/.."
@@ -104,7 +105,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36AdEhS:Jf:l:M:W:PR:G:T"))!=EOF) { 
+	while((c=getopt(argc,argv,"36AdES:Jf:l:M:W:PR:G:Th:"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -121,6 +122,8 @@ main(int argc, char* argv[])
 			break;
 		case 'E': if(expander.generation) exclusive();
 			expander.generation=T_EACL;
+			break;
+		case 'h': expander.server=optarg;
 			break;
 		case 'J': expander.vendor=V_JUNIPER;
 			break;
@@ -187,7 +190,6 @@ main(int argc, char* argv[])
 			};
 			widthSet=1;
 			break;
-		case 'h': usage(0);
 		default : usage(1);
 	};
 	};

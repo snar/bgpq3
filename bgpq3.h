@@ -40,6 +40,7 @@ struct bgpq_expander {
 	struct bgpq_prequest* firstpipe, *lastpipe;
 	int piped;
 	char* match;
+	char* server;
 };
 
 
