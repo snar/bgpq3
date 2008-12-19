@@ -587,7 +587,8 @@ bgpq_expand(struct bgpq_expander* b)
 
 	if(!f) { 
 		/* all our attempts to connect failed */
-		sx_report(SX_ERROR,"All attempts to connect failed\n");
+		sx_report(SX_ERROR,"All attempts to connect %s failed, last"
+			" error: %s\n", b->server, strerror(errno));
 		exit(1);
 	};
 	
