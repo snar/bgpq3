@@ -21,7 +21,7 @@
 .\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
-.\" "$Id: bgpq3.8,v 1.3 2008/12/19 17:58:31 snar Exp $
+.\" "$Id: bgpq3.8,v 1.4 2008/12/25 17:17:05 snar Exp $
 .\"
 .Dd Oct 27, 2008
 .Dt BGPQ3 8
@@ -38,7 +38,7 @@
 .Fl f Ar asn |
 .Fl G Ar asn 
 .Oc
-.Op Fl 36A
+.Op Fl 36ADd
 .Op Fl R Ar len
 .Ar OBJECTS
 .Op "..."
@@ -55,9 +55,12 @@ assume that your device is asn32-safe.
 .It Fl 6 
 generate IPv6 prefix/access-lists (IPv4 by default).
 .It Fl A
-try to aggregate prefix-lists as much as possible (Cisco only).
+try to aggregate prefix-lists as much as possible (Cisco prefix-lists and
+Juniper route-filters only supported). 
 .It Fl d
 enable some debugging output.
+.It Fl D
+use asdot notation for Cisco as-path access-lists.
 .It Fl E
 generate extended access-list (Cisco) or policy-statement term using 
 route-filters (Juniper).
@@ -109,7 +112,7 @@ replace:
 }
 .RE
 .fi
-.Lp
+.Pp
 For Cisco we can use aggregation (-A) flag to make this prefix-filter
 more compact: 
 .nf
@@ -131,7 +134,7 @@ ip prefix-list eltel permit 217.170.64.0/19 ge 20 le 20
 .fi
 - you see, prefixes 89.112.32.0/19 and 89.112.64.0/19 now aggregated
 into single entry 89.112.0.0/18 ge 19 le 19. 
-.Lp
+.Pp
 Well, for Juniper we can generate even more interesting policy-options,
 using -M <extra match conditions>, -R <len> and hierarchical names: 
 .nf
@@ -161,7 +164,7 @@ replace:
 .fi
 generated policy-option term now allows all specifics for eltel networks
 if they match with special community 'blackhole'.
-.Lp
+.Pp
 Of course, this version supports IPv6 (-6): 
 .nf
 .RS
@@ -172,8 +175,10 @@ ipv6 prefix-list as-retn-6 permit 2001:7fb:fe01::/48
 [....]
 .RE
 .fi
-and initial support for ASN 32 is also here (however, now only for
-Juniper JunOS 9.1+ - Cisco IOS is not (as of yet) supports it): 
+and initial support for ASN 32 is also here (for a limited subset
+of router's OS'es: if you run JunOS it MUST be 9.1 or higher, 
+Cisco IOS has even more restrictive list of IOS'es - ASN32 supported
+only on GSR/PRP and only in IOS 12.0(32)S12): 
 .nf
 .RS
 ~>bgpq3 -J3f 112 AS-SPACENET
@@ -189,8 +194,8 @@ replace:
 .RE
 .fi
 see AS196611 in the end of the list ? That's AS3.3 in 'asplain' notation. 
-.Lp
-For Cisco and old versions of JunOS you should not use switch -3, 
+.Pp
+For non-ASN32 capable routers you should not use switch -3, 
 and the result will be next: 
 .nf
 .RS
@@ -204,7 +209,7 @@ ip as-path access-list NN permit ^112(_[0-9]+)*_(25152|31529|34127|34906)$
 ip as-path access-list NN permit ^112(_[0-9]+)*_(35052|41720|43628|44450)$
 .RE
 .fi
-.Lp
+.Pp
 AS196611 is no more in the list, however, AS23456 (transition AS)
 would be added to list if it were not present. 
 .Sh DIAGNOSTICS
@@ -219,5 +224,7 @@ Routing Arbiter project
 .Sy http://www.ietf.org/internet-drafts/
 .Sy draft-michaelson-4byte-as-representation-05.txt
 for information on 'asdot' and 'asplain' notations. 
+.Sy http://www.cisco.com/en/US/docs/ios/12_0s/release/ntes/120SNEWF.html#wp3521658
+for information on Cisco implementation of ASN32. 
 .Sh AUTHOR
 .An Alexandre Snarskii Aq snar@snar.spb.ru

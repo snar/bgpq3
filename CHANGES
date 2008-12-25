@@ -1,3 +1,12 @@
+0.1.8 (2008-12-25)
+	- new flag -D for Cisco asdot notation. Cisco behaviour is a bit
+    strange for me, but, well, that's their decision: 
+When the asdot format is enabled as the default, any regular expressions 
+to match 4-byte autonomous system numbers must be written using the asdot 
+format, or else the regular expression match will fail. 
+    (c) http://www.cisco.com/en/US/docs/ios/12_0s/release/ntes/120SNEWF.html
+		#wp3521658 (note the URL wrap). 
+
 0.1.7 (2008-12-19): 
 	- man page. Finally :) 
 	- option -h now means not help, but now it can be used to point to 

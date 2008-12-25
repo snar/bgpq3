@@ -24,12 +24,13 @@ int
 usage(int ecode)
 { 
 	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
-		" [-36A] [-R len] <OBJECTS>...\n");
+		" [-36ADd] [-R len] <OBJECTS>...\n");
 	printf(" -3        : assume that your device is asn32-safe\n"); 
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
-	printf(" -A        : try to aggregate prefix-lists as much as possible"
-		" (Cisco only)\n");
+	printf(" -A        : try to aggregate Cisco prefix-lists or Juniper "
+			"route-filters\n             as much as possible\n");
 	printf(" -d        : generate some debugging output\n");
+	printf(" -D        : use asdot notation in as-path\n");
 	printf(" -E        : generate extended access-list(Cisco) or "
 		"route-filter(Juniper)\n");
 	printf(" -f number : generate input as-path access-list\n");
@@ -105,7 +106,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36AdES:Jf:l:M:W:PR:G:Th:"))!=EOF) { 
+	while((c=getopt(argc,argv,"36AdDES:Jf:l:M:W:PR:G:Th:"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -119,6 +120,8 @@ main(int argc, char* argv[])
 			aggregate=1;
 			break;
 		case 'd': debug_expander++;
+			break;
+		case 'D': expander.asdot=1;
 			break;
 		case 'E': if(expander.generation) exclusive();
 			expander.generation=T_EACL;
@@ -217,9 +220,15 @@ main(int argc, char* argv[])
 		expander.generation=T_PREFIXLIST;
 	};
 
+	/*
 	if(expander.vendor==V_CISCO && expander.asn32 && 
 		expander.generation<T_PREFIXLIST) { 
 		sx_report(SX_FATAL,"Sorry, AS32-safety is not yet ready for Cisco\n");
+	};
+	*/
+
+	if(expander.asdot && expander.vendor!=V_CISCO) { 
+		sx_report(SX_FATAL,"asdot notation supported only for Cisco\n");
 	};
 
 	if(!expander.asn32 && expander.asnumber>=65536) { 

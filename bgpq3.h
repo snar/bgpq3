@@ -30,7 +30,7 @@ struct bgpq_expander {
 	struct sx_slentry* rsets;
 	int family;
 	char* sources;
-	int asnumber, aswidth;
+	int asnumber, aswidth, asdot;
 	char* name;
 	bgpq_vendor_t vendor;
 	bgpq_gen_t    generation;

@@ -17,27 +17,49 @@
 int
 bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 { 
-	int nc=0, i, j;
+	int nc=0, i, j, k;
 	fprintf(f,"no ip as-path access-list %s\n", b->name?b->name:"NN");
-	if(b->asn32s[0][b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
-		fprintf(f,"ip as-path access-list %s permit ^%i(_%i)*$\n",
-			b->name?b->name:"NN",b->asnumber,b->asnumber);
+	if(b->asn32s[b->asnumber/65536] && 
+		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
+		(0x80>>(b->asnumber%8))) { 
+		if(b->asdot && b->asnumber>65535) { 
+			fprintf(f,"ip as-path access-list %s permit ^%i.%i(_%i.%i)*$\n",
+				b->name?b->name:"NN",b->asnumber/65536,b->asnumber%65536,
+				b->asnumber/65536,b->asnumber%65536);
+		} else { 
+			fprintf(f,"ip as-path access-list %s permit ^%i(_%i)*$\n",
+				b->name?b->name:"NN",b->asnumber,b->asnumber);
+		};
 	};
-	for(i=0;i<8192;i++) { 
-		for(j=0;j<8;j++) { 
-			if(b->asn32s[0][i]&(0x80>>j)) { 
-				if(i*8+j==b->asnumber) continue;
-				if(!nc) { 
-					fprintf(f,"ip as-path access-list %s permit"
-						" ^%i(_[0-9]+)*_(%i", b->name?b->name:"NN", 
-						b->asnumber,i*8+j);
-				} else { 
-					fprintf(f,"|%i",i*8+j);
-				}
-				nc++;
-				if(nc==b->aswidth) { 
-					fprintf(f,")$\n");
-					nc=0;
+	for(k=0;k<65536;k++) { 
+		if(!b->asn32s[k]) continue;
+
+		for(i=0;i<8192;i++) { 
+			for(j=0;j<8;j++) { 
+				if(b->asn32s[k][i]&(0x80>>j)) { 
+					if(k*65536+i*8+j==b->asnumber) continue;
+					if(!nc) { 
+						if(b->asdot && k>0) { 
+							fprintf(f,"ip as-path access-list %s permit"
+								" ^%i(_[0-9]+)*_(%i.%i", b->name?b->name:"NN", 
+								b->asnumber,k,i*8+j);
+						} else { 
+							fprintf(f,"ip as-path access-list %s permit"
+								" ^%i(_[0-9]+)*_(%i", b->name?b->name:"NN", 
+								b->asnumber,k*65536+i*8+j);
+						};
+					} else { 
+						if(b->asdot && k>0) { 
+							fprintf(f,"|%i.%i",k,i*8+j);
+						} else { 
+							fprintf(f,"|%i",k*65536+i*8+j);
+						};
+					}
+					nc++;
+					if(nc==b->aswidth) { 
+						fprintf(f,")$\n");
+						nc=0;
+					};
 				};
 			};
 		};
@@ -48,27 +70,47 @@ bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 int
 bgpq3_print_cisco_oaspath(FILE* f, struct bgpq_expander* b)
 { 
-	int nc=0, i, j;
+	int nc=0, i, j, k;
 	fprintf(f,"no ip as-path access-list %s\n", b->name?b->name:"NN");
-	if(b->asn32s[0][b->asnumber/8]&(0x80>>(b->asnumber%8))) { 
-		fprintf(f,"ip as-path access-list %s permit ^(_%i)*$\n",
-			b->name?b->name:"NN",b->asnumber);
+	if(b->asn32s[b->asnumber/65536] && 
+		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
+			(0x80>>(b->asnumber%8))) { 
+		if(b->asdot && b->asnumber>65535) { 
+			fprintf(f,"ip as-path access-list %s permit ^(_%i.%i)*$\n",
+				b->name?b->name:"NN",b->asnumber/65536,b->asnumber%65536);
+		} else { 
+			fprintf(f,"ip as-path access-list %s permit ^(_%i)*$\n",
+				b->name?b->name:"NN",b->asnumber);
+		};
 	};
-	for(i=0;i<8192;i++) { 
-		for(j=0;j<8;j++) { 
-			if(b->asn32s[0][i]&(0x80>>j)) { 
-				if(i*8+j==b->asnumber) continue;
-				if(!nc) { 
-					fprintf(f,"ip as-path access-list %s permit"
-						" ^(_[0-9]+)*_(%i", b->name?b->name:"NN", 
-						i*8+j);
-				} else { 
-					fprintf(f,"|%i",i*8+j);
-				}
-				nc++;
-				if(nc==b->aswidth) { 
-					fprintf(f,")$\n");
-					nc=0;
+	for(k=0;k<65536;k++) { 
+		if(!b->asn32s[k]) continue;
+		for(i=0;i<8192;i++) { 
+			for(j=0;j<8;j++) { 
+				if(b->asn32s[k][i]&(0x80>>j)) { 
+					if(k*65536+i*8+j==b->asnumber) continue;
+					if(!nc) { 
+						if(b->asdot && k>0) { 
+							fprintf(f,"ip as-path access-list %s permit"
+								" ^(_[0-9]+)*_(%i.%i", b->name?b->name:"NN", 
+								k,i*8+j);
+						} else { 
+							fprintf(f,"ip as-path access-list %s permit"
+								" ^(_[0-9]+)*_(%i", b->name?b->name:"NN", 
+								k*65536+i*8+j);
+						};
+					} else { 
+						if(b->asdot && k>0) { 
+							fprintf(f,"|%i.%i",k,i*8+j);
+						} else { 
+							fprintf(f,"|%i",k*65536+i*8+j);
+						};
+					}
+					nc++;
+					if(nc==b->aswidth) { 
+						fprintf(f,")$\n");
+						nc=0;
+					};
 				};
 			};
 		};
