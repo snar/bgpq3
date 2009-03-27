@@ -48,7 +48,7 @@ usage(int ecode)
 		" RADB,RIPE,APNIC)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
-	printf("Copyright(c) Alexandre Snarskii <snar@paranoia.ru> 2007, 2008\n\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2009\n\n");
 	exit(ecode);
 };
 
@@ -228,7 +228,8 @@ main(int argc, char* argv[])
 	*/
 
 	if(expander.asdot && expander.vendor!=V_CISCO) { 
-		sx_report(SX_FATAL,"asdot notation supported only for Cisco\n");
+		sx_report(SX_FATAL,"asdot notation supported only for Cisco, Juniper"
+			" uses only asplain\n");
 	};
 
 	if(!expander.asn32 && expander.asnumber>65535) { 

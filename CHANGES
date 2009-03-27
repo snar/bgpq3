@@ -1,3 +1,8 @@
+
+0.1.9 (2009-03-27)
+    - RIPE changed ASN32 notation to asplain. And RADB does not support
+	asplain indexing (yet?).... Fixed. Thanks to Pavel Gluchouk. 
+
 0.1.8 (2008-12-25)
 	- new flag -D for Cisco asdot notation. Cisco behaviour is a bit
     strange for me, but, well, that's their decision: 
