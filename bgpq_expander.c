@@ -104,9 +104,15 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 		return 0;
 	};
 
-	if(*eoa=='.') { 
+	if(*eoa=='.' || asno>65535) { 
 		if(b->asn32 || b->generation>=T_PREFIXLIST) { 
-			uint32_t asn1=strtoul(eoa+1,&eoa,10);
+			uint32_t asn1;
+			if(asno>65535) { 
+				asn1=asno%65536;
+				asno/=65536;
+			} else 
+				asn1=strtoul(eoa+1,&eoa,10);
+
 			if(eoa && *eoa!=0) { 
 				sx_report(SX_ERROR,"Invalid symbol in AS number: '%c' in %s\n",
 					*eoa, as);

@@ -65,7 +65,7 @@ parseasnumber(struct bgpq_expander* expander, char* optarg)
 { 
 	char* eon=NULL;
 	expander->asnumber=strtoul(optarg,&eon,10);
-	if(expander->asnumber<0 || expander->asnumber>(65535ul*65535)) { 
+	if(expander->asnumber<1 || expander->asnumber>(65535ul*65535)) { 
 		sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
 		exit(1);
 	};
@@ -77,7 +77,7 @@ parseasnumber(struct bgpq_expander* expander, char* optarg)
 			sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
 			exit(1);
 		};
-		if(loas<0 || loas>65536) { 
+		if(loas<1 || loas>65535) { 
 			sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
 			exit(1);
 		};
@@ -231,7 +231,7 @@ main(int argc, char* argv[])
 		sx_report(SX_FATAL,"asdot notation supported only for Cisco\n");
 	};
 
-	if(!expander.asn32 && expander.asnumber>=65536) { 
+	if(!expander.asn32 && expander.asnumber>65535) { 
 		expander.asnumber=23456;
 	};
 
