@@ -1,3 +1,5 @@
+0.1.10 (2009-06-13)
+    - Fixed bug in aggregation (-A) mode, thanks to Sergey Gonchar. 
 
 0.1.9 (2009-03-27)
     - RIPE changed ASN32 notation to asplain. And RADB does not support

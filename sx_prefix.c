@@ -524,7 +524,9 @@ sx_radix_node_aggregate(struct sx_radix_node* node)
 			if(node->r->son && node->l->son && 
 				node->r->son->isAggregate && node->l->son->isAggregate && 
 				node->r->son->aggregateHi==node->l->son->aggregateHi &&
-				node->r->son->aggregateLow==node->l->son->aggregateLow)
+				node->r->son->aggregateLow==node->l->son->aggregateLow &&
+				node->r->prefix.masklen==node->prefix.masklen+1 && 
+				node->l->prefix.masklen==node->prefix.masklen+1)
 			{ 
 				node->son=sx_radix_node_new(&node->prefix);
 				node->son->isGlue=0;

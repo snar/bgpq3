@@ -21,7 +21,7 @@
 .\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
-.\" "$Id: bgpq3.8,v 1.4 2008/12/25 17:17:05 snar Exp $
+.\" "$Id: bgpq3.8,v 1.5 2009/07/13 10:22:05 snar Exp $
 .\"
 .Dd Oct 27, 2008
 .Dt BGPQ3 8
@@ -45,7 +45,7 @@
 .Sh DESCRIPTION
 The
 .Nm 
-ultility used to generate Cisco and Juniper prefix-lists, extended
+utility used to generate Cisco and Juniper prefix-lists, extended
 access-lists, policy-statement terms and as-path lists based on RADB data.
 .Pp
 The options are as follows: 
@@ -213,7 +213,7 @@ ip as-path access-list NN permit ^112(_[0-9]+)*_(35052|41720|43628|44450)$
 AS196611 is no more in the list, however, AS23456 (transition AS)
 would be added to list if it were not present. 
 .Sh DIAGNOSTICS
-When everyting is ok, 
+When everything is OK, 
 .Nm
 generates access-list to standard output and exits with status == 0. 
 In case of errors they are printed to stderr and program exits with 
