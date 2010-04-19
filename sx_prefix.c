@@ -539,7 +539,8 @@ sx_radix_node_aggregate(struct sx_radix_node* node)
 		} else if(node->r->isAggregate && node->l->isAggregate && 
 			node->r->aggregateHi==node->l->aggregateHi && 
 			node->r->aggregateLow==node->l->aggregateLow) { 
-			if(node->r->prefix.masklen==node->prefix.masklen+1) { 
+			if(node->r->prefix.masklen==node->prefix.masklen+1 &&
+				node->l->prefix.masklen==node->prefix.masklen+1) { 
 				if(node->isGlue) { 
 					node->r->isGlue=1;
 					node->l->isGlue=1;
@@ -579,7 +580,8 @@ sx_radix_node_aggregate(struct sx_radix_node* node)
 			node->r->isAggregate && node->l->son->isAggregate && 
 			node->r->aggregateHi==node->l->son->aggregateHi && 
 			node->r->aggregateLow==node->l->son->aggregateLow) { 
-			if(node->r->prefix.masklen==node->prefix.masklen+1) { 
+			if(node->r->prefix.masklen==node->prefix.masklen+1 &&
+				node->l->prefix.masklen==node->prefix.masklen+1) { 
 				if(node->isGlue) { 
 					node->r->isGlue=1;
 					node->l->son->isGlue=1;
@@ -601,7 +603,8 @@ sx_radix_node_aggregate(struct sx_radix_node* node)
 			node->l->isAggregate && node->r->son->isAggregate && 
 			node->l->aggregateHi==node->r->son->aggregateHi && 
 			node->l->aggregateLow==node->r->son->aggregateLow) { 
-			if(node->l->prefix.masklen==node->prefix.masklen+1) { 
+			if(node->l->prefix.masklen==node->prefix.masklen+1 &&
+				node->r->prefix.masklen==node->prefix.masklen+1) { 
 				if(node->isGlue) { 
 					node->l->isGlue=1;
 					node->r->son->isGlue=1;
