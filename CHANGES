@@ -1,3 +1,7 @@
+0.1.12 (2010-10-08)
+	- Fixed bug preventing AS262144 (that's AS4.0 in asdot) to expand. 
+    Thanks to Sergey Matveychuk
+
 0.1.11 (2010-04-19)
     - Fixed another bug in aggregation (-A) mode, thanks to Dmitry Tejblum.
 

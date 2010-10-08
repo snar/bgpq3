@@ -118,7 +118,7 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 					*eoa, as);
 				return 0;
 			};
-			if(asn1<1 || asn1>65535) { 
+			if(asn1>65535) { 
 				sx_report(SX_ERROR,"Invalid AS number in %s\n", as);
 				return 0;
 			};
