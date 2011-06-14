@@ -69,7 +69,7 @@ sx_maxsockbuf(int s, int dir)
 			} else if(phase==1) { 
 				phase=2; optval-=2048; continue;
 			} else break;
-		} else if(optval>=SX_MAXSOCKBUF_MAX) { 
+		} else if((optval<<1)>=SX_MAXSOCKBUF_MAX) { 
 			/* ... and getsockopt not failed and voptval>=optval. Do not allow
 			 * to increase sockbuf too much even in case OS permits it */
 			break;
