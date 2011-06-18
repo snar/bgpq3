@@ -1,6 +1,9 @@
-0.1.13 (2011-06-14)
+0.1.14 (2011-06-18)
     - Fixed bug in sx_maxsockbuf in rare cases of OS maxsockbuf >2M. 
     Thanks to Andreas Lundin.
+
+0.1.13 (2011-06-14)
+    - never publically released.
 
 0.1.12 (2010-10-08)
 	- Fixed bug preventing AS262144 (that's AS4.0 in asdot) to expand. 

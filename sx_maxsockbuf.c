@@ -78,7 +78,7 @@ sx_maxsockbuf(int s, int dir)
 
 
 	voptlen=sizeof(voptval);
-	if(getsockopt(s,SOL_SOCKET,SO_RCVBUF,(void*)&voptval,&voptlen)==-1) {
+	if(getsockopt(s,SOL_SOCKET,dir,(void*)&voptval,&voptlen)==-1) {
 		sx_report(SX_ERROR,"getsockopt(final stage) failed: %s\n", 
 			strerror(errno));
 		return -1;
