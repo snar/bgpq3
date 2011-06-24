@@ -43,11 +43,8 @@ sx_maxsockbuf(int s, int dir)
 			if(optval==(hiconf+loconf)/2) break;
 			optval=(hiconf+loconf)/2;
 		};
-		if(optval>SX_MAXSOCKBUF_MAX) { 
-			if(phase==0) { 
-				phase=1; optval>>=1; continue;
-			} else break;
-		};
+		if(optval>SX_MAXSOCKBUF_MAX && phase==0) 
+			break;
 
 		if(setsockopt(s,SOL_SOCKET,dir,(void*)&optval,sizeof(optval))==-1)
 		{
@@ -69,10 +66,6 @@ sx_maxsockbuf(int s, int dir)
 			} else if(phase==1) { 
 				phase=2; optval-=2048; continue;
 			} else break;
-		} else if((optval<<1)>=SX_MAXSOCKBUF_MAX) { 
-			/* ... and getsockopt not failed and voptval>=optval. Do not allow
-			 * to increase sockbuf too much even in case OS permits it */
-			break;
 		};
 	};
 
