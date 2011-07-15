@@ -432,7 +432,8 @@ int
 bgpq3_print_ciscoxr_prefixlist(FILE* f, struct bgpq_expander* b)
 { 
 	bname=b->name;
-	fprintf(f,"prefix-set %s\n", bname?bname:"NN");
+	fprintf(f,"no prefix-set %s\nprefix-set %s\n", bname?bname:"NN", 
+		bname?bname:"NN");
 	sx_radix_tree_foreach(b->tree,bgpq3_print_cprefixxr,f);
 	fprintf(f, "\nend-set\n");
 	return 0;

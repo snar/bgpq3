@@ -24,7 +24,7 @@ int
 usage(int ecode)
 { 
 	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
-		" [-36ADd] [-R len] <OBJECTS>...\n");
+		" [-36ADJXd] [-R len] <OBJECTS>...\n");
 	printf(" -3        : assume that your device is asn32-safe\n"); 
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -A        : try to aggregate Cisco prefix-lists or Juniper "
@@ -49,7 +49,7 @@ usage(int ecode)
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
-	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2009\n\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2011\n\n");
 	exit(ecode);
 };
 
