@@ -264,6 +264,7 @@ checkSon:
 		
 
 static char* bname=NULL;
+static int   needscomma=0;
 
 void
 bgpq3_print_cprefix(struct sx_radix_node* n, void* ff)
@@ -290,6 +291,31 @@ bgpq3_print_cprefix(struct sx_radix_node* n, void* ff)
 checkSon:
 	if(n->son) 
 		bgpq3_print_cprefix(n->son,ff);
+};
+
+void
+bgpq3_print_cprefixxr(struct sx_radix_node* n, void* ff)
+{ 
+	char prefix[128];
+	FILE* f=(FILE*)ff;
+	if(!f) f=stdout;
+	if(n->isGlue) goto checkSon;
+	sx_prefix_snprintf(&n->prefix,prefix,sizeof(prefix));
+	if(n->isAggregate) { 
+		if(n->aggregateLow>n->prefix.masklen) { 
+			fprintf(f,"%s%s ge %u le %u",
+				needscomma?",\n ":" ", prefix, n->aggregateLow,n->aggregateHi);
+		} else { 
+			fprintf(f,"%s%s le %u", needscomma?",\n ":" ", prefix, 
+				n->aggregateHi);
+		};
+	} else { 
+		fprintf(f,"%s%s", needscomma?",\n ":" ", prefix);
+	};
+	needscomma=1;
+checkSon:
+	if(n->son) 
+		bgpq3_print_cprefixxr(n->son,ff);
 };
 
 void
@@ -403,6 +429,16 @@ bgpq3_print_cisco_prefixlist(FILE* f, struct bgpq_expander* b)
 };
 
 int
+bgpq3_print_ciscoxr_prefixlist(FILE* f, struct bgpq_expander* b)
+{ 
+	bname=b->name;
+	fprintf(f,"prefix-set %s\n", bname?bname:"NN");
+	sx_radix_tree_foreach(b->tree,bgpq3_print_cprefixxr,f);
+	fprintf(f, "\nend-set\n");
+	return 0;
+};
+
+int
 bgpq3_print_cisco_eacl(FILE* f, struct bgpq_expander* b)
 { 
 	bname=b->name;
@@ -418,6 +454,7 @@ bgpq3_print_prefixlist(FILE* f, struct bgpq_expander* b)
 	switch(b->vendor) { 
 		case V_JUNIPER: return bgpq3_print_juniper_prefixlist(f,b);
 		case V_CISCO: return bgpq3_print_cisco_prefixlist(f,b);
+		case V_CISCO_XR: return bgpq3_print_ciscoxr_prefixlist(f,b);
 	};
 	return 0;
 };
@@ -428,6 +465,7 @@ bgpq3_print_eacl(FILE* f, struct bgpq_expander* b)
 	switch(b->vendor) { 
 		case V_JUNIPER: return bgpq3_print_juniper_routefilter(f,b);
 		case V_CISCO: return bgpq3_print_cisco_eacl(f,b);
+		case V_CISCO_XR: sx_report(SX_FATAL, "unreachable point\n");
 	};
 	return 0;
 };

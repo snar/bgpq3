@@ -47,6 +47,7 @@ usage(int ecode)
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
+	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
 	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2009\n\n");
 	exit(ecode);
@@ -56,6 +57,14 @@ void
 exclusive()
 { 
 	fprintf(stderr,"-E, -f <asnum>, -G <asnum> and -P are mutually "
+		"exclusive\n");
+	exit(1);
+};
+
+void
+vendor_exclusive()
+{ 
+	fprintf(stderr, "-J (JunOS) and -X (IOS XR) options are mutually "
 		"exclusive\n");
 	exit(1);
 };
@@ -106,7 +115,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36AdDES:Jf:l:M:W:PR:G:Th:"))!=EOF) { 
+	while((c=getopt(argc,argv,"36AdDES:Jf:l:M:W:PR:G:Th:X"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -128,7 +137,8 @@ main(int argc, char* argv[])
 			break;
 		case 'h': expander.server=optarg;
 			break;
-		case 'J': expander.vendor=V_JUNIPER;
+		case 'J': if(expander.vendor) vendor_exclusive();
+			expander.vendor=V_JUNIPER;
 			break;
 		case 'f': 
 			if(expander.generation) exclusive();
@@ -193,6 +203,9 @@ main(int argc, char* argv[])
 			};
 			widthSet=1;
 			break;
+		case 'X': if(expander.vendor) vendor_exclusive();
+			expander.vendor=V_CISCO_XR;
+			break;
 		default : usage(1);
 	};
 	};
@@ -226,10 +239,13 @@ main(int argc, char* argv[])
 		sx_report(SX_FATAL,"Sorry, AS32-safety is not yet ready for Cisco\n");
 	};
 	*/
+	if(expander.vendor==V_CISCO_XR && expander.generation!=T_PREFIXLIST) { 
+		sx_report(SX_FATAL, "Sorry, only prefix-sets supported for IOS XR\n");
+	};
 
 	if(expander.asdot && expander.vendor!=V_CISCO) { 
 		sx_report(SX_FATAL,"asdot notation supported only for Cisco, Juniper"
-			" uses only asplain\n");
+			" uses asplain only\n");
 	};
 
 	if(!expander.asn32 && expander.asnumber>65535) { 
