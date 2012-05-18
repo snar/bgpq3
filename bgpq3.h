@@ -43,6 +43,7 @@ struct bgpq_expander {
 	int piped;
 	char* match;
 	char* server;
+	unsigned maxlen;
 };
 
 

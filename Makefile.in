@@ -16,7 +16,6 @@ OBJECTS=bgpq3.o sx_report.o bgpq_expander.o sx_slentry.o bgpq3_printer.o \
 SRCS=bgpq3.c sx_report.c bgpq_expander.c sx_slentry.c bgpq3_printer.c \
 	sx_prefix.c strlcpy.c sx_maxsockbuf.c
 
-
 all: bgpq3
 
 bgpq3: ${OBJECTS}
@@ -34,4 +33,7 @@ install: bgpq3
 	${INSTALL} -m 644 bgpq3.8 @prefix@/man/man8
 
 depend: 
-	 makedepend -- $(CFLAGS) -- $(SRCS)
+	makedepend -- $(CFLAGS) -- $(SRCS)
+
+bgpq3.html: bgpq3.txt
+	markdown2 bgpq3.txt > bgpq3.html

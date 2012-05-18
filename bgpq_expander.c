@@ -161,6 +161,11 @@ bgpq_expander_add_prefix(struct bgpq_expander* b, char* prefix)
 			,prefix);
 		return 0;
 	};
+	if(b->maxlen && p.masklen>b->maxlen) { 
+		SX_DEBUG(debug_expander, "Ignoring prefix %s: masklen %i > max "
+			"masklen %u\n", prefix, p.masklen, b->maxlen);
+		return 0;
+	};
 	sx_radix_tree_insert(b->tree,&p);
 	return 1;
 };

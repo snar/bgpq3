@@ -39,6 +39,8 @@ usage(int ecode)
 		"default)\n");
 	printf(" -J        : generate config for JunOS (Cisco IOS by default)\n");
 	printf(" -M match  : extra match conditions for JunOS route-filters\n");
+	printf(" -m len    : maximum prefix length (default: 32 for IPv4, "
+		"128 for IPv6)\n");
 	printf(" -l name   : use specified name for generated access/prefix/.."
 		" list\n");
 	printf(" -P        : generate prefix-list (default, just for backward"
@@ -111,11 +113,12 @@ main(int argc, char* argv[])
 	struct bgpq_expander expander;
 	int af=AF_INET;
 	int widthSet=0, aggregate=0, refine=0;
+	unsigned long maxlen=0;
 
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36AdDES:Jf:l:M:W:PR:G:Th:X"))!=EOF) { 
+	while((c=getopt(argc,argv,"36AdDES:Jf:l:m:M:W:PR:G:Th:X"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -162,6 +165,12 @@ main(int argc, char* argv[])
 			};
 			break;
 		case 'l': expander.name=optarg;
+			break;
+		case 'm': maxlen=strtoul(optarg, NULL, 10);
+			if (!maxlen) { 
+				sx_report(SX_FATAL, "Invalid maxlen (-m): %s\n", optarg);
+				exit(1);
+			};
 			break;
 		case 'M': { 
 			char* c, *d;
@@ -280,6 +289,19 @@ main(int argc, char* argv[])
 		if(expander.generation<T_PREFIXLIST) { 
 			sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
 				"supported only with prefix-list generation\n", refine);
+		};
+	};
+	if(maxlen) { 
+		if((expander.family==AF_INET6 && maxlen>128) || 
+			(expander.family==AF_INET  && maxlen>32)) { 
+			sx_report(SX_FATAL, "Invalid value for max-prefixlen: %lu (1-128 "
+				"for IPv6, 1-32 for IPv4)\n", maxlen);
+			exit(1);
+		} else if((expander.family==AF_INET6 && maxlen<128) || 
+			(expander.family==AF_INET  && maxlen<32)) { 
+			/* inet6/128 and inet4/32 does not make sense - all routes will
+			 * be accepted, so save some CPU cycles :) */
+			expander.maxlen = maxlen;
 		};
 	};
 

@@ -1,3 +1,11 @@
+0.1.16 (2012-01-19)
+	- new option -m <len>: maximum length of accepted prefixes. 
+	Suggested by Eugene Demidov, used to discard 'too long prefixes'
+	(like /30-/32) even if they are registered in IRR. By default 
+	limit is not set and all prefixes accepted.
+    - documentation redesigned into text/markdown and text/html (manpage 
+    supported still).
+
 0.1.15 (2011-07-15)
     - prefix-set's for Cisco IOS XR now supported too. 
 

@@ -1,0 +1,251 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.or
+g/TR/html4/loose.dtd"> 
+<html><head><style type='text/css'>
+h1 { color: #3c78b5; border-bottom: 3px solid #3c78b5; font-size: 180%; }
+h2 { color: #3c78b5; border-bottom: 2px solid #3c78b5; font-size: 140%; }
+h3 { color: #3c78b5; border-bottom: 1px dotted #3c78b5; font-size: 129%; }
+em { color: #0000FF; }
+code { font-size:12px; background-color:#f8f8ff; border:1px; }
+pre  { border: 1px dotted #3c78b5; background-color: #f8f8ff; margin: 1em 1em;}
+body { width: 80%; margin: 0 3em; }
+ul	{ list-style: none; }
+</style></head><body>
+
+NAME
+----
+
+`bgpq3` - bgp filtering automation for Cisco and Juniper routers
+
+SYNOPSIS
+--------
+
+	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-36ADd] [-R len] [-m max] OBJECTS [...]
+
+DESCRIPTION
+-----------
+
+The bgpq3 utility used to generate Cisco and Juniper prefix-lists,
+extended access-lists, policy-statement terms and as-path lists based on
+RADB data.
+
+The options are as follows:
+
+-    -3      
+
+	> assume that your device is asn32-capable.
+
+-    -6      
+
+	> generate IPv6 prefix/access-lists (IPv4 by default).
+
+-    -A      
+
+	> try to aggregate generated filters as much as possible (Cisco 
+    prefix-lists and Juniper route-filters only supported).
+
+-    -d      
+
+	> enable some debugging output.
+
+-    -D      
+
+	> use asdot notation for Cisco as-path access-lists.
+
+-    -E      
+
+	> generate extended access-list (Cisco) or policy-statement term using 
+	route-filters (Juniper).
+
+-    -f number
+
+	> generate input as-path access-list.
+
+-    -G number
+
+	> generate output as-path access-list.
+
+-    -h host
+
+	> host running IRRD database (default: whois.radb.net)
+
+-    -J      
+
+	> generate config for Juniper (Cisco by default).
+
+-    -m len  
+
+	> maximum length of accepted prefixes
+
+-    -M match 
+
+	> extra match conditions for Juniper route-filters.
+
+-    -l name 
+
+	> name of generated entry.
+
+-    -P      
+
+	> generate prefix-list (default behaviour, flag added for backward 
+	compatibility only).
+
+-    -R len  
+
+	> allow more-specific routes up to specified masklen too.
+	(Please, note: objects with prefix-length greater than specified length
+	will be always allowed.)
+
+-    -S sources 
+
+	> use specified sources only (default: RADB,RIPE,APNIC).
+
+-    -T      
+
+	> disable pipelining.
+
+-    -X      
+
+	> generate config for Cisco IOS XR devices (plain IOS by default).
+
+`OBJECTS` means networks (in prefix format), autonomous systems and as-macros.
+
+EXAMPLES
+--------
+
+Generating named Juniper prefix-filter for `AS20597`:
+
+     user@host:~>bgpq3 -Jl eltel AS20597
+     policy-options {
+     replace:
+      prefix-list eltel {
+         81.9.0.0/20;
+         81.9.32.0/20;
+         81.9.96.0/20;
+         81.222.128.0/20;
+         81.222.192.0/18;
+         85.249.8.0/21;
+         85.249.224.0/19;
+         89.112.0.0/19;
+         89.112.4.0/22;
+         89.112.32.0/19;
+         89.112.64.0/19;
+         217.170.64.0/20;
+         217.170.80.0/20;
+      }
+     }
+
+For Cisco we can use aggregation (-A) flag to make this prefix-filter
+more compact:
+
+     user@host:~>bgpq3 -Al eltel AS20597
+     no ip prefix-list eltel
+     ip prefix-list eltel permit 81.9.0.0/20
+     ip prefix-list eltel permit 81.9.32.0/20
+     ip prefix-list eltel permit 81.9.96.0/20
+     ip prefix-list eltel permit 81.222.128.0/20
+     ip prefix-list eltel permit 81.222.192.0/18
+     ip prefix-list eltel permit 85.249.8.0/21
+     ip prefix-list eltel permit 85.249.224.0/19
+     ip prefix-list eltel permit 89.112.0.0/18 ge 19 le 19
+     ip prefix-list eltel permit 89.112.4.0/22
+     ip prefix-list eltel permit 89.112.64.0/19
+     ip prefix-list eltel permit 217.170.64.0/19 ge 20 le 20
+
+and, as you see, prefixes `89.112.32.0/19` and `89.112.64.0/19` now aggregated 
+into single entry 
+
+	ip prefix-list eltel permit 89.112.0.0/18 ge 19 le 19.
+
+Well, for Juniper we can generate even more interesting policy-statement,
+using `-M <extra match conditions>`, `-R <len>` and hierarchical names:
+
+     user@host:~>bgpq3 -AJEl eltel/specifics -R 32 -M "community blackhole" AS20597
+     policy-options {
+      policy-statement eltel {
+       term specifics {
+     replace:
+        from {
+         community blackhole;
+         route-filter 81.9.0.0/20 upto /32;
+         route-filter 81.9.32.0/20 upto /32;
+         route-filter 81.9.96.0/20 upto /32;
+         route-filter 81.222.128.0/20 upto /32;
+         route-filter 81.222.192.0/18 upto /32;
+         route-filter 85.249.8.0/21 upto /32;
+         route-filter 85.249.224.0/19 upto /32;
+         route-filter 89.112.0.0/18 prefix-length-range /19-/32;
+         route-filter 89.112.64.0/19 upto /32;
+         route-filter 217.170.64.0/19 prefix-length-range /20-/32;
+        }
+       }
+      }
+     }
+
+generated policy-option term now allows all more-specific routes 
+for eltel networks if they marked with community 'blackhole' (defined
+elsewhere in configuration).
+
+Of course, `bgpq3` supports IPv6 (-6):
+
+     user@host:~>bgpq3 -6l as-retn-6 AS-RETN6
+     no ipv6 prefix-list as-retn-6
+     ipv6 prefix-list as-retn-6 permit 2001:7fb:fe00::/48
+     ipv6 prefix-list as-retn-6 permit 2001:7fb:fe01::/48
+     [....]
+
+and ASN32
+
+     user@host:~>bgpq3 -J3f 112 AS-SPACENET
+     policy-options {
+     replace:
+      as-path-group NN {
+       as-path a0 "^112(112)*$";
+       as-path a1 "^112(.)*(1898|5539|8495|8763|8878|12136|12931|15909)$";
+       as-path a2 "^112(.)*(21358|23456|23600|24151|25152|31529|34127|34906)$";
+       as-path a3 "^112(.)*(35052|41720|43628|44450|196611)$";
+      }
+     }
+
+see `AS196611` in the end of the list ? That's `AS3.3` in 'asplain' notation.
+
+If your router does not support ASN32 (yet) you should not use switch -3, 
+and the result will be next:
+
+     user@host:~>bgpq3 -f 112 AS-SPACENET
+     no ip as-path access-list NN
+     ip as-path access-list NN permit ^112( 112)*$
+     ip as-path access-list NN permit ^112( [0-9]+)* (1898|5539|8495|8763)$
+     ip as-path access-list NN permit ^112( [0-9]+)* (8878|12136|12931|15909)$
+     ip as-path access-list NN permit ^112( [0-9]+)* (21358|23456|23600|24151)$
+     ip as-path access-list NN permit ^112( [0-9]+)* (25152|31529|34127|34906)$
+     ip as-path access-list NN permit ^112( [0-9]+)* (35052|41720|43628|44450)$
+
+`AS196611` is no more in the list, however, `AS23456` (transition AS) would
+have been added to list if it were not present.
+
+DIAGNOSTICS
+-----------
+
+When everything is OK, `bgpq3` generates result to standard output and
+exits with status == 0.  In case of errors they are printed to stderr and
+program exits with non-zero status.
+
+SEE ALSO
+--------
+
+1. [Routing Arbiter](http://www.radb.net/)
+2. [draft-michaelson-4byte-as-representation-05.txt](http://www.ietf.org/internet-drafts/draft-michaelson-4byte-as-representation-05.txt)
+     for information on 'asdot' and 'asplain' notations.
+3. [Cisco documentation](http://www.cisco.com/en/US/prod/collateral/iosswrel/ps6537/ps6554/ps6599/data_sheet_C78-521821.html)
+     for information on Cisco implementation of ASN32.
+
+AUTHOR
+------
+
+Alexandre Snarskii [snar@snar.spb.ru](mailto:snar@snar.spb.ru)
+
+Program Homepage
+----------------
+
+[http://snar.spb.ru/prog/bgpq3/](http://snar.spb.ru/prog/bgpq3/)
+
