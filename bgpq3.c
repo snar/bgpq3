@@ -51,7 +51,7 @@ usage(int ecode)
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
-	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2011\n\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2012\n\n");
 	exit(ecode);
 };
 
