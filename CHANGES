@@ -1,3 +1,5 @@
+    - bug in aggregation documentation fixed. Thanks to Nikolay Shopik.
+
 0.1.16 (2012-01-19)
 	- new option -m <len>: maximum length of accepted prefixes. 
 	Suggested by Eugene Demidov, used to discard 'too long prefixes'

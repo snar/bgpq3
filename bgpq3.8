@@ -21,7 +21,7 @@
 .\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
-.\" "$Id: bgpq3.8,v 1.7 2012/05/18 15:52:06 snar Exp $
+.\" "$Id: bgpq3.8,v 1.8 2012/08/29 10:58:20 snar Exp $
 .\"
 .Dd Oct 27, 2008
 .Dt BGPQ3 8
@@ -138,7 +138,7 @@ ip prefix-list eltel permit 89.112.64.0/19
 ip prefix-list eltel permit 217.170.64.0/19 ge 20 le 20
 .RE
 .fi
-- you see, prefixes 89.112.32.0/19 and 89.112.64.0/19 now aggregated
+- you see, prefixes 89.112.0.0/19 and 89.112.32.0/19 now aggregated
 into single entry 89.112.0.0/18 ge 19 le 19. 
 .Pp
 Well, for Juniper we can generate even more interesting policy-options,

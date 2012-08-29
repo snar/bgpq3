@@ -151,7 +151,7 @@ more compact:
      ip prefix-list eltel permit 89.112.64.0/19
      ip prefix-list eltel permit 217.170.64.0/19 ge 20 le 20
 
-and, as you see, prefixes `89.112.32.0/19` and `89.112.64.0/19` now aggregated 
+and, as you see, prefixes `89.112.0.0/19` and `89.112.32.0/19` now aggregated 
 into single entry 
 
 	ip prefix-list eltel permit 89.112.0.0/18 ge 19 le 19.
