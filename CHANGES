@@ -1,3 +1,6 @@
+0.1.17 (2012-10-25)
+    - route-sets handling in command-line added. Thanks to Alexandr Turovsky
+    for pointing out.
     - bug in aggregation documentation fixed. Thanks to Nikolay Shopik.
 
 0.1.16 (2012-01-19)

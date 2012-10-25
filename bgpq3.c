@@ -317,6 +317,8 @@ main(int argc, char* argv[])
 	while(argv[0]) { 
 		if(!strncasecmp(argv[0],"AS-",3)) { 
 			bgpq_expander_add_asset(&expander,argv[0]);
+		} else if(!strncasecmp(argv[0],"RS-",3)) { 
+			bgpq_expander_add_rset(&expander,argv[0]);
 		} else if(!strncasecmp(argv[0],"AS",2)) { 
 			char* c;
 			if((c=strchr(argv[0],':'))) { 
