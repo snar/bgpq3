@@ -21,7 +21,7 @@
 .\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
-.\" "$Id: bgpq3.8,v 1.8 2012/08/29 10:58:20 snar Exp $
+.\" "$Id: bgpq3.8,v 1.9 2013/01/08 12:21:14 snar Exp $
 .\"
 .Dd Oct 27, 2008
 .Dt BGPQ3 8
@@ -38,7 +38,7 @@
 .Fl f Ar asn |
 .Fl G Ar asn 
 .Oc
-.Op Fl 36ADd
+.Op Fl 36ADdJjX
 .Op Fl R Ar len
 .Op Fl m Ar max
 .Ar OBJECTS
@@ -56,8 +56,8 @@ assume that your device is asn32-safe.
 .It Fl 6 
 generate IPv6 prefix/access-lists (IPv4 by default).
 .It Fl A
-try to aggregate prefix-lists as much as possible (Cisco prefix-lists and
-Juniper route-filters only supported). 
+try to aggregate prefix-lists as much as possible (not all output
+formats supported).
 .It Fl d
 enable some debugging output.
 .It Fl D
@@ -70,12 +70,14 @@ generate input as-path access-list.
 .It Fl G Ar number
 generate output as-path access-list.
 .It Fl h Ar host
-host running IRRD database (default: whois.radb.net)
+host running IRRD database (default: whois.radb.net).
 .It Fl J
-generate config for Juniper (Cisco by default).
+generate config for Juniper (default: Cisco).
+.It Fl j
+generate output in JSON format (default: Cisco).
 .It Fl m Ar len
 maximum prefix-length of accepted prefixes (default: 32 for IPv4 and 
-128 for IPv6)
+128 for IPv6).
 .It Fl M Ar match 
 extra match conditions for Juniper route-filters.
 .It Fl l Ar name 

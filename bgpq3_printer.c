@@ -239,6 +239,37 @@ bgpq3_print_jprefix(struct sx_radix_node* n, void* ff)
 	fprintf(f,"    %s;\n",prefix);
 };
 
+static int   needscomma=0;
+
+void
+bgpq3_print_json_prefix(struct sx_radix_node* n, void* ff)
+{ 
+	char prefix[128];
+	FILE* f=(FILE*)ff;
+	if(n->isGlue) 
+		goto checkSon;
+	if(!f) 
+		f=stdout;
+	sx_prefix_jsnprintf(&n->prefix, prefix, sizeof(prefix));
+	if (!n->isAggregate) { 
+		fprintf(f, "%s\n    { \"prefix\": \"%s\", \"exact\": true }", 
+			needscomma?",":"", prefix);
+	} else if (n->aggregateLow > n->prefix.masklen) { 
+		fprintf(f, "%s\n    { \"prefix\": \"%s\", \"exact\": false,\n      "
+			"\"greater-equal\": %u, \"less-equal\": %u }", 
+			needscomma?",":"", prefix,
+			n->aggregateLow, n->aggregateHi);
+	} else { 
+		fprintf(f, "%s\n    { \"prefix\": \"%s\", \"exact\": false, "
+			"\"less-equal\": %u }", 
+			needscomma?",":"", prefix, n->aggregateHi);
+	};
+	needscomma=1;
+checkSon: 
+	if(n->son) 
+		bgpq3_print_json_prefix(n->son, ff);
+};
+
 void
 bgpq3_print_jrfilter(struct sx_radix_node* n, void* ff)
 { 
@@ -264,7 +295,6 @@ checkSon:
 		
 
 static char* bname=NULL;
-static int   needscomma=0;
 
 void
 bgpq3_print_cprefix(struct sx_radix_node* n, void* ff)
@@ -440,6 +470,16 @@ bgpq3_print_ciscoxr_prefixlist(FILE* f, struct bgpq_expander* b)
 };
 
 int
+bgpq3_print_json_prefixlist(FILE* f, struct bgpq_expander* b)
+{ 
+	fprintf(f,"{ \"%s\": [",
+		b->name?b->name:"NN");
+	sx_radix_tree_foreach(b->tree,bgpq3_print_json_prefix,f);
+	fprintf(f,"\n] }\n");
+	return 0;
+};
+
+int
 bgpq3_print_cisco_eacl(FILE* f, struct bgpq_expander* b)
 { 
 	bname=b->name;
@@ -456,6 +496,7 @@ bgpq3_print_prefixlist(FILE* f, struct bgpq_expander* b)
 		case V_JUNIPER: return bgpq3_print_juniper_prefixlist(f,b);
 		case V_CISCO: return bgpq3_print_cisco_prefixlist(f,b);
 		case V_CISCO_XR: return bgpq3_print_ciscoxr_prefixlist(f,b);
+		case V_JSON: return bgpq3_print_json_prefixlist(f,b);
 	};
 	return 0;
 };
@@ -467,6 +508,7 @@ bgpq3_print_eacl(FILE* f, struct bgpq_expander* b)
 		case V_JUNIPER: return bgpq3_print_juniper_routefilter(f,b);
 		case V_CISCO: return bgpq3_print_cisco_eacl(f,b);
 		case V_CISCO_XR: sx_report(SX_FATAL, "unreachable point\n");
+		case V_JSON: sx_report(SX_FATAL, "unreachable point\n");
 	};
 	return 0;
 };

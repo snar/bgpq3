@@ -19,7 +19,7 @@ NAME
 SYNOPSIS
 --------
 
-	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-36ADd] [-R len] [-m max] OBJECTS [...]
+	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-36ADdJjX] [-R len] [-m max] OBJECTS [...]
 
 DESCRIPTION
 -----------
@@ -40,8 +40,8 @@ The options are as follows:
 
 -    -A      
 
-	> try to aggregate generated filters as much as possible (Cisco 
-    prefix-lists and Juniper route-filters only supported).
+	> try to aggregate generated filters as much as possible (not all
+    output formats supported).
 
 -    -d      
 
@@ -66,15 +66,19 @@ The options are as follows:
 
 -    -h host
 
-	> host running IRRD database (default: whois.radb.net)
+	> host running IRRD database (default: whois.radb.net).
 
 -    -J      
 
-	> generate config for Juniper (Cisco by default).
+	> generate config for Juniper (default: Cisco).
+
+-    -j      
+
+	> generate output in JSON format (default: Cisco).
 
 -    -m len  
 
-	> maximum length of accepted prefixes
+	> maximum length of accepted prefixes (default: 32 for IPv4, 128 for IPv6).
 
 -    -M match 
 
@@ -230,6 +234,20 @@ When everything is OK, `bgpq3` generates result to standard output and
 exits with status == 0.  In case of errors they are printed to stderr and
 program exits with non-zero status.
 
+NOTES ON ULTRA-LARGE PREFIX-LISTS
+---------------------------------
+
+When using `bgpq3` to expand extra-large AS-SETs, `bgpq3` may stuck
+due to lacking tcp buffer size. To avoid this, tune your OS. 
+FreeBSD can be tuned in the following way:
+
+    sysctl -w net.inet.tcp.sendbuf_max=16777216
+
+Please note that generated prefix-lists may not fit your router's
+limitations. For example, JunOS supports only 85,325 prefixes in 
+each prefix-list [4](http://www.juniper.net/techpubs/en_US/junos11.4/topics/reference/configuration-statement/prefix-list-edit-policy-options.html). 
+
+
 SEE ALSO
 --------
 
@@ -238,6 +256,7 @@ SEE ALSO
      for information on 'asdot' and 'asplain' notations.
 3. [Cisco documentation](http://www.cisco.com/en/US/prod/collateral/iosswrel/ps6537/ps6554/ps6599/data_sheet_C78-521821.html)
      for information on Cisco implementation of ASN32.
+4. [JunOS prefix-lists limitation](http://www.juniper.net/techpubs/en_US/junos11.4/topics/reference/configuration-statement/prefix-list-edit-policy-options.html)
 
 AUTHOR
 ------

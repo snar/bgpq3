@@ -24,7 +24,7 @@ int
 usage(int ecode)
 { 
 	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
-		" [-36ADJXd] [-R len] <OBJECTS>...\n");
+		" [-36ADJjXd] [-R len] <OBJECTS>...\n");
 	printf(" -3        : assume that your device is asn32-safe\n"); 
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -A        : try to aggregate Cisco prefix-lists or Juniper "
@@ -38,6 +38,7 @@ usage(int ecode)
 	printf(" -h host   : host running IRRD software (whois.radb.net by "
 		"default)\n");
 	printf(" -J        : generate config for JunOS (Cisco IOS by default)\n");
+	printf(" -j        : generate JSON output (Cisco IOS by default)\n");
 	printf(" -M match  : extra match conditions for JunOS route-filters\n");
 	printf(" -m len    : maximum prefix length (default: 32 for IPv4, "
 		"128 for IPv6)\n");
@@ -66,8 +67,8 @@ exclusive()
 void
 vendor_exclusive()
 { 
-	fprintf(stderr, "-J (JunOS) and -X (IOS XR) options are mutually "
-		"exclusive\n");
+	fprintf(stderr, "-J (JunOS), -j (JSON) and -X (IOS XR) options are mutually"
+		" exclusive\n");
 	exit(1);
 };
 
@@ -118,7 +119,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36AdDES:Jf:l:m:M:W:PR:G:Th:X"))!=EOF) { 
+	while((c=getopt(argc,argv,"36AdDES:jJf:l:m:M:W:PR:G:Th:X"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -142,6 +143,9 @@ main(int argc, char* argv[])
 			break;
 		case 'J': if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_JUNIPER;
+			break;
+		case 'j': if(expander.vendor) vendor_exclusive();
+			expander.vendor=V_JSON;
 			break;
 		case 'f': 
 			if(expander.generation) exclusive();
@@ -251,6 +255,10 @@ main(int argc, char* argv[])
 	if(expander.vendor==V_CISCO_XR && expander.generation!=T_PREFIXLIST) { 
 		sx_report(SX_FATAL, "Sorry, only prefix-sets supported for IOS XR\n");
 	};
+	if(expander.vendor==V_JSON && expander.generation!=T_PREFIXLIST) { 
+		sx_report(SX_FATAL, "Sorry, only prefix-lists supported for JSON "
+			"output\n");
+	};
 
 	if(expander.asdot && expander.vendor!=V_CISCO) { 
 		sx_report(SX_FATAL,"asdot notation supported only for Cisco, Juniper"
@@ -268,6 +276,7 @@ main(int argc, char* argv[])
 			" of prefix-lists (-P, default)\n");
 		exit(1);
 	};
+
 	if(aggregate && expander.generation<T_PREFIXLIST) { 
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) used only for prefix-"
 			"lists, extended access-lists and route-filters\n");
@@ -291,6 +300,7 @@ main(int argc, char* argv[])
 				"supported only with prefix-list generation\n", refine);
 		};
 	};
+
 	if(maxlen) { 
 		if((expander.family==AF_INET6 && maxlen>128) || 
 			(expander.family==AF_INET  && maxlen>32)) { 
@@ -310,7 +320,6 @@ main(int argc, char* argv[])
 		sx_report(SX_FATAL,"Sorry, ipv6 access-lists not supported for Cisco"
 			" yet.\n");
 	};
-
 
 	if(!argv[0]) usage(1);
 

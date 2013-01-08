@@ -151,6 +151,18 @@ sx_prefix_snprintf(struct sx_prefix* p, char* rbuffer, int srb)
 	return snprintf(rbuffer,srb,"%s/%i",buffer,p->masklen);
 };
 
+int
+sx_prefix_jsnprintf(struct sx_prefix* p, char* rbuffer, int srb)
+{ 
+	char buffer[128];
+	if(!p) { 
+		snprintf(rbuffer,srb,"(null)"); 
+		return 0; 
+	};
+	inet_ntop(p->family,&p->addr,buffer,sizeof(buffer));
+	return snprintf(rbuffer,srb,"%s\\/%i",buffer,p->masklen);
+};
+
 struct sx_radix_tree* 
 sx_radix_tree_new(int af)
 { 

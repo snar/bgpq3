@@ -48,6 +48,7 @@ struct sx_prefix* sx_prefix_new(int af, char* text);
 int sx_prefix_parse(struct sx_prefix* p, int af, char* text);
 int sx_prefix_fprint(FILE* f, struct sx_prefix* p);
 int sx_prefix_snprintf(struct sx_prefix* p, char* rbuffer, int srb);
+int sx_prefix_jsnprintf(struct sx_prefix* p, char* rbuffer, int srb);
 struct sx_radix_tree* sx_radix_tree_new(int af);
 struct sx_radix_node* sx_radix_node_new(struct sx_prefix* prefix);
 struct sx_prefix* sx_prefix_overlay(struct sx_prefix* p, int n);
