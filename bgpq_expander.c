@@ -353,11 +353,11 @@ bgpq_pipeline(FILE* f, int (*callback)(char*, void*), void* udata,
 
 	bp=malloc(sizeof(struct bgpq_prequest));
 	if(!bp) { 
-		sx_report(SX_FATAL,"Unable to allocate %i bytes: %s\n", 
+		sx_report(SX_FATAL,"Unable to allocate %lu bytes: %s\n", 
 			sizeof(struct bgpq_prequest),strerror(errno));
 		exit(1);
 	};
-	memset(bp,0,sizeof(bp));
+	memset(bp,0,sizeof(struct bgpq_prequest));
 
 	ret=fwrite(request,1,strlen(request),f);
 
@@ -494,7 +494,7 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 		sx_report(SX_FATAL,"EOF from radb (expand,radb)\n");
 		exit(1);
 	};
-	SX_DEBUG(debug_expander>2,"expander: initially got %i bytes, '%s'\n",
+	SX_DEBUG(debug_expander>2,"expander: initially got %lu bytes, '%s'\n",
 		strlen(request),request);
 	if(request[0]=='A') { 
 		char* eon, *c;
@@ -516,7 +516,7 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 			};
 			exit(1);
 		};
-		SX_DEBUG(debug_expander>2,"expander: final reply of %i bytes, '%s'\n",
+		SX_DEBUG(debug_expander>2,"expander: final reply of %lu bytes, '%s'\n",
 			strlen(recvbuffer),recvbuffer);
 			
 		for(c=recvbuffer; c<recvbuffer+togot;) { 
