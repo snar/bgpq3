@@ -1,0 +1,41 @@
+CC=@CC@
+CFLAGS=@CFLAGS@ @DEFS@ -g -Wall -I. -O0
+LDADD=@LDFLAGS@ @LIBS@
+INSTALL=@INSTALL@
+
+prefix = @prefix@
+bindir = @bindir@
+exec_prefix = @exec_prefix@
+datarootdir = @datarootdir@
+datadir = @datadir@
+infodir = @infodir@
+mandir = @mandir@
+
+
+OBJECTS=bgpq3.o sx_report.o bgpq_expander.o sx_slentry.o bgpq3_printer.o \
+	sx_prefix.o strlcpy.o sx_maxsockbuf.o
+SRCS=bgpq3.c sx_report.c bgpq_expander.c sx_slentry.c bgpq3_printer.c \
+	sx_prefix.c strlcpy.c sx_maxsockbuf.c
+
+all: bgpq3
+
+bgpq3: ${OBJECTS}
+	${CC} ${CFLAGS} -o bgpq3 ${OBJECTS} ${LDADD}
+
+.c.o: 
+	${CC} ${CFLAGS} -c $<
+
+clean: 
+	rm -rf Makefile autom4te.cache bgpq3 config.h config.log config.status
+	rm -rf *.o *.core core.* core
+
+install: bgpq3
+	${INSTALL} -c -s -m 755 bgpq3 @bindir@
+	if test ! -d @prefix@/man/man8 ; then mkdir -p @prefix@/man/man8 ; fi
+	${INSTALL} -m 644 bgpq3.8 @prefix@/man/man8
+
+depend: 
+	makedepend -- $(CFLAGS) -- $(SRCS)
+
+bgpq3.html: bgpq3.txt
+	markdown2 bgpq3.txt > bgpq3.html

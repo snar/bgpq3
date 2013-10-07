@@ -1,0 +1,112 @@
+0.1.20 (2013-10-07) 
+    - socket close code fixed. Thanks to Martin J. Levy.
+
+0.1.19 (2013-05-09)
+    - CLANG compilation issues fixed.
+    - bgpq3.spec added. Thanks to Arnoud Vermeer.
+    
+0.1.18 (2013-01-08)
+    - JSON output format. Thanks to Job Snijders (Atrato Networks).
+
+0.1.17 (2012-10-25)
+    - route-sets handling in command-line added. Thanks to Alexandr Turovsky
+    for pointing out.
+    - bug in aggregation documentation fixed. Thanks to Nikolay Shopik.
+
+0.1.16 (2012-01-19)
+    - new option -m <len>: maximum length of accepted prefixes. 
+    Suggested by Eugene Demidov, used to discard 'too long prefixes'
+    (like /30-/32) even if they are registered in IRR. By default 
+    limit is not set and all prefixes accepted.
+    - documentation redesigned into text/markdown and text/html (manpage 
+    supported still).
+
+0.1.15 (2011-07-15)
+    - prefix-set's for Cisco IOS XR now supported too. 
+
+0.1.14 (2011-06-18)
+    - Fixed bug in sx_maxsockbuf in rare cases of OS maxsockbuf >2M. 
+    Thanks to Andreas Lundin.
+
+0.1.13 (2011-06-14)
+    - never publically released.
+
+0.1.12 (2010-10-08)
+    - Fixed bug preventing AS262144 (that's AS4.0 in asdot) to expand. 
+    Thanks to Sergey Matveychuk
+
+0.1.11 (2010-04-19)
+    - Fixed another bug in aggregation (-A) mode, thanks to Dmitry Tejblum.
+
+0.1.10 (2009-06-13)
+    - Fixed bug in aggregation (-A) mode, thanks to Sergey Gonchar. 
+
+0.1.9 (2009-03-27)
+    - RIPE changed ASN32 notation to asplain. And RADB does not support
+    asplain indexing (yet?).... Fixed. Thanks to Pavel Gluchouk. 
+
+0.1.8 (2008-12-25)
+    - new flag -D for Cisco asdot notation. Cisco behaviour is a bit
+    strange for me, but, well, that's their decision: 
+When the asdot format is enabled as the default, any regular expressions 
+to match 4-byte autonomous system numbers must be written using the asdot 
+format, or else the regular expression match will fail. 
+    (c) http://www.cisco.com/en/US/docs/ios/12_0s/release/ntes/120SNEWF.html
+        #wp3521658 (note the URL wrap). 
+
+0.1.7 (2008-12-19): 
+    - man page. Finally :) 
+    - option -h now means not help, but now it can be used to point to 
+    alternate IRRD host, like in old bgpq.
+
+0.1.6 (2008-08-08): 
+    - maxsockbuf call added, that can help with pipelining of really large
+    as-sets.
+    - new key -M <extra match condition> for juniper route-filters, f.e.: 
+    bgpq3 -JEM "protocol bgp;\n    community no-export" -l PolicyName/TermName 
+    will generate term with additional match conditions, like: 
+
+    policy-options {
+     policy-statement PolicyName {
+      term TermName {
+    replace:
+       from {
+        protocol bgp;
+        community no-export;
+        route-filter 10.0.0.0/24 exact;
+       }
+      }
+     }
+    }
+
+0.1.5 (2008-06-02): 
+    - route-set's expansion added. Fully functional for IPv4 prefixes, but
+    not for IPv6 - only those prefixes explicitely marked as 'member-of: RS..'
+    will be expanded. This is due to limitation in IRRd.
+    - extended access-lists (Cisco) and route-filters (Juniper) generation
+    is supported now with new -E key. For Cisco ipv6 access-lists is not
+    yet supported. 
+
+0.1.4 (2008-05-30): 
+    - bugfix for juniper as-path group generation. Thanks to Alexander Shikoff.
+
+0.1.3 (2008-05-20): 
+    - aggregation (-A) now supported for Cisco prefix-lists. 
+    - pipelining now can be enabled for RIPE-style queries too (ipv6). 
+    - more-specific routes (-R len) feature ported from bgpq
+    - pipelining now set by default. -T flag now disables pipelining.
+    - strlcpy.c imported into sources. Not found on Linux :) 
+
+0.1.2 (2008-05-19): 
+    - final support for asn32, now with correct syntax for Juniper. 
+    - experimental 'pipelining' mode (flag -T), much faster when 
+    working with big as-set's. 
+    - RIPE-style query (-i origin) now requests only route6 objects. 
+
+0.1.1 (2008-05-16): 
+    - initial support for asn32 added (flag -3). By default it's off, 
+    and when bgpq sees 32-bit asn in resolver queue, it either replaces
+    it with AS23456 (in as-path generation mode) or queries radb for
+    prefixes with that origin. 
+    Note: for now only JunOS 9.1 can handle asn32, not Cisco IOS..
+
