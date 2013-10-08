@@ -24,8 +24,9 @@ int
 usage(int ecode)
 { 
 	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
-		" [-36ADJjXd] [-R len] <OBJECTS>...\n");
+		" [-346ADJjXd] [-R len] <OBJECTS>...\n");
 	printf(" -3        : assume that your device is asn32-safe\n"); 
+	printf(" -4        : generate IPv4 prefix-lists (default)\n"); 
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -A        : try to aggregate Cisco prefix-lists or Juniper "
 			"route-filters\n             as much as possible\n");
@@ -112,19 +113,32 @@ main(int argc, char* argv[])
 { 
 	int c;
 	struct bgpq_expander expander;
-	int af=AF_INET;
+	int af=AF_INET, selectedipv4 = 0;
 	int widthSet=0, aggregate=0, refine=0;
 	unsigned long maxlen=0;
 
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"36AdDES:jJf:l:m:M:W:PR:G:Th:X"))!=EOF) { 
+	while((c=getopt(argc,argv,"346AdDES:jJf:l:m:M:W:PR:G:Th:X"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
 			break;
-		case '6': af=AF_INET6;
+		case '4': 
+			/* do nothing, expander already configured for IPv4 */
+			if (expander.family == AF_INET6) {
+				sx_report(SX_FATAL, "-4 and -6 are mutually exclusive\n");
+				exit(1);
+			};
+			selectedipv4=1;
+			break;
+		case '6': 
+			if (selectedipv4) { 
+				sx_report(SX_FATAL, "-4 and -6 are mutually exclusive\n");
+				exit(1);
+			};
+			af=AF_INET6;
 			expander.family=AF_INET6;
 			expander.tree->family=AF_INET6;
 			break;

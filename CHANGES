@@ -1,3 +1,8 @@
+0.1.20-todo (2013-10-07)
+    - socket close code fixed. Thanks to Martin J. Levy.
+    - new flag -4, "force ipv4". Actually does a little more than allowing
+    for pedantic checks. Thanks to Martin J. Levy.
+
 0.1.19 (2013-05-09)
     - CLANG compilation issues fixed.
     - bgpq3.spec added. Thanks to Arnoud Vermeer.

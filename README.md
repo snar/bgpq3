@@ -34,6 +34,10 @@ The options are as follows:
 
 	> assume that your device is asn32-capable.
 
+-    -4 
+
+	> generate IPv4 prefix/access-lists (default).
+
 -    -6      
 
 	> generate IPv6 prefix/access-lists (IPv4 by default).

@@ -694,9 +694,8 @@ bgpq_expand(struct bgpq_expander* b)
 		};
 	};
 				
-	write(fd,"!q\n",3);
-	shutdown(fd,SHUT_RDWR);
-	close(fd);
+	fwrite("!q\n",1,3,f);
+	fclose(f);
 	return 1;
 };
 

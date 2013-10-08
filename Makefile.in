@@ -4,6 +4,7 @@ LDADD=@LDFLAGS@ @LIBS@
 INSTALL=@INSTALL@
 
 prefix = @prefix@
+bindir = @bindir@
 exec_prefix = @exec_prefix@
 datarootdir = @datarootdir@
 datadir = @datadir@
@@ -36,5 +37,5 @@ install: bgpq3
 depend: 
 	makedepend -- $(CFLAGS) -- $(SRCS)
 
-bgpq3.html: bgpq3.txt
-	markdown2 bgpq3.txt > bgpq3.html
+bgpq3.html: README.md
+	markdown2 README.md > bgpq3.html
