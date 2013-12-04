@@ -27,6 +27,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "config.h"
+
 #ifndef HAVE_STRLCPY
 
 #include <sys/types.h>
