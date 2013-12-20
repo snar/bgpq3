@@ -246,6 +246,14 @@ due to lacking tcp buffer size. To avoid this, tune your OS.
 FreeBSD can be tuned in the following way:
 
     sysctl -w net.inet.tcp.sendbuf_max=16777216
+    
+Linux can be tuned in the following way:
+
+    sysctl -w net.ipv4.tcp_window_scaling=1
+    sysctl -w net.core.rmem_max=16777216
+    sysctl -w net.core.wmem_max=16777216
+    sysctl -w net.ipv4.tcp_rmem="4096 87380 16777216"
+    sysctl -w net.ipv4.tcp_wmem="4096 65536 16777216"
 
 Please note that generated prefix-lists may not fit your router's
 limitations. For example, JunOS supports only 85,325 prefixes in 
