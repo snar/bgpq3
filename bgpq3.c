@@ -47,13 +47,14 @@ usage(int ecode)
 		" list\n");
 	printf(" -P        : generate prefix-list (default, just for backward"
 		" compatibility)\n");
-	printf(" -R len    : allow specific routes up to masklen specified\n");
+	printf(" -r len    : allow more specific routes from masklen specified\n");
+	printf(" -R len    : allow more specific routes up to specified masklen\n");
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
-	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2013\n\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2014\n\n");
 	exit(ecode);
 };
 
@@ -114,13 +115,13 @@ main(int argc, char* argv[])
 	int c;
 	struct bgpq_expander expander;
 	int af=AF_INET, selectedipv4 = 0;
-	int widthSet=0, aggregate=0, refine=0;
+	int widthSet=0, aggregate=0, refine=0, refineLow=0;
 	unsigned long maxlen=0;
 
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"346AdDES:jJf:l:m:M:W:PR:G:Th:X"))!=EOF) { 
+	while((c=getopt(argc,argv,"346AdDES:jJf:l:m:M:W:Pr:R:G:Th:X"))!=EOF) { 
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -175,6 +176,13 @@ main(int argc, char* argv[])
 			if(expander.generation) exclusive();
 			expander.generation=T_PREFIXLIST;
 			break;
+		case 'r': 
+			refineLow=strtoul(optarg,NULL,10);
+			if(!refineLow) { 
+				sx_report(SX_FATAL,"Invalid refineLow value: %s\n", optarg);
+				exit(1);
+			};
+			break; 
 		case 'R': 
 			refine=strtoul(optarg,NULL,10);
 			if(!refine) { 
@@ -260,12 +268,6 @@ main(int argc, char* argv[])
 		expander.generation=T_PREFIXLIST;
 	};
 
-	/*
-	if(expander.vendor==V_CISCO && expander.asn32 && 
-		expander.generation<T_PREFIXLIST) { 
-		sx_report(SX_FATAL,"Sorry, AS32-safety is not yet ready for Cisco\n");
-	};
-	*/
 	if(expander.vendor==V_CISCO_XR && expander.generation!=T_PREFIXLIST) { 
 		sx_report(SX_FATAL, "Sorry, only prefix-sets supported for IOS XR\n");
 	};
@@ -297,21 +299,52 @@ main(int argc, char* argv[])
 		exit(1);
 	};
 
-	if(refine) { 
-		if(expander.family==AF_INET6 && (refine>128)) { 
-			sx_report(SX_FATAL, "Invalid value for refinement: %u (1-128 for"
+	if(refineLow && !refine) { 
+		if(expander.family == AF_INET) 
+			refine = 32;
+		else
+			refine = 128;
+	};
+
+	if (refineLow && refineLow > refine) { 
+		sx_report(SX_FATAL, "Incompatible values for -r %u and -R %u\n", 
+			refineLow, refine);
+	};
+
+	if(refine || refineLow) { 
+		if(expander.family==AF_INET6 && refine>128) { 
+			sx_report(SX_FATAL, "Invalid value for refine(-R): %u (1-128 for"
 				" IPv6)\n", refine);
+		} else if(expander.family==AF_INET6 && refineLow>128) { 
+			sx_report(SX_FATAL, "Invalid value for refineLow(-r): %u (1-128 for"
+				" IPv6)\n", refineLow);
 		} else if(expander.family==AF_INET && refine>32) { 
-			sx_report(SX_FATAL, "Invalid value for refinement: %u (1-32 for"
+			sx_report(SX_FATAL, "Invalid value for refine(-R): %u (1-32 for"
 				" IPv4)\n", refine);
+		} else if(expander.family==AF_INET && refineLow>32) { 
+			sx_report(SX_FATAL, "Invalid value for refineLow(-r): %u (1-32 for"
+				" IPv4)\n", refineLow);
 		};
+
 		if(expander.vendor==V_JUNIPER && expander.generation==T_PREFIXLIST) { 
-			sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
-				"is not supported for Juniper prefix-lists\n", refine);
+			if(refine) { 
+				sx_report(SX_FATAL, "Sorry, more-specific filters (-R %u) "
+					"is not supported for Juniper prefix-lists.\n"
+					"Use router-filters (-E) instead\n", refine);
+			} else { 
+				sx_report(SX_FATAL, "Sorry, more-specific filters (-r %u) "
+					"is not supported for Juniper prefix-lists.\n"
+					"Use route-filters (-E) instead\n", refineLow);
+			};
 		};
 		if(expander.generation<T_PREFIXLIST) { 
-			sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
-				"supported only with prefix-list generation\n", refine);
+			if(refine) {  
+				sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
+		 			"supported only with prefix-list generation\n", refine);
+			} else { 
+				sx_report(SX_FATAL, "Sorry, more-specific filter (-r %u) "
+					"supported only with prefix-list generation\n", refineLow);
+			};
 		};
 	};
 
@@ -370,6 +403,9 @@ main(int argc, char* argv[])
 
 	if(refine) 
 		sx_radix_tree_refine(expander.tree,refine);
+
+	if(refineLow) 
+		sx_radix_tree_refineLow(expander.tree, refineLow);
 
 	if(aggregate) 
 		sx_radix_tree_aggregate(expander.tree);

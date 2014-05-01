@@ -1,3 +1,8 @@
+0.1.20-todo2 (2014-05-01)
+    - new flag -r <len>, allowing bgpq to generate limited set of more-specific
+    routes - only routes with prefix-length >= <len> are accepted. 
+    Thanks to Pavel Gulchouck for suggesion. 
+
 0.1.20-todo (2013-10-07)
     - socket close code fixed. Thanks to Martin J. Levy.
     - new flag -4, "force ipv4". Actually does a little more than allowing

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2013 Alexandre Snarskii
+.\" Copyright (c) 2007-2014 Alexandre Snarskii
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -21,7 +21,6 @@
 .\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
-.\" "$Id: bgpq3.8,v 1.10 2013/10/08 10:50:34 snar Exp $
 .\"
 .Dd Oct 27, 2008
 .Dt BGPQ3 8
@@ -39,6 +38,7 @@
 .Fl G Ar asn 
 .Oc
 .Op Fl 346ADdJjX
+.Op Fl r Ar len
 .Op Fl R Ar len
 .Op Fl m Ar max
 .Ar OBJECTS
@@ -86,8 +86,10 @@ extra match conditions for Juniper route-filters.
 name of generated entry.
 .It Fl P
 generate prefix-list (default, backward compatibility).
+.It Fl r Ar len
+allow more specific routes starting with specified masklen too. 
 .It Fl R Ar len
-allow specific routes up to specified masklen too. 
+allow more specific routes up to specified masklen too. 
 .It Fl S Ar sources
 use specified sources only (default: RADB,RIPE,APNIC).
 .It Fl T
@@ -95,7 +97,7 @@ disable pipelining.
 .It Fl X
 generate config for Cisco IOS XR devices (plain IOS by default).
 .It Ar OBJECTS 
-means networks (in prefix format), autonomous systems and as-macros. 
+means networks (in prefix format), autonomous systems, as-sets and route-sets.
 .El
 .Sh EXAMPLES
 Generating named juniper prefix-filter for AS20597: 
@@ -149,31 +151,31 @@ Well, for Juniper we can generate even more interesting policy-options,
 using -M <extra match conditions>, -R <len> and hierarchical names: 
 .nf
 .RS
-~>bgpq3 -AJEl eltel/specifics -R 32 -M "community blackhole" AS20597
+./bgpq3 -AJEl eltel/specifics -r 29 -R 32 -M "community blackhole" AS20597
 policy-options {
  policy-statement eltel {
   term specifics {
 replace:
    from {
     community blackhole;
-    route-filter 81.9.0.0/20 upto /32;
-    route-filter 81.9.32.0/20 upto /32;
-    route-filter 81.9.96.0/20 upto /32;
-    route-filter 81.222.128.0/20 upto /32;
-    route-filter 81.222.192.0/18 upto /32;
-    route-filter 85.249.8.0/21 upto /32;
-    route-filter 85.249.224.0/19 upto /32;
-    route-filter 89.112.0.0/18 prefix-length-range /19-/32;
-    route-filter 89.112.64.0/19 upto /32;
-    route-filter 217.170.64.0/19 prefix-length-range /20-/32;
+    route-filter 81.9.0.0/20 prefix-length-range /29-/32;
+    route-filter 81.9.32.0/20 prefix-length-range /29-/32;
+    route-filter 81.9.96.0/20 prefix-length-range /29-/32;
+    route-filter 81.222.128.0/20 prefix-length-range /29-/32;
+    route-filter 81.222.192.0/18 prefix-length-range /29-/32;
+    route-filter 85.249.8.0/21 prefix-length-range /29-/32;
+    route-filter 85.249.224.0/19 prefix-length-range /29-/32;
+    route-filter 89.112.0.0/17 prefix-length-range /29-/32;
+    route-filter 217.170.64.0/19 prefix-length-range /29-/32;
    }
   }
  }
 }
 .RE
 .fi
-generated policy-option term now allows all specifics for eltel networks
-if they match with special community 'blackhole'.
+generated policy-option term now allows all specifics with prefix-length
+between /29 and /32 for eltel networks if they match with special community 
+'blackhole' (defined elsewhere in configuration).
 .Pp
 Of course, this version supports IPv6 (-6): 
 .nf

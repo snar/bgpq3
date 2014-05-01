@@ -695,7 +695,66 @@ sx_radix_tree_refine(struct sx_radix_tree* tree, unsigned refine)
 	if(tree && tree->head) return sx_radix_node_refine(tree->head, refine);
 	return 0;
 };
+
+static void 
+setGlueFrom(struct sx_radix_node* node, void* udata)
+{ 
+	unsigned refine=*(unsigned*)udata;
+	if(node && node->prefix.masklen <= refine) {
+		node->isGlue=1;
+	};
+};
+
+static int 
+sx_radix_node_refineLow(struct sx_radix_node* node, unsigned refineLow)
+{ 
+	if(!node->isGlue && node->prefix.masklen<=refineLow) { 
+		if(!node->isAggregate) { 
+			node->isAggregate=1;
+			node->aggregateLow=refineLow;
+			if(node->prefix.family == AF_INET) { 
+				node->aggregateHi=32;
+			} else { 
+				node->aggregateHi=128;
+			}
+		} else { 
+			node->aggregateLow=refineLow;
+		};
+		if(node->l) { 
+			sx_radix_node_foreach(node->l, setGlueFrom, &refineLow);
+			sx_radix_node_refineLow(node->l, refineLow);
+		};
+		if(node->r) { 
+			sx_radix_node_foreach(node->r, setGlueFrom, &refineLow);
+			sx_radix_node_refineLow(node->r, refineLow);
+		};
+	} else if(!node->isGlue && node->prefix.masklen==refineLow) { 
+		/* not setting aggregate in this case */
+		if(node->l) sx_radix_node_refineLow(node->l, refineLow);
+		if(node->r) sx_radix_node_refineLow(node->r, refineLow);
+	} else if(node->isGlue) { 
+		if(node->r) sx_radix_node_refineLow(node->r, refineLow);
+		if(node->l) sx_radix_node_refineLow(node->l, refineLow);
+	} else { 
+		/* node->prefix.masklen > refine */
+		/* do nothing, should pass specifics 'as is'. Also, do not
+		process any embedded routes, their masklen is bigger, too... 
+		node->isGlue=1;
+		if(node->l) sx_radix_node_foreach(node->l, setGlue, NULL);
+		if(node->r) sx_radix_node_foreach(node->r, setGlue, NULL);
+		*/
+	};
+	return 0;
+};
 	
+
+int
+sx_radix_tree_refineLow(struct sx_radix_tree* tree, unsigned refineLow)
+{ 
+	if(tree && tree->head) 
+		return sx_radix_node_refineLow(tree->head, refineLow);
+	return 0;
+};
 
 
 #if SX_PTREE_TEST

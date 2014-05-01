@@ -1,16 +1,3 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.or
-g/TR/html4/loose.dtd"> 
-<html><head><style type='text/css'>
-h1 { color: #3c78b5; border-bottom: 3px solid #3c78b5; font-size: 180%; }
-h2 { color: #3c78b5; border-bottom: 2px solid #3c78b5; font-size: 140%; }
-h3 { color: #3c78b5; border-bottom: 1px dotted #3c78b5; font-size: 129%; }
-em { color: #0000FF; }
-code { font-size:12px; background-color:#f8f8ff; border:1px; }
-pre  { border: 1px dotted #3c78b5; background-color: #f8f8ff; margin: 1em 1em;}
-body { width: 80%; margin: 0 3em; }
-ul	{ list-style: none; }
-</style></head><body>
-
 NAME
 ----
 
@@ -19,7 +6,7 @@ NAME
 SYNOPSIS
 --------
 
-	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-36ADdJjX] [-R len] [-m max] OBJECTS [...]
+	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-346ADdJjX] [-r len] [-R len] [-m max] OBJECTS [...]
 
 DESCRIPTION
 -----------
@@ -97,6 +84,11 @@ The options are as follows:
 	> generate prefix-list (default behaviour, flag added for backward 
 	compatibility only).
 
+-    -r len 
+
+        > allow more-specific routes with masklen starting with specified 
+        length.
+
 -    -R len  
 
 	> allow more-specific routes up to specified masklen too.
@@ -115,7 +107,8 @@ The options are as follows:
 
 	> generate config for Cisco IOS XR devices (plain IOS by default).
 
-`OBJECTS` means networks (in prefix format), autonomous systems and as-macros.
+`OBJECTS` means networks (in prefix format), autonomous systems, as-sets 
+and route-sets. 
 
 EXAMPLES
 --------
@@ -165,33 +158,34 @@ into single entry
 	ip prefix-list eltel permit 89.112.0.0/18 ge 19 le 19.
 
 Well, for Juniper we can generate even more interesting policy-statement,
-using `-M <extra match conditions>`, `-R <len>` and hierarchical names:
+using `-M <extra match conditions>`, `-r <len>`, `-R <len>` and hierarchical 
+names:
 
-     user@host:~>bgpq3 -AJEl eltel/specifics -R 32 -M "community blackhole" AS20597
-     policy-options {
-      policy-statement eltel {
-       term specifics {
-     replace:
-        from {
-         community blackhole;
-         route-filter 81.9.0.0/20 upto /32;
-         route-filter 81.9.32.0/20 upto /32;
-         route-filter 81.9.96.0/20 upto /32;
-         route-filter 81.222.128.0/20 upto /32;
-         route-filter 81.222.192.0/18 upto /32;
-         route-filter 85.249.8.0/21 upto /32;
-         route-filter 85.249.224.0/19 upto /32;
-         route-filter 89.112.0.0/18 prefix-length-range /19-/32;
-         route-filter 89.112.64.0/19 upto /32;
-         route-filter 217.170.64.0/19 prefix-length-range /20-/32;
-        }
-       }
-      }
-     }
+     user@host:~>bgpq3 -AJEl eltel/specifics -r 29 -R 32 -M "community blackhole" AS20597
+	policy-options {
+	 policy-statement eltel {
+	  term specifics {
+	replace:
+	   from {
+	    community blackhole;
+	    route-filter 81.9.0.0/20 prefix-length-range /29-/32;
+	    route-filter 81.9.32.0/20 prefix-length-range /29-/32;
+	    route-filter 81.9.96.0/20 prefix-length-range /29-/32;
+	    route-filter 81.222.128.0/20 prefix-length-range /29-/32;
+	    route-filter 81.222.192.0/18 prefix-length-range /29-/32;
+	    route-filter 85.249.8.0/21 prefix-length-range /29-/32;
+	    route-filter 85.249.224.0/19 prefix-length-range /29-/32;
+	    route-filter 89.112.0.0/17 prefix-length-range /29-/32;
+	    route-filter 217.170.64.0/19 prefix-length-range /29-/32;
+	   }
+	  }
+	 }
+	}
 
-generated policy-option term now allows all more-specific routes 
-for eltel networks if they marked with community 'blackhole' (defined
-elsewhere in configuration).
+
+generated policy-option term now allows more-specific routes in range
+/29 - /32 for eltel networks if they marked with community 'blackhole' 
+(defined elsewhere in configuration).
 
 Of course, `bgpq3` supports IPv6 (-6):
 
