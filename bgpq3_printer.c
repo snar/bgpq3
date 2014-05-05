@@ -426,7 +426,7 @@ bgpq3_print_juniper_prefixlist(FILE* f, struct bgpq_expander* b)
 int
 bgpq3_print_juniper_routefilter(FILE* f, struct bgpq_expander* b)
 { 
-	char* c;
+	char* c=NULL;
 	if(b->name && (c=strchr(b->name,'/'))) { 
 		*c=0;
 		fprintf(f,"policy-options {\n policy-statement %s {\n  term %s {\n"
