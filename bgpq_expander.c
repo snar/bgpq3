@@ -629,17 +629,12 @@ bgpq_expand(struct bgpq_expander* b)
 	if(b->generation>=T_PREFIXLIST) { 
 		unsigned i, j, k;
 		for(mc=b->rsets;mc;mc=mc->next) { 
-			if(b->family==AF_INET) { 
-				bgpq_expand_radb(f,bgpq_expanded_prefix,b,"!i%s,1\n",mc->text);
-			} else { 
-				if(!pipelining) { 
-					bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
-						"-T route6 -i member-of %s\n",mc->text);
-				} else { 
-					bgpq_pipeline(f,bgpq_expanded_v6prefix,b,
-						"-T route6 -i member-of %s\n", mc->text);
-				};
-			};
+            if(!pipelining) { 
+			    bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
+                        "-T route6 -i member-of %s\n",mc->text);
+            } else { 
+                bgpq_expand_radb(f,bgpq_expanded_prefix,b,"!i%s,1\n",mc->text);
+            };
 		};
 		for(k=0;k<sizeof(b->asn32s)/sizeof(unsigned char*);k++) { 
 			if(!b->asn32s[k]) continue;
