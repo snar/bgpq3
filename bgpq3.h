@@ -8,7 +8,8 @@ typedef enum {
 	V_CISCO = 0,
 	V_JUNIPER,
 	V_CISCO_XR,
-	V_JSON
+	V_JSON,
+	V_BIRD
 } bgpq_vendor_t;
 
 typedef enum { 
