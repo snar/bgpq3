@@ -37,5 +37,5 @@ install: bgpq3
 depend: 
 	makedepend -- $(CFLAGS) -- $(SRCS)
 
-bgpq3.html: README.md
-	markdown2 README.md > bgpq3.html
+bgpq3.html: readme.header README.md
+	cat readme.header README.md | @MARKDOWN@ > bgpq3.html

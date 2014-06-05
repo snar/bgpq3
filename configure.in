@@ -3,6 +3,8 @@ AC_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_INSTALL
 
+AC_CHECK_PROGS([MARKDOWN], [markdown_py markdown2 markdown], [echo])
+
 AC_CHECK_FUNCS(strlcpy)
 
 AC_CHECK_LIB(socket,socket)

@@ -148,7 +148,8 @@ main(int argc, char* argv[])
 			if(aggregate) debug_aggregation++;
 			aggregate=1;
 			break;
-        case 'b': if(expander.vendor) vendor_exclusive();
+		case 'b': 
+			if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_BIRD;
 			break;
 		case 'd': debug_expander++;
