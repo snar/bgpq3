@@ -6,7 +6,7 @@ NAME
 SYNOPSIS
 --------
 
-	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-346ADdJjX] [-r len] [-R len] [-m max] OBJECTS [...]
+	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-346AbDdJjX] [-r len] [-R len] [-m max] OBJECTS [...]
 
 DESCRIPTION
 -----------
@@ -90,7 +90,7 @@ The options are as follows:
 
 -    -r len 
 
-        > allow more-specific routes with masklen starting with specified 
+	> allow more-specific routes with masklen starting with specified 
         length.
 
 -    -R len  

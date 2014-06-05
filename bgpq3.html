@@ -14,7 +14,7 @@ ul      { list-style: none; }
 <h2>NAME</h2>
 <p><code>bgpq3</code> - bgp filtering automation for Cisco and Juniper routers</p>
 <h2>SYNOPSIS</h2>
-<pre><code>bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-346ADdJjX] [-r len] [-R len] [-m max] OBJECTS [...]
+<pre><code>bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-346AbDdJjX] [-r len] [-R len] [-m max] OBJECTS [...]
 </code></pre>
 <h2>DESCRIPTION</h2>
 <p>The bgpq3 utility used to generate Cisco and Juniper prefix-lists,
@@ -139,9 +139,10 @@ compatibility only).</p>
 </li>
 <li>
 <p>-r len </p>
-<pre><code>&gt; allow more-specific routes with masklen starting with specified 
-length.
-</code></pre>
+<blockquote>
+<p>allow more-specific routes with masklen starting with specified 
+    length.</p>
+</blockquote>
 </li>
 <li>
 <p>-R len<br />
