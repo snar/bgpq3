@@ -24,12 +24,13 @@ int
 usage(int ecode)
 { 
 	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
-		" [-346ADJjXd] [-R len] <OBJECTS>...\n");
+		" [-346AbDJjXd] [-R len] <OBJECTS>...\n");
 	printf(" -3        : assume that your device is asn32-safe\n"); 
 	printf(" -4        : generate IPv4 prefix-lists (default)\n"); 
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -A        : try to aggregate Cisco prefix-lists or Juniper "
 			"route-filters\n             as much as possible\n");
+	printf(" -b        : generate BIRD output (Cisco IOS by default)\n");
 	printf(" -d        : generate some debugging output\n");
 	printf(" -D        : use asdot notation in as-path\n");
 	printf(" -E        : generate extended access-list(Cisco) or "
@@ -69,8 +70,8 @@ exclusive()
 void
 vendor_exclusive()
 { 
-	fprintf(stderr, "-J (JunOS), -j (JSON) and -X (IOS XR) options are mutually"
-		" exclusive\n");
+	fprintf(stderr, "-b (BIRD), -J (JunOS), -j (JSON) and -X (IOS XR) options are "
+		"mutually exclusive\n");
 	exit(1);
 };
 
@@ -121,7 +122,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"346AdDES:jJf:l:m:M:W:Pr:R:G:Th:X"))!=EOF) { 
+	while((c=getopt(argc,argv,"346AbdDES:jJf:l:m:M:W:Pr:R:G:Th:X"))!=EOF) {
 	switch(c) { 
 		case '3': 
 			expander.asn32=1;
@@ -146,6 +147,9 @@ main(int argc, char* argv[])
 		case 'A': 
 			if(aggregate) debug_aggregation++;
 			aggregate=1;
+			break;
+        case 'b': if(expander.vendor) vendor_exclusive();
+			expander.vendor=V_BIRD;
 			break;
 		case 'd': debug_expander++;
 			break;
@@ -268,8 +272,12 @@ main(int argc, char* argv[])
 		expander.generation=T_PREFIXLIST;
 	};
 
-	if(expander.vendor==V_CISCO_XR && expander.generation!=T_PREFIXLIST) { 
+	if(expander.vendor==V_CISCO_XR && expander.generation!=T_PREFIXLIST) {
 		sx_report(SX_FATAL, "Sorry, only prefix-sets supported for IOS XR\n");
+	};
+	if(expander.vendor==V_BIRD && expander.generation!=T_PREFIXLIST) {
+		sx_report(SX_FATAL, "Sorry, only prefix-lists supported for BIRD "
+			"output\n");
 	};
 	if(expander.vendor==V_JSON && expander.generation!=T_PREFIXLIST) { 
 		sx_report(SX_FATAL, "Sorry, only prefix-lists supported for JSON "

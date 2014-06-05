@@ -34,6 +34,10 @@ The options are as follows:
 	> try to aggregate generated filters as much as possible (not all
     output formats supported).
 
+-    -b
+
+	> generate output in BIRD format (default: Cisco).
+
 -    -d      
 
 	> enable some debugging output.
