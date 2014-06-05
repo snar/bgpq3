@@ -287,6 +287,13 @@ due to lacking tcp buffer size. To avoid this, tune your OS.
 FreeBSD can be tuned in the following way:</p>
 <pre><code>sysctl -w net.inet.tcp.sendbuf_max=16777216
 </code></pre>
+<p>Linux can be tuned in the following way:</p>
+<pre><code>sysctl -w net.ipv4.tcp_window_scaling=1
+sysctl -w net.core.rmem_max=16777216
+sysctl -w net.core.wmem_max=16777216
+sysctl -w net.ipv4.tcp_rmem="4096 87380 16777216"
+sysctl -w net.ipv4.tcp_wmem="4096 65536 16777216"
+</code></pre>
 <p>Please note that generated prefix-lists may not fit your router's
 limitations. For example, JunOS supports only 85,325 prefixes in 
 each prefix-list <a href="http://www.juniper.net/techpubs/en_US/junos11.4/topics/reference/configuration-statement/prefix-list-edit-policy-options.html">4</a>. </p>
