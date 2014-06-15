@@ -11,6 +11,7 @@ datadir = @datadir@
 infodir = @infodir@
 mandir = @mandir@
 
+PROG = bgpq3
 
 OBJECTS=bgpq3.o sx_report.o bgpq_expander.o sx_slentry.o bgpq3_printer.o \
 	sx_prefix.o strlcpy.o sx_maxsockbuf.o
@@ -30,9 +31,8 @@ clean:
 	rm -rf *.o *.core core.* core
 
 install: bgpq3
-	${INSTALL} -c -s -m 755 bgpq3 @bindir@
-	if test ! -d @prefix@/man/man8 ; then mkdir -p @prefix@/man/man8 ; fi
-	${INSTALL} -m 644 bgpq3.8 @prefix@/man/man8
+	${INSTALL} -D -s -m 755 ${PROG} ${DESTDIR}@bindir@/${PROG}
+	${INSTALL} -D -m 644 ${PROG}.8 ${DESTDIR}@mandir@/man8/${PROG}.8
 
 depend: 
 	makedepend -- $(CFLAGS) -- $(SRCS)
