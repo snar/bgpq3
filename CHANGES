@@ -1,3 +1,7 @@
+0.1.22   (not tagged yet)
+    - bugfix: allow network object with stray spaces after prefix length.
+    Found by Tom Eichhorn in 2620:74:14::/48 (VeriSign Route6, RADB).
+
 0.1.21   (2014-06-05)
     - new flag -b: generate prefix-filters for BIRD (http://bird.network.cz),
     contributed by Job Snijders.

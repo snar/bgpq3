@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,7 +57,7 @@ sx_prefix_parse(struct sx_prefix* p, int af, char* text)
 		char* eod;
 		*c=0;
 		masklen=strtol(c+1,&eod,10);
-		if(eod[0]) { 
+		if(eod && eod[0] && !isspace(eod[0])) { 
 			*c='/';
 			sx_report(SX_ERROR,"Invalid masklen in prefix %s\n", text);
 			goto fixups;
