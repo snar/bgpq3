@@ -73,9 +73,22 @@ sx_prefix_parse(struct sx_prefix* p, int af, char* text)
 	};
 
 	if(inet_pton(af,text,&p->addr)!=1) { 
-		if(c) *c='/';
-		sx_report(SX_ERROR,"Unable to parse prefix %s, af=%i\n",text,af);
-		goto fixups;
+		int aparts[4];
+		/* contrary to documentation (man inet_ntop on FreeBSD), 
+		addresses with leading zeros are not parsed correctly. Try to
+		workaround this issue manually */
+		if (af==AF_INET && sscanf(text, "%i.%i.%i.%i", aparts, 
+			aparts+1, aparts+2, aparts+3) == 4 && aparts[0]>=0 &&
+			aparts[0]<256 && aparts[1]>=0 && aparts[1]<256 && 
+			aparts[2]>=0 && aparts[2]<256 && aparts[3]>=0 && 
+			aparts[3]<256) { 
+			p->addr.addr.s_addr = htonl((aparts[0]<<24) + 
+				(aparts[1]<<16) + (aparts[2]<<8) + aparts[3]);
+		} else { 
+			if(c) *c='/';
+			sx_report(SX_ERROR,"Unable to parse prefix %s, af=%i\n",text,af);
+			goto fixups;
+		};
 	};
 
 	if(af==AF_INET) { 

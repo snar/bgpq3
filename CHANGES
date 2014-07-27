@@ -1,6 +1,8 @@
-0.1.22   (not tagged yet)
+0.1.22   (2014-07-27)
     - bugfix: allow network object with stray spaces after prefix length.
     Found by Tom Eichhorn in 2620:74:14::/48 (VeriSign Route6, RADB).
+    - bugfix: networks with leading zeros (02.51.252.0/22, as4787) are not
+    parsed correctly in inet_ntop.. Found by Tom Eichhorn.
 
 0.1.21   (2014-06-05)
     - new flag -b: generate prefix-filters for BIRD (http://bird.network.cz),
