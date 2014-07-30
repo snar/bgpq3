@@ -1,3 +1,7 @@
+0.1.23   (2014-07-30)
+    - bugfix: use of -M option caused major slowdown as it turned off 
+    request pipelining... Thanks to Tore Anderson.
+
 0.1.22   (2014-07-27)
     - bugfix: allow network object with stray spaces after prefix length.
     Found by Tom Eichhorn in 2620:74:14::/48 (VeriSign Route6, RADB).

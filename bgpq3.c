@@ -231,7 +231,8 @@ main(int argc, char* argv[])
 				};
 			};
 			*d=0;
-		};
+			};
+			break;
 		case 'T': pipelining=0;
 			break;
 		case 'S': expander.sources=optarg;
