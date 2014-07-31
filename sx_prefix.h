@@ -52,6 +52,7 @@ int sx_prefix_jsnprintf(struct sx_prefix* p, char* rbuffer, int srb);
 struct sx_radix_tree* sx_radix_tree_new(int af);
 struct sx_radix_node* sx_radix_node_new(struct sx_prefix* prefix);
 struct sx_prefix* sx_prefix_overlay(struct sx_prefix* p, int n);
+int  sx_radix_tree_empty(struct sx_radix_tree* t);
 void sx_radix_node_fprintf(struct sx_radix_node* node, void* udata);
 int  sx_radix_node_foreach(struct sx_radix_node* node, 
 	void (*func)(struct sx_radix_node*, void*), void* udata);

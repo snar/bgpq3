@@ -189,6 +189,12 @@ sx_radix_tree_new(int af)
 	return rt;
 };
 
+int
+sx_radix_tree_empty(struct sx_radix_tree* t)
+{ 
+	return t->head == NULL;
+};
+
 struct sx_radix_node*
 sx_radix_node_new(struct sx_prefix* prefix)
 { 

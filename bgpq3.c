@@ -378,6 +378,11 @@ main(int argc, char* argv[])
 			" yet.\n");
 	};
 
+	if(expander.match != NULL && (expander.vendor != V_JUNIPER ||
+		expander.generation != T_EACL)) { 
+		sx_report(SX_FATAL, "Sorry, extra match conditions (-M) can be used only with Juniper route-filters\n");
+	};
+
 	if(!argv[0]) usage(1);
 
 	while(argv[0]) { 
