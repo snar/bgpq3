@@ -465,7 +465,12 @@ bgpq3_print_juniper_routefilter(FILE* f, struct bgpq_expander* b)
 		if(b->match) 
 			fprintf(f,"    %s;\n",b->match);
 	};
-	sx_radix_tree_foreach(b->tree,bgpq3_print_jrfilter,f);
+	if(b->tree->head) {
+		sx_radix_tree_foreach(b->tree,bgpq3_print_jrfilter,f);
+	} else {
+		fprintf(f, "%s   route-filter %s/0 orlonger reject;\n",
+			c?" ":"", b->family==AF_INET?"0.0.0.0":"::");
+	};
 	if(c) { 
 		fprintf(f, "   }\n  }\n }\n}\n");
 	} else { 
