@@ -2,6 +2,7 @@
     - empty prefix-lists (Cisco), extended access-lists (Cisco), as-path
     filters (Cisco and Juniper) and route-filters (Juniper) handling: 
     explicit 'deny any' entry now generated instead of implicit 'permit-any'. 
+    Based on suggestion by Tore Anderson.
 
 0.1.23   (2014-07-30)
     - bugfix: use of -M option caused major slowdown as it turned off 
