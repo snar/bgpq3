@@ -22,11 +22,11 @@ extern int pipelining;
 
 int
 usage(int ecode)
-{ 
+{
 	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
 		" [-346AbDJjXd] [-R len] <OBJECTS>...\n");
-	printf(" -3        : assume that your device is asn32-safe\n"); 
-	printf(" -4        : generate IPv4 prefix-lists (default)\n"); 
+	printf(" -3        : assume that your device is asn32-safe\n");
+	printf(" -4        : generate IPv4 prefix-lists (default)\n");
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -A        : try to aggregate Cisco prefix-lists or Juniper "
 			"route-filters\n             as much as possible\n");
@@ -61,7 +61,7 @@ usage(int ecode)
 
 void
 exclusive()
-{ 
+{
 	fprintf(stderr,"-E, -f <asnum>, -G <asnum> and -P are mutually "
 		"exclusive\n");
 	exit(1);
@@ -69,7 +69,7 @@ exclusive()
 
 void
 vendor_exclusive()
-{ 
+{
 	fprintf(stderr, "-b (BIRD), -J (JunOS), -j (JSON) and -X (IOS XR) options are "
 		"mutually exclusive\n");
 	exit(1);
@@ -77,32 +77,32 @@ vendor_exclusive()
 
 int
 parseasnumber(struct bgpq_expander* expander, char* optarg)
-{ 
+{
 	char* eon=NULL;
 	expander->asnumber=strtoul(optarg,&eon,10);
-	if(expander->asnumber<1 || expander->asnumber>(65535ul*65535)) { 
+	if(expander->asnumber<1 || expander->asnumber>(65535ul*65535)) {
 		sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
 		exit(1);
 	};
-	if(eon && *eon=='.') { 
+	if(eon && *eon=='.') {
 		/* -f 3.3, for example */
 		uint32_t loas=strtoul(eon+1,&eon,10);
-		if(expander->asnumber>65535) { 
+		if(expander->asnumber>65535) {
 			/* should prevent incorrect numbers like 65537.1 */
 			sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
 			exit(1);
 		};
-		if(loas<1 || loas>65535) { 
+		if(loas<1 || loas>65535) {
 			sx_report(SX_FATAL,"Invalid AS number: %s\n", optarg);
 			exit(1);
 		};
-		if(eon && *eon) { 
+		if(eon && *eon) {
 			sx_report(SX_FATAL,"Invalid symbol in AS number: %c (%s)\n",
 				*eon, optarg);
 			exit(1);
 		};
 		expander->asnumber=(expander->asnumber<<16)+loas;
-	} else if(eon && *eon) { 
+	} else if(eon && *eon) {
 		sx_report(SX_FATAL,"Invalid symbol in AS number: %c (%s)\n",
 			*eon, optarg);
 		exit(1);
@@ -112,7 +112,7 @@ parseasnumber(struct bgpq_expander* expander, char* optarg)
 
 int
 main(int argc, char* argv[])
-{ 
+{
 	int c;
 	struct bgpq_expander expander;
 	int af=AF_INET, selectedipv4 = 0;
@@ -123,11 +123,11 @@ main(int argc, char* argv[])
 	expander.sources=getenv("IRRD_SOURCES");
 
 	while((c=getopt(argc,argv,"346AbdDES:jJf:l:m:M:W:Pr:R:G:Th:X"))!=EOF) {
-	switch(c) { 
-		case '3': 
+	switch(c) {
+		case '3':
 			expander.asn32=1;
 			break;
-		case '4': 
+		case '4':
 			/* do nothing, expander already configured for IPv4 */
 			if (expander.family == AF_INET6) {
 				sx_report(SX_FATAL, "-4 and -6 are mutually exclusive\n");
@@ -135,8 +135,8 @@ main(int argc, char* argv[])
 			};
 			selectedipv4=1;
 			break;
-		case '6': 
-			if (selectedipv4) { 
+		case '6':
+			if (selectedipv4) {
 				sx_report(SX_FATAL, "-4 and -6 are mutually exclusive\n");
 				exit(1);
 			};
@@ -144,11 +144,11 @@ main(int argc, char* argv[])
 			expander.family=AF_INET6;
 			expander.tree->family=AF_INET6;
 			break;
-		case 'A': 
+		case 'A':
 			if(aggregate) debug_aggregation++;
 			aggregate=1;
 			break;
-		case 'b': 
+		case 'b':
 			if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_BIRD;
 			break;
@@ -167,30 +167,30 @@ main(int argc, char* argv[])
 		case 'j': if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_JSON;
 			break;
-		case 'f': 
+		case 'f':
 			if(expander.generation) exclusive();
 			expander.generation=T_ASPATH;
 			parseasnumber(&expander,optarg);
 			break;
-		case 'G': 
+		case 'G':
 			if(expander.generation) exclusive();
 			expander.generation=T_OASPATH;
 			parseasnumber(&expander,optarg);
 			break;
-		case 'P': 
+		case 'P':
 			if(expander.generation) exclusive();
 			expander.generation=T_PREFIXLIST;
 			break;
-		case 'r': 
+		case 'r':
 			refineLow=strtoul(optarg,NULL,10);
-			if(!refineLow) { 
+			if(!refineLow) {
 				sx_report(SX_FATAL,"Invalid refineLow value: %s\n", optarg);
 				exit(1);
 			};
-			break; 
-		case 'R': 
+			break;
+		case 'R':
 			refine=strtoul(optarg,NULL,10);
-			if(!refine) { 
+			if(!refine) {
 				sx_report(SX_FATAL,"Invalid refine length: %s\n", optarg);
 				exit(1);
 			};
@@ -198,32 +198,32 @@ main(int argc, char* argv[])
 		case 'l': expander.name=optarg;
 			break;
 		case 'm': maxlen=strtoul(optarg, NULL, 10);
-			if (!maxlen) { 
+			if (!maxlen) {
 				sx_report(SX_FATAL, "Invalid maxlen (-m): %s\n", optarg);
 				exit(1);
 			};
 			break;
-		case 'M': { 
+		case 'M': {
 			char* c, *d;
 			expander.match=strdup(optarg);
-			c=d=expander.match; 
-			while(*c) { 
-				if(*c=='\\') { 
-					if(*(c+1)=='n') { 
+			c=d=expander.match;
+			while(*c) {
+				if(*c=='\\') {
+					if(*(c+1)=='n') {
 						*d='\n';
 						d++;
 						c+=2;
-					} else if(*(c+1)=='r') { 
+					} else if(*(c+1)=='r') {
 						*d='\r';
 						d++;
 						c+=2;
-					} else if(*(c+1)=='\\') { 
+					} else if(*(c+1)=='\\') {
 						*d='\\';
 						d++;
 						c+=2;
 					};
-				} else { 
-					if(c!=d) { 
+				} else {
+					if(c!=d) {
 						*d=*c;
 					};
 					d++;
@@ -238,7 +238,7 @@ main(int argc, char* argv[])
 		case 'S': expander.sources=optarg;
 			break;
 		case 'W': expander.aswidth=atoi(optarg);
-			if(expander.aswidth<1) { 
+			if(expander.aswidth<1) {
 				sx_report(SX_FATAL,"Invalid as-width: %s\n", optarg);
 				exit(1);
 			};
@@ -254,23 +254,23 @@ main(int argc, char* argv[])
 	argc-=optind;
 	argv+=optind;
 
-	if(!widthSet) { 
-		if(expander.generation==T_ASPATH) { 
-			if(expander.vendor==V_CISCO) { 
+	if(!widthSet) {
+		if(expander.generation==T_ASPATH) {
+			if(expander.vendor==V_CISCO) {
 				expander.aswidth=4;
-			} else if(expander.vendor==V_JUNIPER) { 
+			} else if(expander.vendor==V_JUNIPER) {
 				expander.aswidth=8;
 			};
-		} else if(expander.generation==T_OASPATH) { 
-			if(expander.vendor==V_CISCO) { 
+		} else if(expander.generation==T_OASPATH) {
+			if(expander.vendor==V_CISCO) {
 				expander.aswidth=5;
-			} else if(expander.vendor==V_JUNIPER) { 
+			} else if(expander.vendor==V_JUNIPER) {
 				expander.aswidth=8;
 			};
 		};
 	};
 
-	if(!expander.generation) { 
+	if(!expander.generation) {
 		expander.generation=T_PREFIXLIST;
 	};
 
@@ -281,130 +281,132 @@ main(int argc, char* argv[])
 		sx_report(SX_FATAL, "Sorry, only prefix-lists supported for BIRD "
 			"output\n");
 	};
-	if(expander.vendor==V_JSON && expander.generation!=T_PREFIXLIST) { 
-		sx_report(SX_FATAL, "Sorry, only prefix-lists supported for JSON "
-			"output\n");
+	if(expander.vendor==V_JSON && expander.generation!=T_PREFIXLIST &&
+		expander.generation!=T_ASPATH) {
+		sx_report(SX_FATAL, "Sorry, only prefix-lists and as-paths supported "
+			"for JSON output\n");
 	};
 
-	if(expander.asdot && expander.vendor!=V_CISCO) { 
+	if(expander.asdot && expander.vendor!=V_CISCO) {
 		sx_report(SX_FATAL,"asdot notation supported only for Cisco, Juniper"
 			" uses asplain only\n");
 	};
 
-	if(!expander.asn32 && expander.asnumber>65535) { 
+	if(!expander.asn32 && expander.asnumber>65535) {
 		expander.asnumber=23456;
 	};
 
-	if(aggregate && expander.vendor==V_JUNIPER && 
-		expander.generation==T_PREFIXLIST) { 
+	if(aggregate && expander.vendor==V_JUNIPER &&
+		expander.generation==T_PREFIXLIST) {
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) does not work in"
 			" Juniper prefix-lists\nYou can try route-filters (-E) instead"
 			" of prefix-lists (-P, default)\n");
 		exit(1);
 	};
 
-	if(aggregate && expander.generation<T_PREFIXLIST) { 
+	if(aggregate && expander.generation<T_PREFIXLIST) {
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) used only for prefix-"
 			"lists, extended access-lists and route-filters\n");
 		exit(1);
 	};
 
-	if(refineLow && !refine) { 
-		if(expander.family == AF_INET) 
+	if(refineLow && !refine) {
+		if(expander.family == AF_INET)
 			refine = 32;
 		else
 			refine = 128;
 	};
 
-	if (refineLow && refineLow > refine) { 
-		sx_report(SX_FATAL, "Incompatible values for -r %u and -R %u\n", 
+	if (refineLow && refineLow > refine) {
+		sx_report(SX_FATAL, "Incompatible values for -r %u and -R %u\n",
 			refineLow, refine);
 	};
 
-	if(refine || refineLow) { 
-		if(expander.family==AF_INET6 && refine>128) { 
+	if(refine || refineLow) {
+		if(expander.family==AF_INET6 && refine>128) {
 			sx_report(SX_FATAL, "Invalid value for refine(-R): %u (1-128 for"
 				" IPv6)\n", refine);
-		} else if(expander.family==AF_INET6 && refineLow>128) { 
+		} else if(expander.family==AF_INET6 && refineLow>128) {
 			sx_report(SX_FATAL, "Invalid value for refineLow(-r): %u (1-128 for"
 				" IPv6)\n", refineLow);
-		} else if(expander.family==AF_INET && refine>32) { 
+		} else if(expander.family==AF_INET && refine>32) {
 			sx_report(SX_FATAL, "Invalid value for refine(-R): %u (1-32 for"
 				" IPv4)\n", refine);
-		} else if(expander.family==AF_INET && refineLow>32) { 
+		} else if(expander.family==AF_INET && refineLow>32) {
 			sx_report(SX_FATAL, "Invalid value for refineLow(-r): %u (1-32 for"
 				" IPv4)\n", refineLow);
 		};
 
-		if(expander.vendor==V_JUNIPER && expander.generation==T_PREFIXLIST) { 
-			if(refine) { 
+		if(expander.vendor==V_JUNIPER && expander.generation==T_PREFIXLIST) {
+			if(refine) {
 				sx_report(SX_FATAL, "Sorry, more-specific filters (-R %u) "
 					"is not supported for Juniper prefix-lists.\n"
 					"Use router-filters (-E) instead\n", refine);
-			} else { 
+			} else {
 				sx_report(SX_FATAL, "Sorry, more-specific filters (-r %u) "
 					"is not supported for Juniper prefix-lists.\n"
 					"Use route-filters (-E) instead\n", refineLow);
 			};
 		};
-		if(expander.generation<T_PREFIXLIST) { 
-			if(refine) {  
+		if(expander.generation<T_PREFIXLIST) {
+			if(refine) { 
 				sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
 		 			"supported only with prefix-list generation\n", refine);
-			} else { 
+			} else {
 				sx_report(SX_FATAL, "Sorry, more-specific filter (-r %u) "
 					"supported only with prefix-list generation\n", refineLow);
 			};
 		};
 	};
 
-	if(maxlen) { 
-		if((expander.family==AF_INET6 && maxlen>128) || 
-			(expander.family==AF_INET  && maxlen>32)) { 
+	if(maxlen) {
+		if((expander.family==AF_INET6 && maxlen>128) ||
+			(expander.family==AF_INET  && maxlen>32)) {
 			sx_report(SX_FATAL, "Invalid value for max-prefixlen: %lu (1-128 "
 				"for IPv6, 1-32 for IPv4)\n", maxlen);
 			exit(1);
-		} else if((expander.family==AF_INET6 && maxlen<128) || 
-			(expander.family==AF_INET  && maxlen<32)) { 
+		} else if((expander.family==AF_INET6 && maxlen<128) ||
+			(expander.family==AF_INET  && maxlen<32)) {
 			/* inet6/128 and inet4/32 does not make sense - all routes will
 			 * be accepted, so save some CPU cycles :) */
 			expander.maxlen = maxlen;
 		};
 	};
 
-	if(expander.generation==T_EACL && expander.vendor==V_CISCO && 
-		expander.family==AF_INET6) { 
+	if(expander.generation==T_EACL && expander.vendor==V_CISCO &&
+		expander.family==AF_INET6) {
 		sx_report(SX_FATAL,"Sorry, ipv6 access-lists not supported for Cisco"
 			" yet.\n");
 	};
 
 	if(expander.match != NULL && (expander.vendor != V_JUNIPER ||
-		expander.generation != T_EACL)) { 
-		sx_report(SX_FATAL, "Sorry, extra match conditions (-M) can be used only with Juniper route-filters\n");
+		expander.generation != T_EACL)) {
+		sx_report(SX_FATAL, "Sorry, extra match conditions (-M) can be used "
+			"only with Juniper route-filters\n");
 	};
 
 	if(!argv[0]) usage(1);
 
-	while(argv[0]) { 
-		if(!strncasecmp(argv[0],"AS-",3)) { 
+	while(argv[0]) {
+		if(!strncasecmp(argv[0],"AS-",3)) {
 			bgpq_expander_add_asset(&expander,argv[0]);
-		} else if(!strncasecmp(argv[0],"RS-",3)) { 
+		} else if(!strncasecmp(argv[0],"RS-",3)) {
 			bgpq_expander_add_rset(&expander,argv[0]);
-		} else if(!strncasecmp(argv[0],"AS",2)) { 
+		} else if(!strncasecmp(argv[0],"AS",2)) {
 			char* c;
-			if((c=strchr(argv[0],':'))) { 
-				if(!strncasecmp(c+1,"AS-",3)) { 
+			if((c=strchr(argv[0],':'))) {
+				if(!strncasecmp(c+1,"AS-",3)) {
 					bgpq_expander_add_asset(&expander,argv[0]);
-				} else if(!strncasecmp(c+1,"RS-",3)) { 
+				} else if(!strncasecmp(c+1,"RS-",3)) {
 					bgpq_expander_add_rset(&expander,argv[0]);
-				} else { 
+				} else {
 					SX_DEBUG(debug_expander,"Unknown sub-as object %s\n",
 						argv[0]);
 				};
-			} else { 
+			} else {
 				bgpq_expander_add_as(&expander,argv[0]);
 			};
-		} else { 
+		} else {
 			if(!bgpq_expander_add_prefix(&expander,argv[0]))
 				exit(1);
 		};
@@ -412,20 +414,20 @@ main(int argc, char* argv[])
 		argc--;
 	};
 
-	if(!bgpq_expand(&expander)) { 
+	if(!bgpq_expand(&expander)) {
 		exit(1);
 	};
 
-	if(refine) 
+	if(refine)
 		sx_radix_tree_refine(expander.tree,refine);
 
-	if(refineLow) 
+	if(refineLow)
 		sx_radix_tree_refineLow(expander.tree, refineLow);
 
-	if(aggregate) 
+	if(aggregate)
 		sx_radix_tree_aggregate(expander.tree);
 
-	switch(expander.generation) { 
+	switch(expander.generation) {
 		default    :
 		case T_NONE: sx_report(SX_FATAL,"Unreachable point... call snar\n");
 			exit(1);
