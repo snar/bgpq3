@@ -6,7 +6,7 @@ NAME
 SYNOPSIS
 --------
 
-	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-346AbDdJjX] [-r len] [-R len] [-m max] OBJECTS [...]
+	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-346AbDdJjX] [-r len] [-R len] [-m max] [-W len] OBJECTS [...]
 
 DESCRIPTION
 -----------
@@ -106,6 +106,10 @@ The options are as follows:
 -    -T      
 
 	> disable pipelining.
+
+-    -W len
+
+    > generate as-path strings of a given length maximum (0 for infinity).
 
 -    -X      
 

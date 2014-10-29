@@ -41,6 +41,7 @@
 .Op Fl r Ar len
 .Op Fl R Ar len
 .Op Fl m Ar max
+.Op Fl W Ar len
 .Ar OBJECTS
 .Op "..."
 .Sh DESCRIPTION
@@ -96,6 +97,8 @@ allow more specific routes up to specified masklen too.
 use specified sources only (default: RADB,RIPE,APNIC).
 .It Fl T
 disable pipelining. 
+.It Fl W Ar len
+generate as-path strings of no more than len items (use 0 for inifinity).
 .It Fl X
 generate config for Cisco IOS XR devices (plain IOS by default).
 .It Ar OBJECTS 

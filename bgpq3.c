@@ -32,7 +32,7 @@ usage(int ecode)
 			"route-filters\n             as much as possible\n");
 	printf(" -b        : generate BIRD output (Cisco IOS by default)\n");
 	printf(" -d        : generate some debugging output\n");
-	printf(" -D        : use asdot notation in as-path\n");
+	printf(" -D        : use asdot notation in as-path (Cisco only)\n");
 	printf(" -E        : generate extended access-list(Cisco) or "
 		"route-filter(Juniper)\n");
 	printf(" -f number : generate input as-path access-list\n");
@@ -53,6 +53,8 @@ usage(int ecode)
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
+	printf(" -W len    : specify max-entries on as-path line (use 0 for "
+		"infinity)\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
 	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2014\n\n");
@@ -238,7 +240,7 @@ main(int argc, char* argv[])
 		case 'S': expander.sources=optarg;
 			break;
 		case 'W': expander.aswidth=atoi(optarg);
-			if(expander.aswidth<1) {
+			if(expander.aswidth<0) {
 				sx_report(SX_FATAL,"Invalid as-width: %s\n", optarg);
 				exit(1);
 			};
@@ -288,8 +290,8 @@ main(int argc, char* argv[])
 	};
 
 	if(expander.asdot && expander.vendor!=V_CISCO) {
-		sx_report(SX_FATAL,"asdot notation supported only for Cisco, Juniper"
-			" uses asplain only\n");
+		sx_report(SX_FATAL,"asdot notation supported only for Cisco, "
+			"other formats use asplain only\n");
 	};
 
 	if(!expander.asn32 && expander.asnumber>65535) {

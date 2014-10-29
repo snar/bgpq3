@@ -306,22 +306,11 @@ bgpq3_print_json_aspath(FILE* f, struct bgpq_expander* b)
 			for(j=0;j<8;j++) {
 				if(b->asn32s[k][i]&(0x80>>j)) {
 					if(!nc) {
-						if(b->asdot && k>0) {
-							fprintf(f,"%s\n  %i.%i",needscomma?",":"", k,i*8+j);
-							needscomma=1;
-						} else {
-							fprintf(f,"%s\n  %i",needscomma?",":"",
-								k*65536+i*8+j);
-							needscomma=1;
-						};
+						fprintf(f,"%s\n  %i",needscomma?",":"", k*65536+i*8+j);
+						needscomma=1;
 					} else {
-						if(b->asdot && k>0) {
-							fprintf(f,"%s%i.%i,",needscomma?",":"", k,i*8+j);
-							needscomma=1;
-						} else {
-							fprintf(f,"%s%i",needscomma?",":"", k*65536+i*8+j);
-							needscomma=1;
-						};
+						fprintf(f,"%s%i",needscomma?",":"", k*65536+i*8+j);
+						needscomma=1;
 					}
 					nc++;
 					if(nc==b->aswidth) {

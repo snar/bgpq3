@@ -10,6 +10,7 @@
 		]}
 
 	Based on suggestion by Henrik Thostrup Jensen.
+    - -W len option documented.
 
 0.1.24   (2014-07-31)
     - empty prefix-lists (Cisco), extended access-lists (Cisco), as-path
