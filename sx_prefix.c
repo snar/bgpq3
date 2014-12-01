@@ -878,66 +878,66 @@ main() {
 	printf("\n25'th bit is %i\n",sx_prefix_isbitset(p,25));
 
 	tree=sx_radix_tree_new(AF_INET);
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"81.9.100.10/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"217.170.80.83/32"));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("81.9.100.10/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("217.170.80.83/32")));
 
 	sx_radix_tree_foreach(tree,sx_radix_node_fprintf,NULL);
 
 	tree=sx_radix_tree_new(AF_INET);
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"81.9.100.10/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"217.170.80.83/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"217.170.80.84/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"217.170.80.85/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"217.170.80.86/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"217.170.80.87/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"217.170.80.90/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"217.170.80.90/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"127.0.0.1/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"127.0.0.1/24"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"127.0.0.0/24"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"128.0.0.0/1"));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("81.9.100.10/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("217.170.80.83/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("217.170.80.84/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("217.170.80.85/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("217.170.80.86/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("217.170.80.87/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("217.170.80.90/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("217.170.80.90/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("127.0.0.1/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("127.0.0.1/24")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("127.0.0.0/24")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("128.0.0.0/1")));
 
 	sx_radix_tree_foreach(tree,sx_radix_node_fprintf,NULL);
 
 	printf("lookup 1.1.1.1: ");
-	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,"1.1.1.1"));
+	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,strdup("1.1.1.1")));
 	sx_radix_node_fprintf(node,NULL);
 
 	printf("lookup 217.170.80.90: ");
-	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,"217.170.80.90"));
+	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,strdup("217.170.80.90")));
 	sx_radix_node_fprintf(node,NULL);
 
 	sx_radix_tree_unlink(tree,node);
 	printf("lookup 217.170.80.90 after delete: ");
-	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,"217.170.80.90"));
+	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,strdup("217.170.80.90")));
 	sx_radix_node_fprintf(node,NULL);
 
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"217.170.80.90/32"));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("217.170.80.90/32")));
 	printf("lookup 217.170.80.90 after reinsert: ");
-	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,"217.170.80.90"));
+	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,strdup("217.170.80.90")));
 	sx_radix_node_fprintf(node,NULL);
 
 	printf("lookup 217.170.80.81: ");
-	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,"217.170.80.81"));
+	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,strdup("217.170.80.81")));
 	sx_radix_node_fprintf(node,NULL);
 
 	printf("lookup 127.0.0.1/24: ");
-	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,"127.0.0.1/24"));
+	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,strdup("127.0.0.1/24")));
 	sx_radix_node_fprintf(node,NULL);
 
 	printf("lookup 127.0.0.1/26: ");
-	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,"127.0.0.1/26"));
+	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,strdup("127.0.0.1/26")));
 	sx_radix_node_fprintf(node,NULL);
 
 	printf("lookup 127.0.0.1/23: ");
-	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,"127.0.0.1/23"));
+	node=sx_radix_tree_lookup(tree,sx_prefix_new(0,strdup("127.0.0.1/23")));
 	sx_radix_node_fprintf(node,NULL);
 
 	tree=sx_radix_tree_new(AF_INET6);
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"2100:1b00::/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"2100:1b01::/32"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"2100:1b00::/33"));
-	sx_radix_tree_insert(tree,sx_prefix_new(0,"2100:1b00::1/128"));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("2100:1b00::/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("2100:1b01::/32")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("2100:1b00::/33")));
+	sx_radix_tree_insert(tree,sx_prefix_new(0,strdup("2100:1b00::1/128")));
 	sx_radix_tree_foreach(tree,sx_radix_node_fprintf,NULL);
 
 	return 0;
