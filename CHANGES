@@ -1,3 +1,7 @@
+0.1.26   (2015-02-19)
+    - RPSL <address-prefix-range> support, can be found in rs-esnetcustomers.
+    Thanks to Kris O'Connell for reporting.
+
 0.1.25   (2014-10-29)
     - JSON support extended to handle "as-paths" too. Well, actually, as
     there are no defined format for as-path in json, bgpq3 just creates

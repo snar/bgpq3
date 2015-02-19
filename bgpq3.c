@@ -351,7 +351,7 @@ main(int argc, char* argv[])
 			};
 		};
 		if(expander.generation<T_PREFIXLIST) {
-			if(refine) { 
+			if(refine) {
 				sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
 		 			"supported only with prefix-list generation\n", refine);
 			} else {
@@ -373,6 +373,10 @@ main(int argc, char* argv[])
 			 * be accepted, so save some CPU cycles :) */
 			expander.maxlen = maxlen;
 		};
+	} else if (expander.family==AF_INET) {
+		expander.maxlen = 32;
+	} else if (expander.family==AF_INET6) {
+		expander.maxlen = 128;
 	};
 
 	if(expander.generation==T_EACL && expander.vendor==V_CISCO &&
@@ -409,7 +413,10 @@ main(int argc, char* argv[])
 				bgpq_expander_add_as(&expander,argv[0]);
 			};
 		} else {
-			if(!bgpq_expander_add_prefix(&expander,argv[0]))
+			char* c = strchr(argv[0], '^');
+			if (!c && !bgpq_expander_add_prefix(&expander,argv[0]))
+				exit(1);
+			else if (!bgpq_expander_add_prefix_range(&expander,argv[0]))
 				exit(1);
 		};
 		argv++;

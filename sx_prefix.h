@@ -46,6 +46,7 @@ void sx_prefix_destroy(struct sx_prefix* p);
 void sx_prefix_adjust_masklen(struct sx_prefix* p);
 struct sx_prefix* sx_prefix_new(int af, char* text);
 int sx_prefix_parse(struct sx_prefix* p, int af, char* text);
+int sx_prefix_range_parse(struct sx_radix_tree* t, int af, int ml, char* text);
 int sx_prefix_fprint(FILE* f, struct sx_prefix* p);
 int sx_prefix_snprintf(struct sx_prefix* p, char* rbuffer, int srb);
 int sx_prefix_jsnprintf(struct sx_prefix* p, char* rbuffer, int srb);

@@ -54,6 +54,7 @@ int bgpq_expander_add_asset(struct bgpq_expander* b, char* set);
 int bgpq_expander_add_rset(struct bgpq_expander* b, char* set);
 int bgpq_expander_add_as(struct bgpq_expander* b, char* as);
 int bgpq_expander_add_prefix(struct bgpq_expander* b, char* prefix);
+int bgpq_expander_add_prefix_range(struct bgpq_expander* b, char* prefix);
 
 int bgpq_expand(struct bgpq_expander* b);
 
