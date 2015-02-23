@@ -195,10 +195,10 @@ sx_prefix_range_parse(struct sx_radix_tree* tree, int af, int maxlen,
 	} else if (d[1] == '+') {
 		min=p.masklen;
 		max=maxlen;
-	} else if (isnumber(d[1])) {
+	} else if (isdigit(d[1])) {
 		char* dm = NULL;
 		min = strtoul(d+1, &dm, 10);
-		if (dm && *dm == '-' && isnumber(dm[1])) {
+		if (dm && *dm == '-' && isdigit(dm[1])) {
 			max = strtoul(dm+1, NULL, 10);
 		} else if (dm && *dm) {
 			sx_report(SX_ERROR, "Unable to parse prefix-range %s\n", text);

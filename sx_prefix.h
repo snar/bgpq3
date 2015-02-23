@@ -63,5 +63,8 @@ int sx_radix_tree_aggregate(struct sx_radix_tree* tree);
 int sx_radix_tree_refine(struct sx_radix_tree* tree, unsigned refine);
 int sx_radix_tree_refineLow(struct sx_radix_tree* tree, unsigned refineLow);
 
+#ifndef HAVE_STRLCPY
+size_t strlcpy(char* dst, const char* src, size_t size);
+#endif
 
 #endif
