@@ -414,10 +414,15 @@ main(int argc, char* argv[])
 			};
 		} else {
 			char* c = strchr(argv[0], '^');
-			if (!c && !bgpq_expander_add_prefix(&expander,argv[0]))
+			if (!c && !bgpq_expander_add_prefix(&expander,argv[0])) {
+				sx_report(SX_ERROR, "Unable to add prefix %s (bad prefix or "
+					"address-family)\n", argv[0]);
 				exit(1);
-			else if (!bgpq_expander_add_prefix_range(&expander,argv[0]))
+			} else if (c && !bgpq_expander_add_prefix_range(&expander,argv[0])){
+				sx_report(SX_ERROR, "Unable to add prefix-range %s (bad range "
+					"or address-family)\n", argv[0]);
 				exit(1);
+			};
 		};
 		argv++;
 		argc--;

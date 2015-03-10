@@ -1,3 +1,7 @@
+0.1.28   (2015-03-10)
+    - minor changes: .spec update, non-silent failure on wrong af,
+    more room for masklen...
+
 0.1.27   (2015-03-10)
     - bugfix: some ipv6 prefixes were not parsed correctly since 0.1.26.
     Thanks to Job Snijders.

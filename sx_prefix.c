@@ -52,7 +52,7 @@ sx_prefix_parse(struct sx_prefix* p, int af, char* text)
 {
 	char* c=NULL;
 	int masklen, ret;
-	char mtext[INET6_ADDRSTRLEN+1];
+	char mtext[INET6_ADDRSTRLEN+5];
 	strlcpy(mtext, text, sizeof(mtext));
 
 	c=strchr(mtext,'/');
