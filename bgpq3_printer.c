@@ -543,8 +543,9 @@ bgpq3_print_cisco_prefixlist(FILE* f, struct bgpq_expander* b)
 		sx_radix_tree_foreach(b->tree,bgpq3_print_cprefix,f);
 	} else {
 		fprintf(f, "! generated prefix-list %s is empty\n", bname);
-		fprintf(f, "%s prefix-list %s deny 0.0.0.0/0\n",
-			(b->family==AF_INET) ? "ip" : "ipv6", bname);
+		fprintf(f, "%s prefix-list %s deny %s\n",
+			(b->family==AF_INET) ? "ip" : "ipv6", bname,
+			(b->family==AF_INET) ? "0.0.0.0/0" : "::/0");
 	};
 	return 0;
 };
