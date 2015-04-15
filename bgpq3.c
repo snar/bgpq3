@@ -19,12 +19,15 @@
 extern int debug_expander;
 extern int debug_aggregation;
 extern int pipelining;
+extern int expand_as23456;
 
 int
 usage(int ecode)
 {
 	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
-		" [-346AbDJjXd] [-R len] <OBJECTS>...\n");
+		" [-2346AbDJjXd] [-R len] <OBJECTS>...\n");
+	printf(" -2        : allow routes belonging to as23456 (transition-as) "
+		"(default: false)\n");
 	printf(" -3        : assume that your device is asn32-safe\n");
 	printf(" -4        : generate IPv4 prefix-lists (default)\n");
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
@@ -57,7 +60,7 @@ usage(int ecode)
 		"infinity)\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
-	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2014\n\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2015\n\n");
 	exit(ecode);
 };
 
@@ -126,6 +129,9 @@ main(int argc, char* argv[])
 
 	while((c=getopt(argc,argv,"346AbdDES:jJf:l:m:M:W:Pr:R:G:Th:X"))!=EOF) {
 	switch(c) {
+		case '2':
+			expand_as23456=1;
+			break;
 		case '3':
 			expander.asn32=1;
 			break;
