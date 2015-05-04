@@ -127,7 +127,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"346AbdDES:jJf:l:m:M:W:Pr:R:G:Th:X"))!=EOF) {
+	while((c=getopt(argc,argv,"2346AbdDES:jJf:l:m:M:W:Pr:R:G:Th:X"))!=EOF) {
 	switch(c) {
 		case '2':
 			expand_as23456=1;
