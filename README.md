@@ -6,7 +6,9 @@ NAME
 SYNOPSIS
 --------
 
+```
 	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-346AbDdJjX] [-r len] [-R len] [-m max] [-W len] OBJECTS [...]
+```
 
 DESCRIPTION
 -----------
@@ -17,106 +19,106 @@ RADB data.
 
 The options are as follows:
 
--    -3      
+#### -3      
 
-	> assume that your device is asn32-capable.
+Assume that your device is asn32-capable.
 
--    -4 
+#### -4 
 
-	> generate IPv4 prefix/access-lists (default).
+Generate IPv4 prefix/access-lists (default).
 
--    -6      
+#### -6      
 
-	> generate IPv6 prefix/access-lists (IPv4 by default).
+Generate IPv6 prefix/access-lists (IPv4 by default).
 
--    -A      
+#### -A      
 
-	> try to aggregate generated filters as much as possible (not all
-    output formats supported).
+Try to aggregate generated filters as much as possible (not all output formats
+supported).
 
--    -b
+#### -b
 
-	> generate output in BIRD format (default: Cisco).
+Generate output in BIRD format (default: Cisco).
 
--    -d      
+#### -d      
 
-	> enable some debugging output.
+Enable some debugging output.
 
--    -D      
+#### -D      
 
-	> use asdot notation for Cisco as-path access-lists.
+Use asdot notation for Cisco as-path access-lists.
 
--    -E      
+#### -E      
 
-	> generate extended access-list (Cisco) or policy-statement term using 
-	route-filters (Juniper).
+Generate extended access-list (Cisco) or policy-statement term using
+route-filters (Juniper).
 
--    -f number
+#### -f `AS number`
 
-	> generate input as-path access-list.
+Generate input as-path access-list for adjacent as `AS number`.
 
--    -G number
+#### -G `number`
 
-	> generate output as-path access-list.
+Generate output as-path access-list.
 
--    -h host
+#### -h `host`
 
-	> host running IRRD database (default: whois.radb.net).
+Host running IRRD database (default: `whois.radb.net`).
 
--    -J      
+#### -J      
 
-	> generate config for Juniper (default: Cisco).
+Generate config for Juniper (default: Cisco).
 
--    -j      
+#### -j      
 
-	> generate output in JSON format (default: Cisco).
+Generate output in JSON format (default: Cisco).
 
--    -m len  
+#### -m `length`
 
-	> maximum length of accepted prefixes (default: 32 for IPv4, 128 for IPv6).
+Maximum length of accepted prefixes (default: `32` for IPv4, `128` for IPv6).
 
--    -M match 
+#### -M `match`
 
-	> extra match conditions for Juniper route-filters.
+Extra match conditions for Juniper route-filters. See the examples section.
 
--    -l name 
+#### -l `name`
 
-	> name of generated entry.
+`Name` of generated configuration stanza.
 
--    -P      
+#### -P      
 
-	> generate prefix-list (default behaviour, flag added for backward 
-	compatibility only).
+Generate prefix-list (default behaviour, flag added for backward compatibility
+only).
 
--    -r len 
+#### -r `length`
 
-	> allow more-specific routes with masklen starting with specified 
-        length.
+Allow more-specific routes with masklen starting with specified length.
 
--    -R len  
+#### -R `length`
 
-	> allow more-specific routes up to specified masklen too.
-	(Please, note: objects with prefix-length greater than specified length
-	will be always allowed.)
+Allow more-specific routes up to specified masklen too.  (Please, note: objects
+with prefix-length greater than specified length will be always allowed.)
 
--    -S sources 
+#### -S `sources`
 
-	> use specified sources only (default: RADB,RIPE,APNIC).
+Use specified sources only (default: RADB,RIPE,APNIC).
 
--    -T      
+#### -T      
 
-	> disable pipelining.
+Disable pipelining. (not recommended)
 
--    -W len
+#### -W `length`
 
-    > generate as-path strings of a given length maximum (0 for infinity).
+Generate as-path strings of a given length maximum (0 for infinity).
 
--    -X      
+#### -X      
 
-	> generate config for Cisco IOS XR devices (plain IOS by default).
+Generate config for Cisco IOS XR devices (plain IOS by default).
 
-`OBJECTS` means networks (in prefix format), autonomous systems, as-sets 
-and route-sets. 
+####  `OBJECTS`
+
+`OBJECTS` means networks (in prefix format), autonomous systems, as-sets and
+route-sets. If multiple objects are specified they will be merged.
 
 EXAMPLES
 --------
@@ -252,10 +254,10 @@ FreeBSD can be tuned in the following way:
 Linux can be tuned in the following way:
 
     sysctl -w net.ipv4.tcp_window_scaling=1
-    sysctl -w net.core.rmem_max=16777216
-    sysctl -w net.core.wmem_max=16777216
-    sysctl -w net.ipv4.tcp_rmem="4096 87380 16777216"
-    sysctl -w net.ipv4.tcp_wmem="4096 65536 16777216"
+    sysctl -w net.core.rmem_max=33554432
+    sysctl -w net.core.wmem_max=33554432
+    sysctl -w net.ipv4.tcp_rmem="4096 87380 33554432"
+    sysctl -w net.ipv4.tcp_wmem="4096 65536 33554432"
 
 Please note that generated prefix-lists may not fit your router's
 limitations. For example, JunOS supports only 85,325 prefixes in 
