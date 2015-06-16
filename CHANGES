@@ -1,3 +1,20 @@
+0.1.30   (2015-06-16)
+    - bugfix: private asns with number > 2^31 were printed as negative integers.
+      Thanks to Henrik Thostrup Jensen.
+    - do not use ASNs reserved for documentation purposes and private use:
+       64496-64511 For documentation and sample code; reserved by [RFC5398]
+       64512-65534 For private use; reserved by [RFC6996]
+       65535       Reserved by [RFC7300]
+       65536-65551 For documentation and sample code; reserved by [RFC5398]
+       4200000000-4294967294  For private use; reserved by [RFC6996]
+       4294967295  Reserved by [RFC7300]
+      Please, use new -p flag to include these asn's.
+      Suggested by Henrik Thostrup Jensen and Job Snijders.
+    - allow as-path generation with BIRD output. Suggested by Jiri Mikulas.
+    - merge README.md changes by Job Snijders.
+    - bugfix: incorrect asdot representation (as101. without symbols after dot)
+      is not allowed anymore.
+
 0.1.29   (2015-05-04)
     - do not include routes registered for AS23456 (transition-as) by default.
     Use new option -2 to restore old behaviour.
@@ -47,7 +64,7 @@
 0.1.21   (2014-06-05)
     - new flag -b: generate prefix-filters for BIRD (http://bird.network.cz),
     contributed by Job Snijders.
-   
+
 0.1.20-todo2 (2014-05-01)
     - new flag -r <len>, allowing bgpq to generate limited set of more-specific
     routes - only routes with prefix-length >= <len> are accepted.
@@ -61,7 +78,7 @@
 0.1.19 (2013-05-09)
     - CLANG compilation issues fixed.
     - bgpq3.spec added. Thanks to Arnoud Vermeer.
-   
+
 0.1.18 (2013-01-08)
     - JSON output format. Thanks to Job Snijders (Atrato Networks).
 

@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-346AbDdJjX] [-r len] [-R len] [-m max] [-W len] OBJECTS [...]
+	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-2346AbDdJjpX] [-r len] [-R len] [-m max] [-W len] OBJECTS [...]
 ```
 
 DESCRIPTION
@@ -84,6 +84,11 @@ Extra match conditions for Juniper route-filters. See the examples section.
 #### -l `name`
 
 `Name` of generated configuration stanza.
+
+#### -p
+
+Enable use of private ASNs and ASNs used for documentation purpose only
+(default: disabled).
 
 #### -P      
 

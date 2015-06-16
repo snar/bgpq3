@@ -20,6 +20,7 @@ extern int debug_expander;
 extern int debug_aggregation;
 extern int pipelining;
 extern int expand_as23456;
+extern int expand_special_asn;
 
 int
 usage(int ecode)
@@ -127,7 +128,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346AbdDES:jJf:l:m:M:W:Pr:R:G:Th:X"))!=EOF) {
+	while((c=getopt(argc,argv,"2346AbdDES:jJf:l:m:M:W:Ppr:R:G:Th:X"))!=EOF) {
 	switch(c) {
 		case '2':
 			expand_as23456=1;
@@ -184,6 +185,9 @@ main(int argc, char* argv[])
 			if(expander.generation) exclusive();
 			expander.generation=T_OASPATH;
 			parseasnumber(&expander,optarg);
+			break;
+		case 'p':
+			expand_special_asn=1;
 			break;
 		case 'P':
 			if(expander.generation) exclusive();
@@ -268,6 +272,8 @@ main(int argc, char* argv[])
 				expander.aswidth=4;
 			} else if(expander.vendor==V_JUNIPER) {
 				expander.aswidth=8;
+			} else if(expander.vendor==V_BIRD) {
+				expander.aswidth=10;
 			};
 		} else if(expander.generation==T_OASPATH) {
 			if(expander.vendor==V_CISCO) {
@@ -285,9 +291,10 @@ main(int argc, char* argv[])
 	if(expander.vendor==V_CISCO_XR && expander.generation!=T_PREFIXLIST) {
 		sx_report(SX_FATAL, "Sorry, only prefix-sets supported for IOS XR\n");
 	};
-	if(expander.vendor==V_BIRD && expander.generation!=T_PREFIXLIST) {
-		sx_report(SX_FATAL, "Sorry, only prefix-lists supported for BIRD "
-			"output\n");
+	if(expander.vendor==V_BIRD && expander.generation!=T_PREFIXLIST &&
+		expander.generation!=T_ASPATH) {
+		sx_report(SX_FATAL, "Sorry, only prefix-lists and as-paths supported "
+			"for BIRD output\n");
 	};
 	if(expander.vendor==V_JSON && expander.generation!=T_PREFIXLIST &&
 		expander.generation!=T_ASPATH) {

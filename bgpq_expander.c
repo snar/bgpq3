@@ -22,6 +22,7 @@
 int debug_expander=0;
 int pipelining=1;
 int expand_as23456=0;
+int expand_special_asn=0;
 
 int
 bgpq_expander_init(struct bgpq_expander* b, int af)
@@ -111,8 +112,12 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 			if(asno>65535) {
 				asn1=asno%65536;
 				asno/=65536;
-			} else
+			} else if(eoa && *(eoa+1)) {
 				asn1=strtoul(eoa+1,&eoa,10);
+			} else {
+				sx_report(SX_ERROR, "Invalid AS number: '%s'\n", as);
+				return 0;
+			};
 
 			if(eoa && *eoa!=0) {
 				sx_report(SX_ERROR,"Invalid symbol in AS number: '%c' in %s\n",
@@ -121,6 +126,10 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 			};
 			if(asn1>65535) {
 				sx_report(SX_ERROR,"Invalid AS number in %s\n", as);
+				return 0;
+			};
+			if(!expand_special_asn && (((asno*65536+asn1)>=4200000000) ||
+				((asno*65536+asn1)>=64496 && (asno*65536+asn1) <= 65551))) {
 				return 0;
 			};
 			if(!b->asn32s[asno]) {
@@ -146,6 +155,9 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 	};
 
 	if(asno==23456 && !expand_as23456)
+		return 0;
+
+	if(!expand_special_asn && (asno>=64496 && asno <= 65536))
 		return 0;
 
 	b->asn32s[0][asno/8]|=(0x80>>(asno%8));

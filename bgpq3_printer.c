@@ -15,6 +15,7 @@
 #include "sx_report.h"
 
 int bgpq3_print_json_aspath(FILE* f, struct bgpq_expander* b);
+int bgpq3_print_bird_aspath(FILE* f, struct bgpq_expander* b);
 
 int
 bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
@@ -25,12 +26,12 @@ bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
 		if(b->asdot && b->asnumber>65535) {
-			fprintf(f,"ip as-path access-list %s permit ^%i.%i(_%i.%i)*$\n",
+			fprintf(f,"ip as-path access-list %s permit ^%u.%u(_%u.%u)*$\n",
 				b->name?b->name:"NN",b->asnumber/65536,b->asnumber%65536,
 				b->asnumber/65536,b->asnumber%65536);
 			empty=0;
 		} else {
-			fprintf(f,"ip as-path access-list %s permit ^%i(_%i)*$\n",
+			fprintf(f,"ip as-path access-list %s permit ^%u(_%u)*$\n",
 				b->name?b->name:"NN",b->asnumber,b->asnumber);
 			empty=0;
 		};
@@ -45,21 +46,21 @@ bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 					if(!nc) {
 						if(b->asdot && k>0) {
 							fprintf(f,"ip as-path access-list %s permit"
-								" ^%i(_[0-9]+)*_(%i.%i", b->name?b->name:"NN",
+								" ^%u(_[0-9]+)*_(%u.%u", b->name?b->name:"NN",
 								b->asnumber,k,i*8+j);
 							empty=0;
 						} else {
 							fprintf(f,"ip as-path access-list %s permit"
-								" ^%i(_[0-9]+)*_(%i", b->name?b->name:"NN",
+								" ^%u(_[0-9]+)*_(%u", b->name?b->name:"NN",
 								b->asnumber,k*65536+i*8+j);
 							empty=0;
 						};
 					} else {
 						if(b->asdot && k>0) {
-							fprintf(f,"|%i.%i",k,i*8+j);
+							fprintf(f,"|%u.%u",k,i*8+j);
 							empty=0;
 						} else {
-							fprintf(f,"|%i",k*65536+i*8+j);
+							fprintf(f,"|%u",k*65536+i*8+j);
 							empty=0;
 						};
 					}
@@ -86,10 +87,10 @@ bgpq3_print_cisco_oaspath(FILE* f, struct bgpq_expander* b)
 		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
 			(0x80>>(b->asnumber%8))) {
 		if(b->asdot && b->asnumber>65535) {
-			fprintf(f,"ip as-path access-list %s permit ^(_%i.%i)*$\n",
+			fprintf(f,"ip as-path access-list %s permit ^(_%u.%u)*$\n",
 				b->name?b->name:"NN",b->asnumber/65536,b->asnumber%65536);
 		} else {
-			fprintf(f,"ip as-path access-list %s permit ^(_%i)*$\n",
+			fprintf(f,"ip as-path access-list %s permit ^(_%u)*$\n",
 				b->name?b->name:"NN",b->asnumber);
 		};
 		empty=0;
@@ -103,21 +104,21 @@ bgpq3_print_cisco_oaspath(FILE* f, struct bgpq_expander* b)
 					if(!nc) {
 						if(b->asdot && k>0) {
 							fprintf(f,"ip as-path access-list %s permit"
-								" ^(_[0-9]+)*_(%i.%i", b->name?b->name:"NN",
+								" ^(_[0-9]+)*_(%u.%u", b->name?b->name:"NN",
 								k,i*8+j);
 							empty=0;
 						} else {
 							fprintf(f,"ip as-path access-list %s permit"
-								" ^(_[0-9]+)*_(%i", b->name?b->name:"NN",
+								" ^(_[0-9]+)*_(%u", b->name?b->name:"NN",
 								k*65536+i*8+j);
 							empty=0;
 						};
 					} else {
 						if(b->asdot && k>0) {
-							fprintf(f,"|%i.%i",k,i*8+j);
+							fprintf(f,"|%u.%u",k,i*8+j);
 							empty=0;
 						} else {
-							fprintf(f,"|%i",k*65536+i*8+j);
+							fprintf(f,"|%u",k*65536+i*8+j);
 							empty=0;
 						};
 					}
@@ -146,7 +147,7 @@ bgpq3_print_juniper_aspath(FILE* f, struct bgpq_expander* b)
 	if(b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65535][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
-		fprintf(f,"  as-path a%i \"^%u(%u)*$\";\n", lineNo, b->asnumber,
+		fprintf(f,"  as-path a%u \"^%u(%u)*$\";\n", lineNo, b->asnumber,
 			b->asnumber);
 		lineNo++;
 	};
@@ -157,7 +158,7 @@ bgpq3_print_juniper_aspath(FILE* f, struct bgpq_expander* b)
 				if(b->asn32s[k][i]&(0x80>>j)) {
 					if(k*65536+i*8+j==b->asnumber) continue;
 					if(!nc) {
-						fprintf(f,"  as-path a%i \"^%u(.)*(%u",
+						fprintf(f,"  as-path a%u \"^%u(.)*(%u",
 							lineNo,b->asnumber,k*65536+i*8+j);
 					} else {
 						fprintf(f,"|%u",k*65536+i*8+j);
@@ -189,7 +190,7 @@ bgpq3_print_juniper_oaspath(FILE* f, struct bgpq_expander* b)
 	if(b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
-		fprintf(f,"  as-path a%i \"^%u(%u)*$\";\n", lineNo, b->asnumber,
+		fprintf(f,"  as-path a%u \"^%u(%u)*$\";\n", lineNo, b->asnumber,
 			b->asnumber);
 		lineNo++;
 	};
@@ -201,7 +202,7 @@ bgpq3_print_juniper_oaspath(FILE* f, struct bgpq_expander* b)
 				if(b->asn32s[k][i]&(0x80>>j)) {
 					if(k*65536+i*8+j==b->asnumber) continue;
 					if(!nc) {
-						fprintf(f,"  as-path a%i \"^(.)*(%u",
+						fprintf(f,"  as-path a%u \"^(.)*(%u",
 							lineNo,k*65536+i*8+j);
 					} else {
 						fprintf(f,"|%u",k*65536+i*8+j);
@@ -232,6 +233,8 @@ bgpq3_print_aspath(FILE* f, struct bgpq_expander* b)
 		return bgpq3_print_cisco_aspath(f,b);
 	} else if(b->vendor==V_JSON) {
 		return bgpq3_print_json_aspath(f,b);
+	} else if(b->vendor==V_BIRD) {
+		return bgpq3_print_bird_aspath(f,b);
 	} else {
 		sx_report(SX_FATAL,"Unknown vendor %i\n", b->vendor);
 	};
@@ -306,10 +309,10 @@ bgpq3_print_json_aspath(FILE* f, struct bgpq_expander* b)
 			for(j=0;j<8;j++) {
 				if(b->asn32s[k][i]&(0x80>>j)) {
 					if(!nc) {
-						fprintf(f,"%s\n  %i",needscomma?",":"", k*65536+i*8+j);
+						fprintf(f,"%s\n  %u",needscomma?",":"", k*65536+i*8+j);
 						needscomma=1;
 					} else {
-						fprintf(f,"%s%i",needscomma?",":"", k*65536+i*8+j);
+						fprintf(f,"%s%u",needscomma?",":"", k*65536+i*8+j);
 						needscomma=1;
 					}
 					nc++;
@@ -348,6 +351,36 @@ bgpq3_print_bird_prefix(struct sx_radix_node* n, void* ff)
 checkSon:
 	if(n->son)
 		bgpq3_print_bird_prefix(n->son, ff);
+};
+
+int
+bgpq3_print_bird_aspath(FILE* f, struct bgpq_expander* b)
+{
+	int nc=0, i, j, k, empty=1;
+	fprintf(f, "%s = [", b->name?b->name:"NN");
+
+	for(k=0;k<65536;k++) {
+		if(!b->asn32s[k]) continue;
+
+		for(i=0;i<8192;i++) {
+			for(j=0;j<8;j++) {
+				if(b->asn32s[k][i]&(0x80>>j)) {
+					if(!nc) {
+						fprintf(f, "%s%u", empty?"":",\n    ", k*65536+i*8+j);
+						empty = 0;
+					} else {
+						fprintf(f, ", %u", k*65536+i*8+j);
+					};
+					nc++;
+					if(nc==b->aswidth) {
+						nc=0;
+					};
+				};
+			};
+		};
+	};
+	fprintf(f,"];\n");
+	return 0;
 };
 
 void
