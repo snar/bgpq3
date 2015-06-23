@@ -1,12 +1,12 @@
 Name:           bgpq3
-Version:        0.1.28
+Version:        0.1.31
 Release:        0%{?dist}
 
 Group:          System/Utilities
 Summary:        Automate BGP filter generation based on routing database information
 URL:            http://snar.spb.ru/prog/bgpq3/
 License:        BSD
-Source0:        http://snar.spb.ru/prog/bgpq3/bgpq3-0.1.28.tgz
+Source0:        http://snar.spb.ru/prog/bgpq3/bgpq3-0.1.31.tgz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %description
@@ -35,6 +35,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Jun 23 Alexandre Snarskii <snar@snar.spb.ru> 0.1.31
+- Version updated
+
 * Tue Mar 10 Alexandre Snarskii <snar@snar.spb.ru> 0.1.28
 - Version updated
 

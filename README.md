@@ -250,19 +250,20 @@ program exits with non-zero status.
 NOTES ON ULTRA-LARGE PREFIX-LISTS
 ---------------------------------
 
-When using `bgpq3` to expand extra-large AS-SETs, `bgpq3` may stuck
-due to lacking tcp buffer size. To avoid this, tune your OS. 
+To improve `bgpq3` performance when expanding extra-large AS-SETs you
+shall tune OS settings to enlarge TCP send buffer.
+
 FreeBSD can be tuned in the following way:
 
-    sysctl -w net.inet.tcp.sendbuf_max=16777216
+    sysctl -w net.inet.tcp.sendbuf_max=2097152
     
 Linux can be tuned in the following way:
 
     sysctl -w net.ipv4.tcp_window_scaling=1
-    sysctl -w net.core.rmem_max=33554432
-    sysctl -w net.core.wmem_max=33554432
-    sysctl -w net.ipv4.tcp_rmem="4096 87380 33554432"
-    sysctl -w net.ipv4.tcp_wmem="4096 65536 33554432"
+    sysctl -w net.core.rmem_max=2097152
+    sysctl -w net.core.wmem_max=2097152
+    sysctl -w net.ipv4.tcp_rmem="4096 87380 2097152"
+    sysctl -w net.ipv4.tcp_wmem="4096 65536 2097152"
 
 Please note that generated prefix-lists may not fit your router's
 limitations. For example, JunOS supports only 85,325 prefixes in 
