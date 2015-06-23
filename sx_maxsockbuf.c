@@ -85,5 +85,5 @@ sx_maxsockbuf(int s, int dir)
 			voptval, iterations);
 		*/
 	};
-	return 0;
+	return voptval;
 };

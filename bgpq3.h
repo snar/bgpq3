@@ -23,6 +23,7 @@ typedef enum {
 struct bgpq_prequest { 
 	struct bgpq_prequest* next;
 	char request[128];
+	int size;
 	int (*callback)(char*, void*);
 	void *udata;
 };
@@ -46,6 +47,8 @@ struct bgpq_expander {
 	char* match;
 	char* server;
 	unsigned maxlen;
+	int socksize;
+	int qsize;
 };
 
 
