@@ -21,12 +21,13 @@ extern int debug_aggregation;
 extern int pipelining;
 extern int expand_as23456;
 extern int expand_special_asn;
+extern int print_sequence_nums;
 
 int
 usage(int ecode)
 {
 	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
-		" [-2346AbDJjXd] [-R len] <OBJECTS>...\n");
+		" [-2346AbDJjXds] [-R len] <OBJECTS>...\n");
 	printf(" -2        : allow routes belonging to as23456 (transition-as) "
 		"(default: false)\n");
 	printf(" -3        : assume that your device is asn32-safe\n");
@@ -54,6 +55,7 @@ usage(int ecode)
 		" compatibility)\n");
 	printf(" -r len    : allow more specific routes from masklen specified\n");
 	printf(" -R len    : allow more specific routes up to specified masklen\n");
+	printf(" -s        : add sequence numbers in IOS mode\n");
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
@@ -128,7 +130,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346AbdDES:jJf:l:m:M:W:Ppr:R:G:Th:X"))!=EOF) {
+	while((c=getopt(argc,argv,"2346AbdDEsS:jJf:l:m:M:W:Ppr:R:G:Th:X"))!=EOF) {
 	switch(c) {
 		case '2':
 			expand_as23456=1;
@@ -247,6 +249,8 @@ main(int argc, char* argv[])
 			break;
 		case 'T': pipelining=0;
 			break;
+		case 's': print_sequence_nums=1;
+			break;
 		case 'S': expander.sources=optarg;
 			break;
 		case 'W': expander.aswidth=atoi(optarg);
@@ -306,6 +310,11 @@ main(int argc, char* argv[])
 		sx_report(SX_FATAL,"asdot notation supported only for Cisco, "
 			"other formats use asplain only\n");
 	};
+
+	if(print_sequence_nums && expander.vendor!=V_CISCO) {
+		sx_report(SX_FATAL,"Sequence number printing supported only on Cisco IOS\n");
+	};
+
 
 	if(!expander.asn32 && expander.asnumber>65535) {
 		expander.asnumber=23456;
