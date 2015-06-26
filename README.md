@@ -104,6 +104,10 @@ Allow more-specific routes with masklen starting with specified length.
 Allow more-specific routes up to specified masklen too.  (Please, note: objects
 with prefix-length greater than specified length will be always allowed.)
 
+#### -s
+
+Add sequence numbers (can only be used in combination with Cisco IOS output)
+
 #### -S `sources`
 
 Use specified sources only (default: RADB,RIPE,APNIC).
