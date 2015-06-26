@@ -390,7 +390,7 @@ bgpq_pipeline(FILE* f, int (*callback)(char*, void*), void* udata,
 		};
 	};
 
-	SX_DEBUG(debug_expander,"expander: sending '%s' (queued %i of %i)\n", 
+	SX_DEBUG(debug_expander,"expander: sending '%s' (queued %i of %i)\n",
 		request, d->qsize, d->socksize);
 
 	bp=malloc(sizeof(struct bgpq_prequest));
@@ -668,6 +668,11 @@ bgpq_expand(struct bgpq_expander* b)
 		snprintf(sources,sizeof(sources),"!s%s\n", b->sources);
 		fwrite(sources,strlen(sources),1,f);
 		fgets(sources,sizeof(sources),f);
+		if(sources[0]!='C') {
+			sx_report(SX_ERROR, "Invalid sources '%s': %s\n", b->sources,
+				sources);
+			exit(1);
+		};
 	};
 
 	if(b->identify) {

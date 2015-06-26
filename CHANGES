@@ -1,3 +1,6 @@
+untagged yet (2015-06-26)
+    - bugfix: F source(s) unavailable message from IRRD was ignored
+
 0.1.31   (2015-06-23)
     - pipelining mode now counts buffered requests and issues dequeue
       when new request can overflow allocated buffer. So, bgpq3 shall no
