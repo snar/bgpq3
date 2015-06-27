@@ -41,7 +41,7 @@ usage(int ecode)
 		"route-filter(Juniper)\n");
 	printf(" -f number : generate input as-path access-list\n");
 	printf(" -G number : generate output as-path access-list\n");
-	printf(" -h host   : host running IRRD software (whois.radb.net by "
+	printf(" -h host   : host running IRRd software (whois.radb.net by "
 		"default)\n");
 	printf(" -J        : generate config for JunOS (Cisco IOS by default)\n");
 	printf(" -j        : generate JSON output (Cisco IOS by default)\n");
