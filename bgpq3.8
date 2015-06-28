@@ -37,7 +37,7 @@
 .Fl f Ar asn |
 .Fl G Ar asn 
 .Oc
-.Op Fl 346AbDdJjX
+.Op Fl 346AbDdJjsX
 .Op Fl r Ar len
 .Op Fl R Ar len
 .Op Fl m Ar max
@@ -93,6 +93,8 @@ generate prefix-list (default, backward compatibility).
 allow more specific routes starting with specified masklen too. 
 .It Fl R Ar len
 allow more specific routes up to specified masklen too. 
+.It Fl s
+emit sequence numbers in IOS as-paths
 .It Fl S Ar sources
 use specified sources only (default: RADB,RIPE,APNIC).
 .It Fl T
