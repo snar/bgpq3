@@ -223,147 +223,6 @@ bgpq_expanded_v6prefix(char* prefix, void* udata)
 	return 1;
 };
 
-int
-bgpq_pipeline_dequeue_ripe(FILE* f, struct bgpq_expander* b)
-{
-	int sawNL=0;
-	char buffer[128];
-	char* otype=NULL, *object=NULL;
-
-	if(!f || !b) {
-		sx_report(SX_FATAL, "Invalid arguments\n");
-		exit(1);
-	};
-	if(!b->firstpipe) {
-		sx_report(SX_FATAL, "No piped requests\n");
-		exit(1);
-	};
-	while(fgets(buffer,sizeof(buffer),f)) {
-		if(buffer[0]=='\n') {
-			if(b->family==AF_INET && otype && !strcmp(otype,"route")) {
-				SX_DEBUG(debug_expander,"dequeuer(ripe): got route %s\n",
-					object);
-				if(b->firstpipe->callback)
-					b->firstpipe->callback(object,b->firstpipe->udata);
-			} else if(b->family==AF_INET6 && otype && !strcmp(otype,"route6")){
-				SX_DEBUG(debug_expander,"dequeuer(ripe): got route6 %s\n",
-					object);
-				if(b->firstpipe->callback)
-					b->firstpipe->callback(object,b->firstpipe->udata);
-			};
-			if(otype) free(otype); otype=NULL;
-			if(object) free(object); object=NULL;
-			sawNL++;
-			if(sawNL==2) {
-				/* end of object */
-				struct bgpq_prequest* p=b->firstpipe;
-				b->firstpipe=b->firstpipe->next;
-				b->qsize-=p->size;
-				free(p);
-				b->piped--;
-				if(!b->piped) {
-					b->lastpipe=NULL;
-					return 0;
-				};
-			};
-		} else {
-			sawNL=0;
-			if(!otype) {
-				char* c=strchr(buffer,':');
-				if(c) {
-					*c=0;
-					otype=strdup(buffer);
-					c++;
-					while(isspace((int)*c)) c++;
-					object=strdup(c);
-					c=strchr(object,'\n');
-					if(c) *c=0;
-				};
-			};
-		};
-	};
-	if(feof(f)) {
-		sx_report(SX_FATAL,"EOF from RADB (dequeue, ripe)\n");
-	} else {
-		sx_report(SX_FATAL,"Error from RADB: %s (dequeue, ripe)\n",
-			strerror(errno));
-	};
-	return 0;
-};
-
-int
-bgpq_expand_ripe(FILE* f, int (*callback)(char*, void*), void* udata,
-	char* fmt, ...)
-{
-	char  request[128];
-	char* otype=NULL, *object=NULL, *origin=NULL;
-	int sawNL=0, nObjects=0;
-	va_list ap;
-	struct bgpq_expander* b=(struct bgpq_expander*)udata;
-
-	if(!f) {
-		sx_report(SX_FATAL,"Invalid argments\n");
-		exit(1);
-	};
-
-	va_start(ap,fmt);
-	vsnprintf(request,sizeof(request),fmt,ap);
-	va_end(ap);
-
-	SX_DEBUG(debug_expander,"expander(ripe): sending '%s'\n", request);
-	fwrite(request,1,strlen(request),f);
-	fflush(f);
-
-	sawNL=0;
-	while(fgets(request,sizeof(request),f)) {
-		if(request[0]=='\n') {
-			if(b->family==AF_INET && otype && !strcmp(otype,"route")) {
-				SX_DEBUG(debug_expander,"expander(ripe): got route: %s\n",
-					object);
-				callback(object,udata);
-			} else if(b->family==AF_INET6 && otype&&!strcmp(otype,"route6")) {
-				SX_DEBUG(debug_expander,"expander(ripe): got route6: %s\n",
-					object);
-				callback(object,udata);
-			};
-			if(otype) free(otype); otype=NULL;
-			if(object) free(object); object=NULL;
-			if(origin) free(origin); origin=NULL;
-			nObjects++;
-			sawNL++;
-			if(sawNL==2) {
-				/* ok, that's end of input */
-				return nObjects;
-			};
-		} else {
-			sawNL=0;
-			if(!otype) {
-				/* that's the first line of object */
-				char* c=strchr(request,':');
-				if(c) {
-					*c=0;
-					otype=strdup(request);
-					c++;
-					while((isspace((int)*c))) c++;
-					object=strdup(c);
-					c=strchr(object,'\n');
-					if(c) *c=0;
-				};
-			} else if(!strncmp(request,"origin",6)) {
-				if(origin) free(origin);
-				origin=strdup(request);
-			};
-		};
-	};
-	if(feof(f)) {
-		sx_report(SX_FATAL,"EOF from server (expand, ripe)\n");
-	} else {
-		sx_report(SX_FATAL,"Error reading server: %s (expand, ripe)\n",
-			strerror(errno));
-	};
-	return 0;
-};
-
 int bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b);
 
 int
@@ -383,11 +242,7 @@ bgpq_pipeline(FILE* f, int (*callback)(char*, void*), void* udata,
 	if(rlen+d->qsize >= d->socksize) {
 		SX_DEBUG(debug_expander, "looks like socket buffer shortage, "
 			"queued %i of %i, dequeueing\n", d->qsize, d->socksize);
-		if (d->family==AF_INET6) {
-			bgpq_pipeline_dequeue_ripe(f, d);
-		} else {
-			bgpq_pipeline_dequeue(f, d);
-		};
+		bgpq_pipeline_dequeue(f, d);
 	};
 
 	SX_DEBUG(debug_expander,"expander: sending '%s' (queued %i of %i)\n",
@@ -404,7 +259,7 @@ bgpq_pipeline(FILE* f, int (*callback)(char*, void*), void* udata,
 	ret=fwrite(request,1,strlen(request),f);
 
 	if(ret!=rlen) {
-		sx_report(SX_FATAL,"Partial write to radb, only %i bytes written: %s\n",
+		sx_report(SX_FATAL,"Partial write to IRRd, only %i bytes written: %s\n",
 			ret,strerror(errno));
 		exit(1);
 	};
@@ -510,7 +365,7 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 };
 
 int
-bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
+bgpq_expand_irrd(FILE* f, int (*callback)(char*, void*), void* udata,
 	char* fmt, ...)
 {
 	char request[128];
@@ -525,18 +380,18 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 
 	ret=fwrite(request,1,strlen(request),f);
 	if(ret!=strlen(request)) {
-		sx_report(SX_FATAL,"Partial write to radb, only %i bytes written: %s\n",
+		sx_report(SX_FATAL,"Partial write to IRRd, only %i bytes written: %s\n",
 			ret,strerror(errno));
 		exit(1);
 	};
 	memset(request,0,sizeof(request));
 	if(!fgets(request,sizeof(request),f)) {
 		if(ferror(f)) {
-			sx_report(SX_FATAL,"Error reading data from radb: %s (expand,radb)"
+			sx_report(SX_FATAL,"Error reading data from IRRd: %s (expand)"
 				"\n", strerror(errno));
 			exit(1);
 		};
-		sx_report(SX_FATAL,"EOF from radb (expand,radb)\n");
+		sx_report(SX_FATAL,"EOF from IRRd (expand)\n");
 		exit(1);
 	};
 	SX_DEBUG(debug_expander>2,"expander: initially got %lu bytes, '%s'\n",
@@ -554,10 +409,10 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 
 		if(fgets(recvbuffer,togot+1,f)==NULL) {
 			if(feof(f)) {
-				sx_report(SX_FATAL,"EOF from radb (expand,radb,result)\n");
+				sx_report(SX_FATAL,"EOF from IRRd (expand,result)\n");
 			} else {
-				sx_report(SX_FATAL,"Error reading radb: %s (expand,radb,"
-					"result)\n", strerror(errno));
+				sx_report(SX_FATAL,"Error reading IRRd: %s (expand,result)\n",
+					strerror(errno));
 			};
 			exit(1);
 		};
@@ -574,9 +429,9 @@ bgpq_expand_radb(FILE* f, int (*callback)(char*, void*), void* udata,
 
 		if(fgets(recvbuffer,togot,f)==NULL) {
 			if(feof(f)) {
-				sx_report(SX_FATAL,"EOF from radb (expand,radb,final)\n");
+				sx_report(SX_FATAL,"EOF from IRRd (expand,final)\n");
 			} else {
-				sx_report(SX_FATAL,"ERROR from radb: %s\n", strerror(errno));
+				sx_report(SX_FATAL,"ERROR from IRRd: %s\n", strerror(errno));
 			};
 			exit(1);
 		};
@@ -658,7 +513,7 @@ bgpq_expand(struct bgpq_expander* b)
 	};
 
 	if((ret=fwrite("!!\n",1,3,f))!=3) {
-		sx_report(SX_ERROR,"Partial fwrite to radb: %i bytes, %s\n",
+		sx_report(SX_ERROR,"Partial fwrite to IRRd: %i bytes, %s\n",
 			ret, strerror(errno));
 		exit(1);
 	};
@@ -683,21 +538,16 @@ bgpq_expand(struct bgpq_expander* b)
 	};
 
 	for(mc=b->macroses;mc;mc=mc->next) {
-		bgpq_expand_radb(f,bgpq_expanded_macro,b,"!i%s,1\n",mc->text);
+		bgpq_expand_irrd(f,bgpq_expanded_macro,b,"!i%s,1\n",mc->text);
 	};
 	if(b->generation>=T_PREFIXLIST) {
 		unsigned i, j, k;
 		for(mc=b->rsets;mc;mc=mc->next) {
 			if(b->family==AF_INET) {
-				bgpq_expand_radb(f,bgpq_expanded_prefix,b,"!i%s,1\n",mc->text);
+				bgpq_expand_irrd(f,bgpq_expanded_prefix,b,"!i%s,1\n",mc->text);
 			} else {
-				if(!pipelining) {
-					bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
-						"-T route6 -i member-of %s\n",mc->text);
-				} else {
-					bgpq_pipeline(f,bgpq_expanded_v6prefix,b,
-						"-T route6 -i member-of %s\n", mc->text);
-				};
+				bgpq_expand_irrd(f,bgpq_expanded_v6prefix,b,"!i%s,1\n",
+					mc->text);
 			};
 		};
 		for(k=0;k<sizeof(b->asn32s)/sizeof(unsigned char*);k++) {
@@ -708,28 +558,26 @@ bgpq_expand(struct bgpq_expander* b)
 						if(b->family==AF_INET6) {
 							if(!pipelining) {
 								if(k>0)
-									bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
-										"-T route6 -i origin as%u.%u\r\n", k,
-										i*8+j);
+									bgpq_expand_irrd(f,bgpq_expanded_v6prefix,b,
+										"!6as%u.%u\r\n", k, i*8+j);
 								else
-									bgpq_expand_ripe(f,bgpq_expanded_v6prefix,b,
-										"-T route6 -i origin as%u\r\n", i*8+j);
+									bgpq_expand_irrd(f,bgpq_expanded_v6prefix,b,
+										"!6as%u\r\n", i*8+j);
 							} else {
 								if(k>0)
 									bgpq_pipeline(f,bgpq_expanded_v6prefix,b,
-										"-T route6 -i origin as%u.%u\r\n", k,
-										i*8+j);
+										"!6as%u.%u\r\n", k, i*8+j);
 								else
 									bgpq_pipeline(f,bgpq_expanded_v6prefix,b,
-										"-T route6 -i origin as%u\r\n", i*8+j);
+										"!6as%u\r\n", i*8+j);
 							};
 						} else {
 							if(!pipelining) {
 								if(k>0)
-									bgpq_expand_radb(f,bgpq_expanded_prefix,b,
+									bgpq_expand_irrd(f,bgpq_expanded_prefix,b,
 										"!gas%u.%u\n", k, i*8+j);
 								else
-									bgpq_expand_radb(f,bgpq_expanded_prefix,b,
+									bgpq_expand_irrd(f,bgpq_expanded_prefix,b,
 										"!gas%u\n", i*8+j);
 							} else {
 								if(k>0)
@@ -745,11 +593,7 @@ bgpq_expand(struct bgpq_expander* b)
 			};
 		};
 		if(pipelining && b->firstpipe) {
-			if(b->family==AF_INET6) {
-				bgpq_pipeline_dequeue_ripe(f,b);
-			} else {
-				bgpq_pipeline_dequeue(f,b);
-			};
+			bgpq_pipeline_dequeue(f,b);
 		};
 	};
 

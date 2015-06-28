@@ -6,6 +6,8 @@ untagged yet (2015-06-28)
       Thanks to Mikhail A. Grishin for reporting.
     - new flag -s for IOS mode enables as-path sequencing. According to Job
       Snijders this significantly speeds up Arista configuration load.
+    - RIPE-style queries (-T route6 -i origin asNNN) replaced with IRRd-style
+      !6asNNN queries.
 
 0.1.31   (2015-06-23)
     - pipelining mode now counts buffered requests and issues dequeue
