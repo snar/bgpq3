@@ -128,7 +128,7 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 				sx_report(SX_ERROR,"Invalid AS number in %s\n", as);
 				return 0;
 			};
-			if(!expand_special_asn && (((asno*65536+asn1)>=4200000000) ||
+			if(!expand_special_asn && (((asno*65536+asn1)>=4200000000ul) ||
 				((asno*65536+asn1)>=64496 && (asno*65536+asn1) <= 65551))) {
 				return 0;
 			};
