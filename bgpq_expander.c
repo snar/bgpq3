@@ -669,7 +669,7 @@ bgpq_expand(struct bgpq_expander* b)
 		fwrite(sources,strlen(sources),1,f);
 		fgets(sources,sizeof(sources),f);
 		if(sources[0]!='C') {
-			sx_report(SX_ERROR, "Invalid sources '%s': %s\n", b->sources,
+			sx_report(SX_ERROR, "Invalid source(s) '%s': %s\n", b->sources,
 				sources);
 			exit(1);
 		};

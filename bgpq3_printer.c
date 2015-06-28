@@ -20,18 +20,23 @@ int bgpq3_print_bird_aspath(FILE* f, struct bgpq_expander* b);
 int
 bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 {
-	int nc=0, i, j, k, empty=1;
+	int nc=0, i, j, k, empty=1, seq=1;
+	char sseq[16];
 	fprintf(f,"no ip as-path access-list %s\n", b->name?b->name:"NN");
 	if(b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
+		if(b->ios_asn_sequence)
+			snprintf(sseq, sizeof(sseq), "seq %i ", seq++);
 		if(b->asdot && b->asnumber>65535) {
-			fprintf(f,"ip as-path access-list %s permit ^%u.%u(_%u.%u)*$\n",
+			fprintf(f,"ip as-path access-list %s%s permit ^%u.%u(_%u.%u)*$\n",
+				b->ios_asn_sequence?sseq:"",
 				b->name?b->name:"NN",b->asnumber/65536,b->asnumber%65536,
 				b->asnumber/65536,b->asnumber%65536);
 			empty=0;
 		} else {
-			fprintf(f,"ip as-path access-list %s permit ^%u(_%u)*$\n",
+			fprintf(f,"ip as-path access-list %s%s permit ^%u(_%u)*$\n",
+				b->ios_asn_sequence?sseq:"",
 				b->name?b->name:"NN",b->asnumber,b->asnumber);
 			empty=0;
 		};
@@ -44,14 +49,20 @@ bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 				if(b->asn32s[k][i]&(0x80>>j)) {
 					if(k*65536+i*8+j==b->asnumber) continue;
 					if(!nc) {
+						if(b->ios_asn_sequence)
+							snprintf(sseq, sizeof(sseq), "seq %i ", seq++);
 						if(b->asdot && k>0) {
-							fprintf(f,"ip as-path access-list %s permit"
-								" ^%u(_[0-9]+)*_(%u.%u", b->name?b->name:"NN",
+							fprintf(f,"ip as-path access-list %s%s permit"
+								" ^%u(_[0-9]+)*_(%u.%u",
+								b->ios_asn_sequence?sseq:"",
+								b->name?b->name:"NN",
 								b->asnumber,k,i*8+j);
 							empty=0;
 						} else {
-							fprintf(f,"ip as-path access-list %s permit"
-								" ^%u(_[0-9]+)*_(%u", b->name?b->name:"NN",
+							fprintf(f,"ip as-path access-list %s%s permit"
+								" ^%u(_[0-9]+)*_(%u",
+								b->ios_asn_sequence?sseq:"",
+								b->name?b->name:"NN",
 								b->asnumber,k*65536+i*8+j);
 							empty=0;
 						};
@@ -81,17 +92,21 @@ bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 int
 bgpq3_print_cisco_oaspath(FILE* f, struct bgpq_expander* b)
 {
-	int nc=0, i, j, k, empty=1;
+	int nc=0, i, j, k, empty=1, seq=1;
+	char sseq[16];
 	fprintf(f,"no ip as-path access-list %s\n", b->name?b->name:"NN");
 	if(b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
 			(0x80>>(b->asnumber%8))) {
+		if(b->ios_asn_sequence)
+			snprintf(sseq, sizeof(sseq), "seq %i ", seq++);
 		if(b->asdot && b->asnumber>65535) {
-			fprintf(f,"ip as-path access-list %s permit ^(_%u.%u)*$\n",
-				b->name?b->name:"NN",b->asnumber/65536,b->asnumber%65536);
+			fprintf(f,"ip as-path access-list %s%s permit ^(_%u.%u)*$\n",
+				b->ios_asn_sequence?sseq:"",b->name?b->name:"NN",
+				b->asnumber/65536,b->asnumber%65536);
 		} else {
-			fprintf(f,"ip as-path access-list %s permit ^(_%u)*$\n",
-				b->name?b->name:"NN",b->asnumber);
+			fprintf(f,"ip as-path access-list %s%s permit ^(_%u)*$\n",
+				b->ios_asn_sequence?sseq:"",b->name?b->name:"NN",b->asnumber);
 		};
 		empty=0;
 	};
@@ -102,14 +117,20 @@ bgpq3_print_cisco_oaspath(FILE* f, struct bgpq_expander* b)
 				if(b->asn32s[k][i]&(0x80>>j)) {
 					if(k*65536+i*8+j==b->asnumber) continue;
 					if(!nc) {
+						if(b->ios_asn_sequence)
+							snprintf(sseq, sizeof(sseq), "seq %i ", seq++);
 						if(b->asdot && k>0) {
-							fprintf(f,"ip as-path access-list %s permit"
-								" ^(_[0-9]+)*_(%u.%u", b->name?b->name:"NN",
+							fprintf(f,"ip as-path access-list %s%s permit"
+								" ^(_[0-9]+)*_(%u.%u",
+								b->ios_asn_sequence?sseq:"",
+								b->name?b->name:"NN",
 								k,i*8+j);
 							empty=0;
 						} else {
-							fprintf(f,"ip as-path access-list %s permit"
-								" ^(_[0-9]+)*_(%u", b->name?b->name:"NN",
+							fprintf(f,"ip as-path access-list %s%s permit"
+								" ^(_[0-9]+)*_(%u",
+								b->ios_asn_sequence?sseq:"",
+								b->name?b->name:"NN",
 								k*65536+i*8+j);
 							empty=0;
 						};

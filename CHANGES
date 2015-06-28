@@ -1,12 +1,18 @@
-untagged yet (2015-06-26)
-    - bugfix: F source(s) unavailable message from IRRD was ignored
+untagged yet (2015-06-28)
+    - bugfix: F source(s) unavailable message from IRRD was ignored.
+      Please note: this error is caught only when all the specified sources
+      are invalid. For example, 'bgpq3 -s nonexistant' will fail, however,
+      'bgpq3 -s nonexistant,ripe' will not fail and will use only ripe source.
+      Thanks to Mikhail A. Grishin for reporting.
+    - new flag -s for IOS mode enables as-path sequencing. According to Job
+      Snijders this significantly speeds up Arista configuration load.
 
 0.1.31   (2015-06-23)
     - pipelining mode now counts buffered requests and issues dequeue
       when new request can overflow allocated buffer. So, bgpq3 shall no
       more require TCP tuning (it is still recomended, though).
     - tcp tuning parameters decreased in README (sx_maxsockbuf will not
-      allow to grow buffer over 2Mb anyway).
+      allow buffer over 2Mb anyway).
 
 0.1.30   (2015-06-16)
     - bugfix: private asns with number > 2^31 were printed as negative integers.

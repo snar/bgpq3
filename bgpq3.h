@@ -49,6 +49,7 @@ struct bgpq_expander {
 	unsigned maxlen;
 	int socksize;
 	int qsize;
+	int ios_asn_sequence;
 };
 
 

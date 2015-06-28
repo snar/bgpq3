@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-2346AbDdJjpX] [-r len] [-R len] [-m max] [-W len] OBJECTS [...]
+	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-2346AbDdJjpsX] [-r len] [-R len] [-m max] [-W len] OBJECTS [...]
 ```
 
 DESCRIPTION
@@ -103,6 +103,11 @@ Allow more-specific routes with masklen starting with specified length.
 
 Allow more-specific routes up to specified masklen too.  (Please, note: objects
 with prefix-length greater than specified length will be always allowed.)
+
+#### -s
+
+Add sequence numbers to as-path filters (can only be used in combination
+with Cisco IOS output).
 
 #### -S `sources`
 
