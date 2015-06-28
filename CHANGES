@@ -1,4 +1,4 @@
-untagged yet (2015-06-28)
+0.1.32-rc (2015-06-28)
     - bugfix: F source(s) unavailable message from IRRD was ignored.
       Please note: this error is caught only when all the specified sources
       are invalid. For example, 'bgpq3 -s nonexistant' will fail, however,
