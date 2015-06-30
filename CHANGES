@@ -4,8 +4,6 @@
       are invalid. For example, 'bgpq3 -s nonexistant' will fail, however,
       'bgpq3 -s nonexistant,ripe' will not fail and will use only ripe source.
       Thanks to Mikhail A. Grishin for reporting.
-    - new flag -s for IOS mode enables as-path sequencing. According to Job
-      Snijders this significantly speeds up Arista configuration load.
     - RIPE-style queries (-T route6 -i origin asNNN) replaced with IRRd-style
       !6asNNN queries.
 

@@ -26,7 +26,7 @@ int
 usage(int ecode)
 {
 	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
-		" [-2346AbDJjsXd] [-R len] <OBJECTS>...\n");
+		" [-2346AbDJjXd] [-R len] <OBJECTS>...\n");
 	printf(" -2        : allow routes belonging to as23456 (transition-as) "
 		"(default: false)\n");
 	printf(" -3        : assume that your device is asn32-safe\n");
@@ -54,7 +54,6 @@ usage(int ecode)
 		" compatibility)\n");
 	printf(" -r len    : allow more specific routes from masklen specified\n");
 	printf(" -R len    : allow more specific routes up to specified masklen\n");
-	printf(" -s        : emit sequence numbers in IOS as-paths\n");
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
@@ -129,7 +128,7 @@ main(int argc, char* argv[])
 	bgpq_expander_init(&expander,af);
 	expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346AbdDEsS:jJf:l:m:M:W:Ppr:R:G:Th:X"))!=EOF) {
+	while((c=getopt(argc,argv,"2346AbdDES:jJf:l:m:M:W:Ppr:R:G:Th:X"))!=EOF) {
 	switch(c) {
 		case '2':
 			expand_as23456=1;
@@ -248,12 +247,10 @@ main(int argc, char* argv[])
 			break;
 		case 'T': pipelining=0;
 			break;
-		case 's': expander.ios_asn_sequence=1;
-			break;
 		case 'S': expander.sources=optarg;
 			break;
 		case 'W': expander.aswidth=atoi(optarg);
-			if(expander.aswidth<=0) {
+			if(expander.aswidth<0) {
 				sx_report(SX_FATAL,"Invalid as-width: %s\n", optarg);
 				exit(1);
 			};
@@ -325,12 +322,6 @@ main(int argc, char* argv[])
 	if(aggregate && expander.generation<T_PREFIXLIST) {
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) used only for prefix-"
 			"lists, extended access-lists and route-filters\n");
-		exit(1);
-	};
-
-	if(expander.ios_asn_sequence && expander.vendor!=V_CISCO) {
-		sx_report(SX_FATAL, "Sorry, -s (as-path sequencing) works for IOS "
-			"only\n");
 		exit(1);
 	};
 
