@@ -618,6 +618,38 @@ bgpq3_print_bird_prefixlist(FILE* f, struct bgpq_expander* b)
 	return 0;
 };
 
+struct fpcbdata {
+	FILE* f;
+	struct bgpq_expander* b;
+};
+
+void
+bgpq3_print_format_prefix(struct sx_radix_node* n, void* ff)
+{
+	char prefix[128];
+	struct fpcbdata* fpc=(struct fpcbdata*)ff;
+	FILE* f=fpc->f;
+	struct bgpq_expander* b=fpc->b;
+	if(n->isGlue)
+		return;
+	if(!f)
+		f=stdout;
+	memset(prefix, 0, sizeof(prefix));
+	sx_prefix_snprintf_fmt(&n->prefix, prefix, sizeof(prefix), b->format);
+	fprintf(f, "%s", prefix);
+};
+
+
+int
+bgpq3_print_format_prefixlist(FILE* f, struct bgpq_expander* b)
+{
+	struct fpcbdata ff = {.f=f, .b=b};
+	sx_radix_tree_foreach(b->tree,bgpq3_print_format_prefix,&ff);
+	if (strcmp(b->format+strlen(b->format-2), "\n"))
+		fprintf(f, "\n");
+	return 0;
+};
+
 int
 bgpq3_print_cisco_eacl(FILE* f, struct bgpq_expander* b)
 {
@@ -642,6 +674,7 @@ bgpq3_print_prefixlist(FILE* f, struct bgpq_expander* b)
 		case V_CISCO_XR: return bgpq3_print_ciscoxr_prefixlist(f,b);
 		case V_JSON: return bgpq3_print_json_prefixlist(f,b);
 		case V_BIRD: return bgpq3_print_bird_prefixlist(f,b);
+		case V_FORMAT: return bgpq3_print_format_prefixlist(f,b);
 	};
 	return 0;
 };
@@ -655,6 +688,7 @@ bgpq3_print_eacl(FILE* f, struct bgpq_expander* b)
 		case V_CISCO_XR: sx_report(SX_FATAL, "unreachable point\n");
 		case V_JSON: sx_report(SX_FATAL, "unreachable point\n");
 		case V_BIRD: sx_report(SX_FATAL, "unreachable point\n");
+		case V_FORMAT: sx_report(SX_FATAL, "unreachable point\n");
 	};
 	return 0;
 };

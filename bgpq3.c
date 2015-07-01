@@ -40,6 +40,7 @@ usage(int ecode)
 	printf(" -E        : generate extended access-list(Cisco) or "
 		"route-filter(Juniper)\n");
 	printf(" -f number : generate input as-path access-list\n");
+	printf(" -F fmt    : generate output in user-defined format\n");
 	printf(" -G number : generate output as-path access-list\n");
 	printf(" -h host   : host running IRRD software (whois.radb.net by "
 		"default)\n");
@@ -77,8 +78,8 @@ exclusive()
 void
 vendor_exclusive()
 {
-	fprintf(stderr, "-b (BIRD), -J (JunOS), -j (JSON) and -X (IOS XR) options are "
-		"mutually exclusive\n");
+	fprintf(stderr, "-b (BIRD), -F (formatted), -J (JunOS), -j (JSON) "
+		"and -X (IOS XR) options are mutually exclusive\n");
 	exit(1);
 };
 
@@ -130,7 +131,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346AbdDES:jJf:l:m:M:W:Ppr:R:G:Th:Xs"))!=EOF) {
+	while((c=getopt(argc,argv,"2346AbdDEF:S:jJf:l:m:M:W:Ppr:R:G:Th:Xs"))!=EOF) {
 	switch(c) {
 		case '2':
 			expand_as23456=1;
@@ -169,6 +170,10 @@ main(int argc, char* argv[])
 			break;
 		case 'E': if(expander.generation) exclusive();
 			expander.generation=T_EACL;
+			break;
+		case 'F': if(expander.vendor) exclusive();
+			expander.vendor=V_FORMAT;
+			expander.format=optarg;
 			break;
 		case 'h': expander.server=optarg;
 			break;
@@ -305,6 +310,14 @@ main(int argc, char* argv[])
 		sx_report(SX_FATAL, "Sorry, only prefix-lists and as-paths supported "
 			"for JSON output\n");
 	};
+	if(expander.vendor==V_FORMAT && expander.generation!=T_PREFIXLIST)
+		sx_report(SX_FATAL, "Sorry, only prefix-lists supported in formatted "
+			"output\n");
+	if(expander.vendor==V_FORMAT && (refine || refineLow)) {
+		sx_report(SX_FATAL, "Sorry, formatted output (-F <fmt>) in not "
+			"compatible with -R/-r options\n");
+		exit(1);
+	};
 
 	if(expander.asdot && expander.vendor!=V_CISCO) {
 		sx_report(SX_FATAL,"asdot notation supported only for Cisco, "
@@ -320,6 +333,12 @@ main(int argc, char* argv[])
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) does not work in"
 			" Juniper prefix-lists\nYou can try route-filters (-E) instead"
 			" of prefix-lists (-P, default)\n");
+		exit(1);
+	};
+
+	if(aggregate && expander.vendor==V_FORMAT) {
+		sx_report(SX_FATAL, "Sorry, aggregation (-A) is not compatible with "
+			"formatted output (-F <fmt>)\n");
 		exit(1);
 	};
 

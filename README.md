@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-2346AbDdJjpsX] [-r len] [-R len] [-m max] [-W len] OBJECTS [...]
+	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-2346AbDdJjpsX] [-F fmt] [-r len] [-R len] [-m max] [-W len] OBJECTS [...]
 ```
 
 DESCRIPTION
@@ -56,6 +56,10 @@ route-filters (Juniper).
 #### -f `AS number`
 
 Generate input as-path access-list for adjacent as `AS number`.
+
+#### -F `fmt`
+
+Generate output in user-defined format.
 
 #### -G `number`
 
@@ -243,6 +247,28 @@ and the result will be next:
 
 `AS196611` is no more in the list, however, `AS23456` (transition AS) would
 have been added to list if it were not present.
+
+USER-DEFINED FORMAT
+-------------------
+
+If you want to generate configuration not for routers, but for some
+other programs/systems, you may use user-defined formatting, like in
+example below:
+
+	user@host:~>bgpq3 -F "ipfw add pass all from %n/%l to any\\n" as3254
+	ipfw add pass all from 62.244.0.0/18 to any
+	ipfw add pass all from 91.219.29.0/24 to any
+	ipfw add pass all from 91.219.30.0/24 to any
+	ipfw add pass all from 193.193.192.0/19 to any
+
+Recognized format characters: '%n' - network, '%l' - mask length.
+Recognized escape characters: '\n' - new line, '\t' - tabulation.
+Please note that no new lines inserted automatically after each sentence,
+you have to add them into format string manually, elsewhere output will
+be in one line (sometimes it makes sense):
+
+	user@host:~>bgpq3 -6F "%n/%l; " as-eltel
+	2001:1b00::/32; 2620:4f:8000::/48; 2a04:bac0::/29; 2a05:3a80::/48;
 
 DIAGNOSTICS
 -----------

@@ -217,7 +217,7 @@ sx_prefix_range_parse(struct sx_radix_tree* tree, int af, int maxlen,
 	};
 	SX_DEBUG(debug_expander, "parsed prefix-range %s as %lu-%lu\n",
 		text, min, max);
-	if (max > maxlen) 
+	if (max > maxlen)
 		max = maxlen;
 	sx_radix_tree_insert_specifics(tree, p, min, max);
 	return 1;
@@ -262,6 +262,52 @@ sx_prefix_snprintf(struct sx_prefix* p, char* rbuffer, int srb)
 	};
 	inet_ntop(p->family,&p->addr,buffer,sizeof(buffer));
 	return snprintf(rbuffer,srb,"%s/%i",buffer,p->masklen);
+};
+
+int
+sx_prefix_snprintf_fmt(struct sx_prefix* p, char* buffer, int size,
+	const char* format)
+{
+	unsigned off=0;
+	const char* c=format;
+	while(*c) {
+		if(*c=='%') {
+			switch(*(c+1)) {
+				case 'r':
+				case 'n':
+					inet_ntop(p->family,&p->addr,buffer+off,size-off);
+					off=strlen(buffer);
+					break;
+				case 'l':
+					off+=snprintf(buffer+off,size-off,"%i",p->masklen);
+					break;
+				case '%':
+					buffer[off++]='%';
+					break;
+				default :
+					sx_report(SX_ERROR, "Unknown format char '%c'\n", *(c+1));
+					return 0;
+			};
+			c+=2;
+		} else if (*c=='\\') {
+			switch(*(c+1)) {
+				case 'n':
+					buffer[off++]='\n'; break;
+				case 't':
+					buffer[off++]='\t'; break;
+				case '\\':
+					buffer[off++]='\\'; break;
+				default:
+					buffer[off++]=*(c+1);
+					break;
+			};
+			c+=2;
+		} else {
+			buffer[off++]=*c;
+			c++;
+		};
+	};
+	return strlen(buffer);
 };
 
 int

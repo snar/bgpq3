@@ -9,7 +9,8 @@ typedef enum {
 	V_JUNIPER,
 	V_CISCO_XR,
 	V_JSON,
-	V_BIRD
+	V_BIRD,
+	V_FORMAT
 } bgpq_vendor_t;
 
 typedef enum { 
@@ -47,6 +48,7 @@ struct bgpq_expander {
 	int piped;
 	char* match;
 	char* server;
+	char* format;
 	unsigned maxlen;
 	int socksize;
 	int qsize;
