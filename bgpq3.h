@@ -40,6 +40,7 @@ struct bgpq_expander {
 	bgpq_vendor_t vendor;
 	bgpq_gen_t    generation;
 	int identify;
+	int sequence;
 	unsigned char asn32;
 	unsigned char* asn32s[65536];
 	struct bgpq_prequest* firstpipe, *lastpipe;

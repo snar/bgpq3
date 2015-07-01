@@ -54,6 +54,7 @@ usage(int ecode)
 		" compatibility)\n");
 	printf(" -r len    : allow more specific routes from masklen specified\n");
 	printf(" -R len    : allow more specific routes up to specified masklen\n");
+	printf(" -s        : generate sequence numbers in prefix-lists (IOS only)\n");
 	printf(" -S sources: use only specified sources (default:"
 		" RADB,RIPE,APNIC)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
@@ -129,7 +130,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346AbdDES:jJf:l:m:M:W:Ppr:R:G:Th:X"))!=EOF) {
+	while((c=getopt(argc,argv,"2346AbdDES:jJf:l:m:M:W:Ppr:R:G:Th:Xs"))!=EOF) {
 	switch(c) {
 		case '2':
 			expand_as23456=1;
@@ -248,6 +249,8 @@ main(int argc, char* argv[])
 			break;
 		case 'T': pipelining=0;
 			break;
+		case 's': expander.sequence=1;
+			break;
 		case 'S': expander.sources=optarg;
 			break;
 		case 'W': expander.aswidth=atoi(optarg);
@@ -323,6 +326,18 @@ main(int argc, char* argv[])
 	if(aggregate && expander.generation<T_PREFIXLIST) {
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) used only for prefix-"
 			"lists, extended access-lists and route-filters\n");
+		exit(1);
+	};
+
+	if (expander.sequence && expander.vendor!=V_CISCO) {
+		sx_report(SX_FATAL, "Sorry, prefix-lists sequencing (-s) supported"
+			" only for IOS\n");
+		exit(1);
+	};
+
+	if (expander.sequence && expander.generation<T_PREFIXLIST) {
+		sx_report(SX_FATAL, "Sorry, prefix-lists sequencing (-s) can't be "
+			" used for non prefix-list\n");
 		exit(1);
 	};
 

@@ -408,28 +408,32 @@ checkSon:
 		
 
 static char* bname=NULL;
+static int   seq=0;
 
 void
 bgpq3_print_cprefix(struct sx_radix_node* n, void* ff)
 {
-	char prefix[128];
+	char prefix[128], seqno[16]="";
 	FILE* f=(FILE*)ff;
 	if(!f) f=stdout;
 	if(n->isGlue) goto checkSon;
 	sx_prefix_snprintf(&n->prefix,prefix,sizeof(prefix));
+	if(seq)
+		snprintf(seqno, sizeof(seqno), " seq %i", seq++);
 	if(n->isAggregate) {
 		if(n->aggregateLow>n->prefix.masklen) {
-			fprintf(f,"%s prefix-list %s permit %s ge %u le %u\n",
-				n->prefix.family==AF_INET?"ip":"ipv6",bname?bname:"NN",prefix,
-				n->aggregateLow,n->aggregateHi);
+			fprintf(f,"%s prefix-list %s%s permit %s ge %u le %u\n",
+				n->prefix.family==AF_INET?"ip":"ipv6",bname?bname:"NN",seqno,
+				prefix,n->aggregateLow,n->aggregateHi);
 		} else {
-			fprintf(f,"%s prefix-list %s permit %s le %u\n",
-				n->prefix.family==AF_INET?"ip":"ipv6",bname?bname:"NN",prefix,
-				n->aggregateHi);
+			fprintf(f,"%s prefix-list %s%s permit %s le %u\n",
+				n->prefix.family==AF_INET?"ip":"ipv6",bname?bname:"NN",seqno,
+				prefix,n->aggregateHi);
 		};
 	} else {
-		fprintf(f,"%s prefix-list %s permit %s\n",
-			(n->prefix.family==AF_INET)?"ip":"ipv6",bname?bname:"NN",prefix);
+		fprintf(f,"%s prefix-list %s%s permit %s\n",
+			(n->prefix.family==AF_INET)?"ip":"ipv6",bname?bname:"NN",seqno,
+			prefix);
 	};
 checkSon:
 	if(n->son)
@@ -570,6 +574,7 @@ int
 bgpq3_print_cisco_prefixlist(FILE* f, struct bgpq_expander* b)
 {
 	bname=b->name ? b->name : "NN";
+	seq=b->sequence;
 	fprintf(f,"no %s prefix-list %s\n",
 		(b->family==AF_INET)?"ip":"ipv6",bname);
 	if (!sx_radix_tree_empty(b->tree)) {
