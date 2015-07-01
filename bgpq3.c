@@ -126,7 +126,8 @@ main(int argc, char* argv[])
 	unsigned long maxlen=0;
 
 	bgpq_expander_init(&expander,af);
-	expander.sources=getenv("IRRD_SOURCES");
+	if (getenv("IRRD_SOURCES"))
+		expander.sources=getenv("IRRD_SOURCES");
 
 	while((c=getopt(argc,argv,"2346AbdDES:jJf:l:m:M:W:Ppr:R:G:Th:X"))!=EOF) {
 	switch(c) {

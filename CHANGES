@@ -1,3 +1,7 @@
+0.1.32-rc2 (2015-06-28)
+    - bugfix: when no sources provided in command line and via IRRD_SOURCES env,
+      no source limitation were sent to IRRd. Thanks to Mikhail A. Grishin.
+
 0.1.32-rc (2015-06-28)
     - bugfix: F source(s) unavailable message from IRRD was ignored.
       Please note: this error is caught only when all the specified sources

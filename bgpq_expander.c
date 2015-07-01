@@ -521,8 +521,10 @@ bgpq_expand(struct bgpq_expander* b)
 	if(b->sources && b->sources[0]!=0) {
 		char sources[128];
 		snprintf(sources,sizeof(sources),"!s%s\n", b->sources);
+		SX_DEBUG(debug_expander,"Requesting sources %s", sources);
 		fwrite(sources,strlen(sources),1,f);
 		fgets(sources,sizeof(sources),f);
+		SX_DEBUG(debug_expander,"Got answer %s", sources);
 		if(sources[0]!='C') {
 			sx_report(SX_ERROR, "Invalid source(s) '%s': %s\n", b->sources,
 				sources);
