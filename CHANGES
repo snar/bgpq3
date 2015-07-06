@@ -1,3 +1,7 @@
+0.1.32-rc4 (2015-07-06)
+    - change: BIRD can't handle empty lists (NAME = []), so they are not
+      generated at all.
+
 0.1.32-rc3 (2015-07-01)
     - feature: option -s can be used to generate sequence numbers in IOS
       prefix-lists

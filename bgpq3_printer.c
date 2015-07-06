@@ -14,6 +14,8 @@
 #include "bgpq3.h"
 #include "sx_report.h"
 
+extern int debug_expander;
+
 int bgpq3_print_json_aspath(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_bird_aspath(FILE* f, struct bgpq_expander* b);
 
@@ -357,7 +359,8 @@ int
 bgpq3_print_bird_aspath(FILE* f, struct bgpq_expander* b)
 {
 	int nc=0, i, j, k, empty=1;
-	fprintf(f, "%s = [", b->name?b->name:"NN");
+	char buffer[2048];
+	snprintf(buffer, sizeof(buffer), "%s = [", b->name?b->name:"NN");
 
 	for(k=0;k<65536;k++) {
 		if(!b->asn32s[k]) continue;
@@ -365,6 +368,9 @@ bgpq3_print_bird_aspath(FILE* f, struct bgpq_expander* b)
 		for(i=0;i<8192;i++) {
 			for(j=0;j<8;j++) {
 				if(b->asn32s[k][i]&(0x80>>j)) {
+					if(buffer[0])
+						fprintf(f, "%s", buffer);
+					buffer[0]=0;
 					if(!nc) {
 						fprintf(f, "%s%u", empty?"":",\n    ", k*65536+i*8+j);
 						empty = 0;
@@ -379,7 +385,8 @@ bgpq3_print_bird_aspath(FILE* f, struct bgpq_expander* b)
 			};
 		};
 	};
-	fprintf(f,"];\n");
+	if(!empty)
+		fprintf(f,"];\n");
 	return 0;
 };
 
@@ -611,10 +618,14 @@ bgpq3_print_json_prefixlist(FILE* f, struct bgpq_expander* b)
 int
 bgpq3_print_bird_prefixlist(FILE* f, struct bgpq_expander* b)
 {
-	fprintf(f,"%s = [",
-		b->name?b->name:"NN");
-	sx_radix_tree_foreach(b->tree,bgpq3_print_bird_prefix,f);
-	fprintf(f,"\n];\n");
+	if (!sx_radix_tree_empty(b->tree)) {
+		fprintf(f,"%s = [",
+			b->name?b->name:"NN");
+		sx_radix_tree_foreach(b->tree,bgpq3_print_bird_prefix,f);
+		fprintf(f,"\n];\n");
+	} else {
+		SX_DEBUG(debug_expander, "skip empty prefix-list in BIRD format\n");
+	};
 	return 0;
 };
 
