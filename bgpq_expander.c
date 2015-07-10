@@ -280,7 +280,7 @@ addasset:
 		} else {
 			if(bgpq_expander_add_as(lr->b, as)) {
 				SX_DEBUG(debug_expander>2, ".. added asn %s\n", as);
-			} else { 
+			} else {
 				SX_DEBUG(debug_expander, ".. some error adding as %s (in "
 					"response to %s)\n", as, request);
 			};
@@ -356,6 +356,13 @@ bgpq_pipeline(struct bgpq_expander* b, FILE* f,
 		exit(1);
 	};
 
+	ret=fflush(f);
+	if(ret) {
+		sx_report(SX_FATAL, "fflush(%i) error: %s\n", fileno(f),
+			strerror(errno));
+		exit(1);
+	};
+
 	strlcpy(bp->request,request,sizeof(bp->request));
 	bp->callback=callback;
 	bp->udata=udata;
@@ -380,6 +387,8 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 		char request[128];
 		struct bgpq_prequest* pipe;
 		memset(request,0,sizeof(request));
+		SX_DEBUG(debug_expander>2, "waiting for answer to %s",
+			b->firstpipe->request);
 		if(!fgets(request,sizeof(request),f)) {
 			if(ferror(f)) {
 				sx_report(SX_FATAL,"Error reading data from IRRd: %s (dequeue)"
@@ -393,7 +402,7 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 		if(request[0]=='A') {
 			char* eon, *c;
 			unsigned long togot=strtoul(request+1,&eon,10);
-			char recvbuffer[togot+2];
+			char* recvbuffer=malloc(togot+2);
 			memset(recvbuffer,0,togot+2);
 
 			if(eon && *eon!='\n') {
@@ -433,6 +442,7 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 				};
 				c+=spn+1;
 			};
+			free(recvbuffer);
 		} else if(request[0]=='C') {
 			/* No data */
 		} else if(request[0]=='D') {
