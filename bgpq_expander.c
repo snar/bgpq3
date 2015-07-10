@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
@@ -384,12 +385,12 @@ int
 bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 {
 	while(b->piped>0) {
-		char request[128];
+		char response[256];
 		struct bgpq_prequest* pipe;
-		memset(request,0,sizeof(request));
+		memset(response,0,sizeof(response));
 		SX_DEBUG(debug_expander>2, "waiting for answer to %s",
 			b->firstpipe->request);
-		if(!fgets(request,sizeof(request),f)) {
+		if(!fgets(response,sizeof(response),f)) {
 			if(ferror(f)) {
 				sx_report(SX_FATAL,"Error reading data from IRRd: %s (dequeue)"
 					"\n", strerror(errno));
@@ -399,18 +400,19 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 			exit(1);
 		};
 
-		if(request[0]=='A') {
+		if(response[0]=='A') {
 			char* eon, *c;
-			unsigned long togot=strtoul(request+1,&eon,10);
-			char* recvbuffer=malloc(togot+2);
-			memset(recvbuffer,0,togot+2);
+			unsigned long togot=strtoul(response+1,&eon,10);
+			char* recvbuffer=malloc(togot+256);
+			int offset = 0;
+			memset(recvbuffer,0,togot+256);
 
-			if(eon && *eon!='\n') {
+			if(!eon || *eon!='\n') {
 				sx_report(SX_ERROR,"A-code finished with wrong char '%c'(%s)\n",
-					*eon,request);
+					eon?*eon:'0',response);
 				exit(1);
 			};
-			if(fgets(recvbuffer,togot+2,f)==NULL) {
+			if(fgets(recvbuffer,togot+256,f)==NULL) {
 				if(ferror(f)) {
 					sx_report(SX_FATAL,"Error reading IRRd: %s (dequeue, "
 						"result)\n", strerror(errno));
@@ -419,7 +421,12 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 				};
 				exit(1);
 			};
-			if(fgets(request,sizeof(request),f)==NULL) {
+			if(strlen(recvbuffer) != togot) { 
+				sx_report(SX_FATAL, "expected %lu, got %lu\n", 
+					togot, strlen(recvbuffer));
+				exit(1);
+			};
+			if(fgets(response,sizeof(response),f)==NULL) {
 				if(ferror(f)) {
 					sx_report(SX_FATAL,"Error reading IRRd: %s (dequeue,final)"
 						")\n", strerror(errno));
@@ -429,8 +436,8 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 				exit(1);
 			};
 			SX_DEBUG(debug_expander>=3,"Got %s (%lu bytes of %lu) in response "
-				"to %s. final code: %s",recvbuffer,strlen(recvbuffer),togot,
-				b->firstpipe->request,request);
+				"to %sfinal code: %s",recvbuffer,strlen(recvbuffer),togot,
+				b->firstpipe->request,response);
 
 			for(c=recvbuffer; c<recvbuffer+togot;) {
 				size_t spn=strcspn(c," \n");
@@ -442,18 +449,26 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 				};
 				c+=spn+1;
 			};
+			memset(recvbuffer,0,togot+2);
 			free(recvbuffer);
-		} else if(request[0]=='C') {
+		} else if(response[0]=='C') {
 			/* No data */
-		} else if(request[0]=='D') {
-			/* .... */
-		} else if(request[0]=='E') {
-			/* XXXXX */
-		} else if(request[0]=='F') {
-			/* XXXXX */
-		} else {
-			sx_report(SX_ERROR,"Wrong reply: %s to %s\n", request,
+			SX_DEBUG(debug_expander>2,"No data expanding %s\n", 
 				b->firstpipe->request);
+		} else if(response[0]=='D') {
+			/* .... */
+			SX_DEBUG(debug_expander>2,"Key not found expanding %s\n", 
+				b->firstpipe->request);
+		} else if(response[0]=='E') {
+			sx_report(SX_ERROR, "Multiple keys expanding %s: %s\n", 
+				b->firstpipe->request, response);
+		} else if(response[0]=='F') {
+			sx_report(SX_ERROR, "Error expanding %s: %s\n", 
+				b->firstpipe->request, response);
+		} else {
+			sx_report(SX_ERROR,"Wrong reply: %s to %s\n", response,
+				b->firstpipe->request);
+			exit(1);
 		};
 
 		pipe=b->firstpipe;
@@ -463,6 +478,7 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 		free(pipe);
 	};
 	b->lastpipe=NULL;
+	assert(b->firstpipe == NULL);
 	return 0;
 };
 
