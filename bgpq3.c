@@ -49,6 +49,7 @@ usage(int ecode)
 	printf(" -M match  : extra match conditions for JunOS route-filters\n");
 	printf(" -m len    : maximum prefix length (default: 32 for IPv4, "
 		"128 for IPv6)\n");
+	printf(" -L depth  : limit recursion depth (default: unlimited)\n"),
 	printf(" -l name   : use specified name for generated access/prefix/.."
 		" list\n");
 	printf(" -P        : generate prefix-list (default, just for backward"
@@ -131,7 +132,8 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346AbdDEF:S:jJf:l:m:M:W:Ppr:R:G:Th:Xs"))!=EOF) {
+	while((c=getopt(argc,argv,"2346AbdDEF:S:jJf:l:L:m:M:W:Ppr:R:G:Th:Xs"))
+		!=EOF) {
 	switch(c) {
 		case '2':
 			expand_as23456=1;
@@ -215,6 +217,13 @@ main(int argc, char* argv[])
 			};
 			break;
 		case 'l': expander.name=optarg;
+			break;
+		case 'L': expander.maxdepth=strtol(optarg, NULL, 10);
+			if (expander.maxdepth < 1) {
+				sx_report(SX_FATAL, "Invalid maximum recursion (-L): %s\n",
+					optarg);
+				exit(1);
+			};
 			break;
 		case 'm': maxlen=strtoul(optarg, NULL, 10);
 			if (!maxlen) {

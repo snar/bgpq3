@@ -25,7 +25,7 @@ struct bgpq_prequest {
 	struct bgpq_prequest* next;
 	char request[128];
 	int size;
-	int (*callback)(char*, void*);
+	int (*callback)(char*, void*, char*);
 	void *udata;
 };
 
@@ -33,6 +33,7 @@ struct bgpq_expander {
 	struct sx_radix_tree* tree;
 	struct sx_slentry* macroses;
 	struct sx_slentry* rsets;
+	struct sx_slentry* already;
 	int family;
 	char* sources;
 	uint32_t asnumber;
@@ -42,6 +43,7 @@ struct bgpq_expander {
 	bgpq_gen_t    generation;
 	int identify;
 	int sequence;
+	int maxdepth;
 	unsigned char asn32;
 	unsigned char* asn32s[65536];
 	struct bgpq_prequest* firstpipe, *lastpipe;

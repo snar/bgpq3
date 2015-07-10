@@ -24,6 +24,25 @@ int pipelining=1;
 int expand_as23456=0;
 int expand_special_asn=0;
 
+struct limited_req {
+	int cdepth;
+	struct bgpq_expander* b;
+	FILE* f;
+};
+
+struct limited_req*
+lreq_alloc(struct bgpq_expander* b, int cdepth, FILE* f)
+{
+	struct limited_req* lr = malloc(sizeof(struct limited_req));
+	if (!lr)
+		return NULL;
+	memset(lr, 0, sizeof(struct limited_req));
+	lr->cdepth=cdepth;
+	lr->b=b;
+	lr->f=f;
+	return lr;
+};
+
 int
 bgpq_expander_init(struct bgpq_expander* b, int af)
 {
@@ -92,6 +111,23 @@ bgpq_expander_add_rset(struct bgpq_expander* b, char* rs)
 };
 
 int
+bgpq_expander_add_already(struct bgpq_expander* b, char* rs)
+{
+	struct sx_slentry* le;
+	if(!b || !rs) return 0;
+	le=sx_slentry_new(rs);
+	if(!le) return 0;
+	if(!b->already) {
+		b->already=le;
+	} else {
+		struct sx_slentry* ln=b->already;
+		while(ln->next) ln=ln->next;
+		ln->next=le;
+	};
+	return 1;
+};
+
+int
 bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 {
 	char* eoa;
@@ -146,7 +182,7 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 		} else if(!b->asn32) {
 			b->asn32s[0][23456/8]|=(0x80>>(23456%8));
 		};
-		return 0;
+		return 1;
 	};
 
 	if(asno<1 || asno>65535) {
@@ -193,7 +229,7 @@ bgpq_expander_add_prefix_range(struct bgpq_expander* b, char* prefix)
 };
 
 int
-bgpq_expanded_macro(char* as, void* udata)
+bgpq_expanded_macro(char* as, void* udata, char* request)
 {
 	struct bgpq_expander* ex=(struct bgpq_expander*)udata;
 	if(!ex) return 0;
@@ -201,8 +237,65 @@ bgpq_expanded_macro(char* as, void* udata)
 	return 1;
 };
 
+int bgpq_pipeline(struct bgpq_expander* b, FILE* f,
+	int (*callback)(char*, void*,char*), void* udata, char* fmt, ...);
+int bgpq_expand_irrd(FILE* f, int (*callback)(char*, void*,char*), void* udata,
+	char* fmt, ...);
+
 int
-bgpq_expanded_prefix(char* as, void* udata)
+bgpq_expanded_macro_limit(char* as, void* udata, char* request)
+{
+	struct limited_req* lr = (struct limited_req*)udata;
+	struct sx_slentry* already = lr->b->already;
+	if (!strncasecmp(as, "AS-", 3)) {
+addasset:
+		while(already) {
+			if (!strcasecmp(already->text, as)) {
+				SX_DEBUG(debug_expander>2,"%s is already expanding, ignore\n",
+					as);
+				return 0;
+			};
+			already=already->next;
+		};
+		if(lr->cdepth + 1 < lr->b->maxdepth) {
+			struct limited_req* lr1 = lreq_alloc(lr->b,lr->cdepth+1,lr->f);
+			bgpq_expander_add_already(lr->b,as);
+			if (pipelining) {
+				bgpq_pipeline(lr->b,lr->f,bgpq_expanded_macro_limit,lr1,
+					"!i%s\n",as);
+			} else {
+				bgpq_expand_irrd(lr->f,bgpq_expanded_macro_limit,lr1,
+					"!i%s\n",as);
+			};
+		} else {
+			SX_DEBUG(debug_expander>2, "ignoring %s at depth %i\n", as,
+				lr->cdepth+1);
+		};
+	} else if(!strncasecmp(as, "AS", 2)) {
+		char* cc = strchr(as, ':');
+		if (cc) {
+			if(!strncasecmp(cc+1, "AS-", 3)) goto addasset;
+			SX_DEBUG(debug_expander,"Unexpected sub-as object '%s' in "
+				"response to %s\n", as, request);
+		} else {
+			if(bgpq_expander_add_as(lr->b, as)) {
+				SX_DEBUG(debug_expander>2, ".. added asn %s\n", as);
+			} else { 
+				SX_DEBUG(debug_expander, ".. some error adding as %s (in "
+					"response to %s)\n", as, request);
+			};
+		};
+	} else {
+		sx_report(SX_ERROR, "unexpected object '%s' in expanded_macro_limit "
+			"(in response to %s)\n", as, request);
+	};
+	return 1;
+};
+
+
+
+int
+bgpq_expanded_prefix(char* as, void* udata, char* request)
 {
 	struct bgpq_expander* ex=(struct bgpq_expander*)udata;
 	char* d = strchr(as, '^');
@@ -215,7 +308,7 @@ bgpq_expanded_prefix(char* as, void* udata)
 };
 
 int
-bgpq_expanded_v6prefix(char* prefix, void* udata)
+bgpq_expanded_v6prefix(char* prefix, void* udata, char* request)
 {
 	struct bgpq_expander* ex=(struct bgpq_expander*)udata;
 	if(!ex) return 0;
@@ -226,27 +319,26 @@ bgpq_expanded_v6prefix(char* prefix, void* udata)
 int bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b);
 
 int
-bgpq_pipeline(FILE* f, int (*callback)(char*, void*), void* udata,
-	char* fmt, ...)
+bgpq_pipeline(struct bgpq_expander* b, FILE* f,
+	int (*callback)(char*, void*,char*), void* udata, char* fmt, ...)
 {
 	char request[128];
 	int ret, rlen;
 	struct bgpq_prequest* bp=NULL;
-	struct bgpq_expander* d=(struct bgpq_expander*)udata;
 	va_list ap;
 	va_start(ap,fmt);
 	vsnprintf(request,sizeof(request),fmt,ap);
 	va_end(ap);
 
 	rlen=strlen(request);
-	if(rlen+d->qsize >= d->socksize) {
+	if(rlen+b->qsize >= b->socksize) {
 		SX_DEBUG(debug_expander, "looks like socket buffer shortage, "
-			"queued %i of %i, dequeueing\n", d->qsize, d->socksize);
-		bgpq_pipeline_dequeue(f, d);
+			"queued %i of %i, dequeueing\n", b->qsize, b->socksize);
+		bgpq_pipeline_dequeue(f, b);
 	};
 
 	SX_DEBUG(debug_expander,"expander: sending '%s' (queued %i of %i)\n",
-		request, d->qsize, d->socksize);
+		request, b->qsize, b->socksize);
 
 	bp=malloc(sizeof(struct bgpq_prequest));
 	if(!bp) {
@@ -268,15 +360,15 @@ bgpq_pipeline(FILE* f, int (*callback)(char*, void*), void* udata,
 	bp->callback=callback;
 	bp->udata=udata;
 	bp->size=rlen;
-	d->qsize+=rlen;
+	b->qsize+=rlen;
 
-	if(d->lastpipe) {
-		d->lastpipe->next=bp;
-		d->lastpipe=bp;
+	if(b->lastpipe) {
+		b->lastpipe->next=bp;
+		b->lastpipe=bp;
 	} else {
-		d->firstpipe=d->lastpipe=bp;
+		b->firstpipe=b->lastpipe=bp;
 	};
-	d->piped++;
+	b->piped++;
 
 	return 0;
 };
@@ -290,10 +382,10 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 		memset(request,0,sizeof(request));
 		if(!fgets(request,sizeof(request),f)) {
 			if(ferror(f)) {
-				sx_report(SX_FATAL,"Error reading data from RADB: %s (dequeue)"
+				sx_report(SX_FATAL,"Error reading data from IRRd: %s (dequeue)"
 					"\n", strerror(errno));
 			} else {
-				sx_report(SX_FATAL,"EOF from RADB (dequeue)\n");
+				sx_report(SX_FATAL,"EOF from IRRd (dequeue)\n");
 			};
 			exit(1);
 		};
@@ -309,37 +401,37 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 					*eon,request);
 				exit(1);
 			};
-			if(fgets(recvbuffer,togot+1,f)==NULL) {
+			if(fgets(recvbuffer,togot+2,f)==NULL) {
 				if(ferror(f)) {
-					sx_report(SX_FATAL,"Error reading RADB: %s (dequeue, "
+					sx_report(SX_FATAL,"Error reading IRRd: %s (dequeue, "
 						"result)\n", strerror(errno));
 				} else {
-					sx_report(SX_FATAL,"EOF from RADB (dequeue, result)\n");
+					sx_report(SX_FATAL,"EOF from IRRd (dequeue, result)\n");
 				};
 				exit(1);
 			};
-			SX_DEBUG(debug_expander>=3,"Got %s in response to %s",recvbuffer,
-				b->firstpipe->request);
+			if(fgets(request,sizeof(request),f)==NULL) {
+				if(ferror(f)) {
+					sx_report(SX_FATAL,"Error reading IRRd: %s (dequeue,final)"
+						")\n", strerror(errno));
+				} else {
+					sx_report(SX_FATAL,"EOF from IRRd (dequeue,final)\n");
+				};
+				exit(1);
+			};
+			SX_DEBUG(debug_expander>=3,"Got %s (%lu bytes of %lu) in response "
+				"to %s. final code: %s",recvbuffer,strlen(recvbuffer),togot,
+				b->firstpipe->request,request);
 
 			for(c=recvbuffer; c<recvbuffer+togot;) {
 				size_t spn=strcspn(c," \n");
 				if(spn) c[spn]=0;
 				if(c[0]==0) break;
 				if(b->firstpipe->callback) {
-					b->firstpipe->callback(c,b->firstpipe->udata);
+					b->firstpipe->callback(c,b->firstpipe->udata,
+						b->firstpipe->request);
 				};
 				c+=spn+1;
-			};
-
-			/* Final code */
-			if(fgets(recvbuffer,togot,f)==NULL) {
-				if(ferror(f)) {
-					sx_report(SX_FATAL,"Error reading RADB: %s (dequeue,final)"
-						")\n", strerror(errno));
-				} else {
-					sx_report(SX_FATAL,"EOF from RADB (dequeue,final)\n");
-				};
-				exit(1);
 			};
 		} else if(request[0]=='C') {
 			/* No data */
@@ -365,10 +457,10 @@ bgpq_pipeline_dequeue(FILE* f, struct bgpq_expander* b)
 };
 
 int
-bgpq_expand_irrd(FILE* f, int (*callback)(char*, void*), void* udata,
+bgpq_expand_irrd(FILE* f, int (*callback)(char*, void*,char*), void* udata,
 	char* fmt, ...)
 {
-	char request[128];
+	char request[128], response[128];
 	va_list ap;
 	int ret;
 
@@ -384,8 +476,8 @@ bgpq_expand_irrd(FILE* f, int (*callback)(char*, void*), void* udata,
 			ret,strerror(errno));
 		exit(1);
 	};
-	memset(request,0,sizeof(request));
-	if(!fgets(request,sizeof(request),f)) {
+	memset(response,0,sizeof(response));
+	if(!fgets(response,sizeof(response),f)) {
 		if(ferror(f)) {
 			sx_report(SX_FATAL,"Error reading data from IRRd: %s (expand)"
 				"\n", strerror(errno));
@@ -395,15 +487,15 @@ bgpq_expand_irrd(FILE* f, int (*callback)(char*, void*), void* udata,
 		exit(1);
 	};
 	SX_DEBUG(debug_expander>2,"expander: initially got %lu bytes, '%s'\n",
-		(unsigned long)strlen(request),request);
-	if(request[0]=='A') {
+		(unsigned long)strlen(response),response);
+	if(response[0]=='A') {
 		char* eon, *c;
-		long togot=strtoul(request+1,&eon,10);
+		long togot=strtoul(response+1,&eon,10);
 		char recvbuffer[togot+1];
 
 		if(eon && *eon!='\n') {
 			sx_report(SX_ERROR,"A-code finised with wrong char '%c' (%s)\n",
-				*eon,request);
+				*eon,response);
 			exit(1);
 		};
 
@@ -416,6 +508,15 @@ bgpq_expand_irrd(FILE* f, int (*callback)(char*, void*), void* udata,
 			};
 			exit(1);
 		};
+		if(fgets(response,sizeof(response),f)==NULL) {
+			if(ferror(f)) {
+				sx_report(SX_FATAL,"Error reading IRRd: %s (dequeue,final)",
+					strerror(errno));
+			} else {
+				sx_report(SX_FATAL,"EOF from IRRd (dequeue,final)\n");
+			};
+			exit(1);
+		};
 		SX_DEBUG(debug_expander>2,"expander: final reply of %lu bytes, '%s'\n",
 			(unsigned long)strlen(recvbuffer),recvbuffer);
 
@@ -423,28 +524,19 @@ bgpq_expand_irrd(FILE* f, int (*callback)(char*, void*), void* udata,
 			size_t spn=strcspn(c," \n");
 			if(spn) c[spn]=0;
 			if(c[0]==0) break;
-			if(callback) callback(c,udata);
+			if(callback) callback(c,udata,request);
 			c+=spn+1;
 		};
-
-		if(fgets(recvbuffer,togot,f)==NULL) {
-			if(feof(f)) {
-				sx_report(SX_FATAL,"EOF from IRRd (expand,final)\n");
-			} else {
-				sx_report(SX_FATAL,"ERROR from IRRd: %s\n", strerror(errno));
-			};
-			exit(1);
-		};
-	} else if(request[0]=='C') {
+	} else if(response[0]=='C') {
 		/* no data */
-	} else if(request[0]=='D') {
+	} else if(response[0]=='D') {
 		/* ... */
-	} else if(request[0]=='E') {
+	} else if(response[0]=='E') {
 		/* XXXXXX */
-	} else if(request[0]=='F') {
+	} else if(response[0]=='F') {
 		/* XXXXXX */
 	} else {
-		sx_report(SX_ERROR,"Wrong reply: %s\n", request);
+		sx_report(SX_ERROR,"Wrong reply: %s\n", response);
 		exit(0);
 	};
 	return 0;
@@ -540,8 +632,30 @@ bgpq_expand(struct bgpq_expander* b)
 	};
 
 	for(mc=b->macroses;mc;mc=mc->next) {
-		bgpq_expand_irrd(f,bgpq_expanded_macro,b,"!i%s,1\n",mc->text);
+		if (!b->maxdepth) {
+			bgpq_expand_irrd(f,bgpq_expanded_macro,b,"!i%s,1\n",mc->text);
+		} else {
+			struct limited_req* lr = lreq_alloc(b, 0, f);
+			bgpq_expander_add_already(b,mc->text);
+			if (!lr) {
+				sx_report(SX_FATAL, "Unable to allocate memory: %s\n",
+					strerror(errno));
+				exit(1);
+			};
+			if (pipelining) {
+				bgpq_pipeline(b,f,bgpq_expanded_macro_limit,lr,"!i%s\n",
+					mc->text);
+			} else {
+				bgpq_expand_irrd(f,bgpq_expanded_macro_limit,lr,"!i%s\n",
+					mc->text);
+			};
+		};
 	};
+
+	if(pipelining && b->firstpipe) {
+		bgpq_pipeline_dequeue(f,b);
+	};
+
 	if(b->generation>=T_PREFIXLIST) {
 		unsigned i, j, k;
 		for(mc=b->rsets;mc;mc=mc->next) {
@@ -567,10 +681,10 @@ bgpq_expand(struct bgpq_expander* b)
 										"!6as%u\r\n", i*8+j);
 							} else {
 								if(k>0)
-									bgpq_pipeline(f,bgpq_expanded_v6prefix,b,
+									bgpq_pipeline(b,f,bgpq_expanded_v6prefix,b,
 										"!6as%u.%u\r\n", k, i*8+j);
 								else
-									bgpq_pipeline(f,bgpq_expanded_v6prefix,b,
+									bgpq_pipeline(b,f,bgpq_expanded_v6prefix,b,
 										"!6as%u\r\n", i*8+j);
 							};
 						} else {
@@ -583,10 +697,10 @@ bgpq_expand(struct bgpq_expander* b)
 										"!gas%u\n", i*8+j);
 							} else {
 								if(k>0)
-									bgpq_pipeline(f,bgpq_expanded_prefix,b,
+									bgpq_pipeline(b,f,bgpq_expanded_prefix,b,
 										"!gas%u.%u\n", k, i*8+j);
 								else
-									bgpq_pipeline(f,bgpq_expanded_prefix,b,
+									bgpq_pipeline(b,f,bgpq_expanded_prefix,b,
 										"!gas%u\n", i*8+j);
 							};
 						};
