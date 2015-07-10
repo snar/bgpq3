@@ -1,10 +1,12 @@
 #ifndef BGPQ3_H_
 #define BGPQ3_H_
 
+#include <sys/queue.h>
+
 #include "sx_prefix.h"
 #include "sx_slentry.h"
 
-typedef enum { 
+typedef enum {
 	V_CISCO = 0,
 	V_JUNIPER,
 	V_CISCO_XR,
@@ -13,7 +15,7 @@ typedef enum {
 	V_FORMAT
 } bgpq_vendor_t;
 
-typedef enum { 
+typedef enum {
 	T_NONE = 0,
 	T_ASPATH,
 	T_OASPATH,
@@ -21,15 +23,17 @@ typedef enum {
 	T_EACL
 } bgpq_gen_t;
 
-struct bgpq_prequest { 
-	struct bgpq_prequest* next;
-	char request[128];
-	int size;
+struct bgpq_request {
+	STAILQ_ENTRY(bgpq_request) next;
+	char* request;
+	int size, offset;
 	int (*callback)(char*, void*, char*);
 	void *udata;
+	char* response;
+	int rsize, roffset;
 };
 
-struct bgpq_expander { 
+struct bgpq_expander {
 	struct sx_radix_tree* tree;
 	struct sx_slentry* macroses;
 	struct sx_slentry* rsets;
@@ -52,8 +56,7 @@ struct bgpq_expander {
 	char* server;
 	char* format;
 	unsigned maxlen;
-	int socksize;
-	int qsize;
+	STAILQ_HEAD(bgpq_requests, bgpq_request) wq, rq;
 };
 
 
