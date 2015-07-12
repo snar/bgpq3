@@ -244,8 +244,8 @@ bgpq_expanded_macro(char* as, void* udata, char* request)
 
 int bgpq_pipeline(struct bgpq_expander* b, int fd,
 	int (*callback)(char*, void*,char*), void* udata, char* fmt, ...);
-int bgpq_expand_irrd(int fd, int (*callback)(char*, void*,char*), void* udata,
-	char* fmt, ...);
+int bgpq_expand_irrd(struct bgpq_expander* b, int fd,
+	int (*callback)(char*, void*,char*), void* udata, char* fmt, ...);
 
 int
 bgpq_expanded_macro_limit(char* as, void* udata, char* request)
@@ -269,7 +269,7 @@ addasset:
 				bgpq_pipeline(lr->b,lr->fd,bgpq_expanded_macro_limit,lr1,
 					"!i%s\n",as);
 			} else {
-				bgpq_expand_irrd(lr->fd,bgpq_expanded_macro_limit,lr1,
+				bgpq_expand_irrd(lr->b,lr->fd,bgpq_expanded_macro_limit,lr1,
 					"!i%s\n",as);
 			};
 		} else {
@@ -397,6 +397,36 @@ bgpq_write(struct bgpq_expander* b, int fd)
 	};
 };
 
+static int
+bgpq_selread(struct bgpq_expander* b, int fd, char* buffer, int size)
+{
+	fd_set rfd, wfd;
+	int ret;
+	struct timeval timeout = {10, 0};
+
+repeat:
+	FD_ZERO(&rfd);
+	FD_SET(fd, &rfd);
+	FD_ZERO(&wfd);
+	if (!STAILQ_EMPTY(&b->wq))
+		FD_SET(fd, &wfd);
+
+	ret = select(fd+1, &rfd, &wfd, NULL, &timeout);
+	if (ret == 0)
+		sx_report(SX_FATAL, "select timeout\n");
+	else if (ret == -1 && errno == EINTR)
+		goto repeat;
+	else if (ret == -1)
+		sx_report(SX_FATAL, "select error %i: %s\n", errno, strerror(errno));
+
+	if (!STAILQ_EMPTY(&b->wq) && FD_ISSET(fd, &wfd))
+		bgpq_write(b, fd);
+
+	if (FD_ISSET(fd, &rfd))
+		return read(fd, buffer, size);
+	goto repeat;
+};
+
 int
 bgpq_read(struct bgpq_expander* b, int fd)
 {
@@ -416,7 +446,7 @@ bgpq_read(struct bgpq_expander* b, int fd)
 		if ((cres=strchr(response, '\n'))!=NULL)
 			goto have;
 repeat:
-		ret = read(fd, response+off, sizeof(response)-off);
+		ret = bgpq_selread(b, fd, response+off, sizeof(response)-off);
 		if (ret < 0) {
 			if (errno == EAGAIN)
 				goto repeat;
@@ -469,7 +499,7 @@ have:
 				goto reread2;
 reread:
 
-			ret = read(fd, recvbuffer+offset, togot-offset);
+			ret = bgpq_selread(b, fd, recvbuffer+offset, togot-offset);
 			if (ret < 0) {
 				if (errno == EAGAIN)
 					goto reread;
@@ -487,7 +517,7 @@ reread:
 				goto reread;
 			};
 reread2:
-			ret = read(fd, response+off, sizeof(response) - off);
+			ret = bgpq_selread(b, fd, response+off, sizeof(response) - off);
 			if (ret < 0) {
 				if (errno == EAGAIN)
 					goto reread2;
@@ -550,8 +580,8 @@ have3:
 };
 
 int
-bgpq_expand_irrd(int fd, int (*callback)(char*, void*,char*), void* udata,
-	char* fmt, ...)
+bgpq_expand_irrd(struct bgpq_expander* b, int fd,
+	int (*callback)(char*, void*,char*), void* udata, char* fmt, ...)
 {
 	char request[128], response[128];
 	va_list ap;
@@ -572,7 +602,7 @@ bgpq_expand_irrd(int fd, int (*callback)(char*, void*,char*), void* udata,
 	memset(response,0,sizeof(response));
 
 repeat:
-	ret = read(fd, response+off, sizeof(response)-off);
+	ret = bgpq_selread(b, fd, response+off, sizeof(response)-off);
 	if (ret < 0) {
 		sx_report(SX_ERROR, "Error reading IRRd: %s\n", strerror(errno));
 		exit(1);
@@ -618,7 +648,7 @@ repeat:
 			goto reread2;
 
 reread:
-		ret = read(fd, recvbuffer+offset, togot-offset);
+		ret = bgpq_selread(b, fd, recvbuffer+offset, togot-offset);
 		if (ret == 0) {
 			sx_report(SX_FATAL,"EOF from IRRd (expand,result)\n");
 		} else if (ret < 0) {
@@ -630,7 +660,7 @@ reread:
 			goto reread;
 
 reread2:
-		ret = read(fd, response+off, sizeof(response)-off);
+		ret = bgpq_selread(b, fd, response+off, sizeof(response)-off);
 		if (ret < 0) {
 			sx_report(SX_FATAL, "error reading IRRd: %s\n", strerror(errno));
 			exit(1);
@@ -645,7 +675,7 @@ have3:
 
 		SX_DEBUG(debug_expander>2,"expander: final reply of %lu bytes, "
 			"%.*sreturn code %.*s",
-			(unsigned long)strlen(recvbuffer), offset, recvbuffer, off, 
+			(unsigned long)strlen(recvbuffer), offset, recvbuffer, off,
 			response);
 
 		for(c=recvbuffer; c<recvbuffer+togot;) {
@@ -756,7 +786,7 @@ bgpq_expand(struct bgpq_expander* b)
 
 	for(mc=b->macroses;mc;mc=mc->next) {
 		if (!b->maxdepth) {
-			bgpq_expand_irrd(fd,bgpq_expanded_macro,b,"!i%s,1\n",mc->text);
+			bgpq_expand_irrd(b, fd,bgpq_expanded_macro,b,"!i%s,1\n",mc->text);
 		} else {
 			struct limited_req* lr = lreq_alloc(b, 0, fd);
 			bgpq_expander_add_already(b,mc->text);
@@ -769,7 +799,7 @@ bgpq_expand(struct bgpq_expander* b)
 				bgpq_pipeline(b,fd,bgpq_expanded_macro_limit,lr,"!i%s\n",
 					mc->text);
 			} else {
-				bgpq_expand_irrd(fd,bgpq_expanded_macro_limit,lr,"!i%s\n",
+				bgpq_expand_irrd(b, fd,bgpq_expanded_macro_limit,lr,"!i%s\n",
 					mc->text);
 			};
 		};
@@ -786,9 +816,10 @@ bgpq_expand(struct bgpq_expander* b)
 		unsigned i, j, k;
 		for(mc=b->rsets;mc;mc=mc->next) {
 			if(b->family==AF_INET) {
-				bgpq_expand_irrd(fd,bgpq_expanded_prefix,b,"!i%s,1\n",mc->text);
+				bgpq_expand_irrd(b,fd,bgpq_expanded_prefix,b,"!i%s,1\n",
+					mc->text);
 			} else {
-				bgpq_expand_irrd(fd,bgpq_expanded_v6prefix,b,"!i%s,1\n",
+				bgpq_expand_irrd(b,fd,bgpq_expanded_v6prefix,b,"!i%s,1\n",
 					mc->text);
 			};
 		};
@@ -800,11 +831,13 @@ bgpq_expand(struct bgpq_expander* b)
 						if(b->family==AF_INET6) {
 							if(!pipelining) {
 								if(k>0)
-									bgpq_expand_irrd(fd,bgpq_expanded_v6prefix,
-										b,"!6as%u.%u\r\n", k, i*8+j);
+									bgpq_expand_irrd(b,fd,
+										bgpq_expanded_v6prefix,b,
+										"!6as%u.%u\r\n", k, i*8+j);
 								else
-									bgpq_expand_irrd(fd,bgpq_expanded_v6prefix,
-										b,"!6as%u\r\n", i*8+j);
+									bgpq_expand_irrd(b,fd,
+										bgpq_expanded_v6prefix,b,"!6as%u\r\n",
+										i*8+j);
 							} else {
 								if(k>0)
 									bgpq_pipeline(b,fd,bgpq_expanded_v6prefix,b,
@@ -816,11 +849,11 @@ bgpq_expand(struct bgpq_expander* b)
 						} else {
 							if(!pipelining) {
 								if(k>0)
-									bgpq_expand_irrd(fd,bgpq_expanded_prefix,b,
-										"!gas%u.%u\n", k, i*8+j);
+									bgpq_expand_irrd(b,fd,bgpq_expanded_prefix,
+										b,"!gas%u.%u\n", k, i*8+j);
 								else
-									bgpq_expand_irrd(fd,bgpq_expanded_prefix,b,
-										"!gas%u\n", i*8+j);
+									bgpq_expand_irrd(b,fd,bgpq_expanded_prefix,
+										b,"!gas%u\n", i*8+j);
 							} else {
 								if(k>0)
 									bgpq_pipeline(b,fd,bgpq_expanded_prefix,b,
