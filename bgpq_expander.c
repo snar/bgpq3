@@ -32,7 +32,7 @@ tentry_cmp(struct sx_tentry* a, struct sx_tentry* b)
 	return strcasecmp(a->text, b->text);
 };
 
-RB_GENERATE_STATIC(tentree, sx_tentry, entry, tentry_cmp);
+RB_GENERATE(tentree, sx_tentry, entry, tentry_cmp);
 
 int
 bgpq_expander_init(struct bgpq_expander* b, int af)
@@ -329,14 +329,12 @@ bgpq_pipeline(struct bgpq_expander* b,
 	void* udata, char* fmt, ...)
 {
 	char request[128];
-	int ret, rlen;
+	int ret;
 	struct bgpq_request* bp=NULL;
 	va_list ap;
 	va_start(ap,fmt);
 	vsnprintf(request,sizeof(request),fmt,ap);
 	va_end(ap);
-
-	rlen=strlen(request);
 
 	SX_DEBUG(debug_expander,"expander: sending %s", request);
 
@@ -348,8 +346,13 @@ bgpq_pipeline(struct bgpq_expander* b,
 	};
 	if (STAILQ_EMPTY(&b->wq)) {
 		ret=write(b->fd, request, bp->size);
-		if (ret < 0)
+		if (ret < 0) {
+			if (errno == EAGAIN) {
+				STAILQ_INSERT_TAIL(&b->wq, bp, next);
+				return bp;
+			};
 			sx_report(SX_FATAL, "Error writing request: %s\n", strerror(errno));
+		};
 		bp->offset=ret;
 		if (ret == bp->size) {
 			STAILQ_INSERT_TAIL(&b->rq, bp, next);
@@ -368,8 +371,11 @@ bgpq_write(struct bgpq_expander* b)
 	while(!STAILQ_EMPTY(&b->wq)) {
 		struct bgpq_request* req = STAILQ_FIRST(&b->wq);
 		int ret = write(b->fd, req->request+req->offset, req->size-req->offset);
-		if (ret < 0)
+		if (ret < 0) {
+			if (errno == EAGAIN)
+				return;
 			sx_report(SX_FATAL, "error writing data: %s\n", strerror(errno));
+		};
 
 		if (ret == req->size - req->offset) {
 			/* this request was dequeued */
