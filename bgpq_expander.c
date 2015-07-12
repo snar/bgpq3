@@ -26,6 +26,14 @@ int pipelining=1;
 int expand_as23456=0;
 int expand_special_asn=0;
 
+static inline int
+tentry_cmp(struct sx_tentry* a, struct sx_tentry* b)
+{
+	return strcasecmp(a->text, b->text);
+};
+
+RB_GENERATE_STATIC(tentree, sx_tentry, entry, tentry_cmp);
+
 int
 bgpq_expander_init(struct bgpq_expander* b, int af)
 {
@@ -53,6 +61,8 @@ bgpq_expander_init(struct bgpq_expander* b, int af)
 
 	STAILQ_INIT(&b->wq);
 	STAILQ_INIT(&b->rq);
+	STAILQ_INIT(&b->rsets);
+	STAILQ_INIT(&b->macroses);
 
 	return 1;
 fixups:
@@ -68,14 +78,7 @@ bgpq_expander_add_asset(struct bgpq_expander* b, char* as)
 	struct sx_slentry* le;
 	if(!b || !as) return 0;
 	le=sx_slentry_new(as);
-	if(!le) return 0;
-	if(!b->macroses) {
-		b->macroses=le;
-	} else {
-		struct sx_slentry* ln=b->macroses;
-		while(ln->next) ln=ln->next;
-		ln->next=le;
-	};
+	STAILQ_INSERT_TAIL(&b->macroses, le, next);
 	return 1;
 };
 
@@ -86,30 +89,31 @@ bgpq_expander_add_rset(struct bgpq_expander* b, char* rs)
 	if(!b || !rs) return 0;
 	le=sx_slentry_new(rs);
 	if(!le) return 0;
-	if(!b->rsets) {
-		b->rsets=le;
-	} else {
-		struct sx_slentry* ln=b->rsets;
-		while(ln->next) ln=ln->next;
-		ln->next=le;
-	};
+	STAILQ_INSERT_TAIL(&b->rsets, le, next);
 	return 1;
 };
 
 int
 bgpq_expander_add_already(struct bgpq_expander* b, char* rs)
 {
-	struct sx_slentry* le;
-	if(!b || !rs) return 0;
-	le=sx_slentry_new(rs);
-	if(!le) return 0;
-	if(!b->already) {
-		b->already=le;
-	} else {
-		struct sx_slentry* ln=b->already;
-		while(ln->next) ln=ln->next;
-		ln->next=le;
-	};
+	struct sx_tentry* le, lkey;
+	lkey.text = rs;
+	if (RB_FIND(tentree, &b->already, &lkey))
+		return 1;
+	le = sx_tentry_new(rs);
+	RB_INSERT(tentree, &b->already, le);
+	return 1;
+};
+
+int
+bgpq_expander_add_stop(struct bgpq_expander* b, char* rs)
+{
+	struct sx_tentry* le, lkey;
+	lkey.text = rs;
+	if (RB_FIND(tentree, &b->stoplist, &lkey))
+		return 1;
+	le = sx_tentry_new(rs);
+	RB_INSERT(tentree, &b->stoplist, le);
 	return 1;
 };
 
@@ -233,17 +237,18 @@ int
 bgpq_expanded_macro_limit(char* as, struct bgpq_expander* b,
 	struct bgpq_request* req)
 {
-	struct sx_slentry* already = b->already;
 	if (!strncasecmp(as, "AS-", 3) || strchr(as, '-') || strchr(as, ':')) {
-		while(already) {
-			if (!strcasecmp(already->text, as)) {
-				SX_DEBUG(debug_expander>2,"%s is already expanding, ignore\n",
-					as);
-				return 0;
-			};
-			already=already->next;
+		struct sx_tentry tkey = { .text = as };
+		if (RB_FIND(tentree, &b->already, &tkey)) {
+			SX_DEBUG(debug_expander>2,"%s is already expanding, ignore\n", as);
+			return 0;
 		};
-		if(b->cdepth + 1 < b->maxdepth && req->depth + 1 < b->maxdepth) {
+		if (RB_FIND(tentree, &b->stoplist, &tkey)) {
+			SX_DEBUG(debug_expander>2,"%s is in the stoplist, ignore\n", as);
+			return 0;
+		};
+		if(!b->maxdepth ||
+			(b->cdepth + 1 < b->maxdepth && req->depth + 1 < b->maxdepth)) {
 			bgpq_expander_add_already(b,as);
 			if (pipelining) {
 				struct bgpq_request* req1 = bgpq_pipeline(b,
@@ -771,8 +776,8 @@ bgpq_expand(struct bgpq_expander* b)
 	if (pipelining)
 		fcntl(fd, F_SETFL, O_NONBLOCK|(fcntl(fd, F_GETFL)));
 
-	for(mc=b->macroses;mc;mc=mc->next) {
-		if (!b->maxdepth) {
+	STAILQ_FOREACH(mc, &b->macroses, next) {
+		if (!b->maxdepth && RB_EMPTY(&b->stoplist)) {
 			bgpq_expand_irrd(b, bgpq_expanded_macro, b, "!i%s,1\n", mc->text);
 		} else {
 			bgpq_expander_add_already(b,mc->text);
@@ -795,7 +800,7 @@ bgpq_expand(struct bgpq_expander* b)
 
 	if(b->generation>=T_PREFIXLIST) {
 		unsigned i, j, k;
-		for(mc=b->rsets;mc;mc=mc->next) {
+		STAILQ_FOREACH(mc, &b->rsets, next) {
 			if(b->family==AF_INET) {
 				bgpq_expand_irrd(b, bgpq_expanded_prefix, NULL, "!i%s,1\n",
 					mc->text);

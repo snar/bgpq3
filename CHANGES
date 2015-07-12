@@ -1,6 +1,10 @@
-0.1.32-rc5 (2015-07-10)
+0.1.32-rc5 (2015-07-12)
     - feature: -L <depth>: limit recursion depth when expanding as-sets
-      (default: not limited).
+      (default: not limited). Based on idea by Eugene Demidov.
+    - feature: stoplist. Now you can add EXCEPT Object... at the end of
+      bgpq3 command line and corresponding as-sets and asns will not be
+      expanded (does not works for prefixes and prefix-sets yet).
+    - internals: major pipelining rewrite and some code cleanup.
 
 0.1.32-rc4 (2015-07-06)
     - change: BIRD can't handle empty lists (NAME = []), so they are not

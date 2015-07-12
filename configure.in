@@ -1,7 +1,9 @@
-AC_INIT(bgpq3,0.1.32-rc5,snar@snar.spb.ru)
+AC_INIT(bgpq3,0.1.32-rc6,snar@snar.spb.ru)
 AC_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_INSTALL
+
+AC_CHECK_HEADERS([sys/queue.h sys/tree.h])
 
 AC_CHECK_PROGS([MARKDOWN], [markdown_py markdown2 markdown], [echo])
 

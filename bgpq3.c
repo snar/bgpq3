@@ -124,7 +124,7 @@ main(int argc, char* argv[])
 {
 	int c;
 	struct bgpq_expander expander;
-	int af=AF_INET, selectedipv4 = 0;
+	int af=AF_INET, selectedipv4 = 0, exceptmode = 0;
 	int widthSet=0, aggregate=0, refine=0, refineLow=0;
 	unsigned long maxlen=0;
 
@@ -448,10 +448,15 @@ main(int argc, char* argv[])
 			"only with Juniper route-filters\n");
 	};
 
-	if(!argv[0]) usage(1);
+	if(!argv[0])
+		usage(1);
 
 	while(argv[0]) {
-		if(!strncasecmp(argv[0],"AS-",3)) {
+		if(!strcmp(argv[0], "EXCEPT")) {
+			exceptmode = 1;
+		} else if (exceptmode) {
+			bgpq_expander_add_stop(&expander,argv[0]);
+		} else if(!strncasecmp(argv[0],"AS-",3)) {
 			bgpq_expander_add_asset(&expander,argv[0]);
 		} else if(!strncasecmp(argv[0],"RS-",3)) {
 			bgpq_expander_add_rset(&expander,argv[0]);

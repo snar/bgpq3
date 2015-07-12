@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-2346AbDdJjpsX] [-F fmt] [-r len] [-R len] [-m max] [-W len] OBJECTS [...]
+	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-2346AbDdJjpsX] [-F fmt] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -89,6 +89,11 @@ Extra match conditions for Juniper route-filters. See the examples section.
 
 `Name` of generated configuration stanza.
 
+#### -L `limit`
+
+Limit recursion depth when expanding. This slows `bgpq3` a bit, but sometimes
+is a useful feature to prevent generated filters from growing too big.
+
 #### -p
 
 Enable use of private ASNs and ASNs used for documentation purpose only
@@ -132,6 +137,11 @@ Generate config for Cisco IOS XR devices (plain IOS by default).
 
 `OBJECTS` means networks (in prefix format), autonomous systems, as-sets and
 route-sets. If multiple objects are specified they will be merged.
+
+#### `EXCEPT OBJECTS`
+
+You can exclude autonomous sets, as-sets and route-sets found during
+expansion from future expansion.
 
 EXAMPLES
 --------

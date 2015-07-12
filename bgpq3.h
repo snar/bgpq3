@@ -1,7 +1,11 @@
 #ifndef BGPQ3_H_
 #define BGPQ3_H_
 
+#if HAVE_SYS_QUEUE_H
 #include <sys/queue.h>
+#else
+#include "sys_queue.h"
+#endif
 
 #include "sx_prefix.h"
 #include "sx_slentry.h"
@@ -23,21 +27,21 @@ typedef enum {
 	T_EACL
 } bgpq_gen_t;
 
+struct bgpq_expander;
+
 struct bgpq_request {
 	STAILQ_ENTRY(bgpq_request) next;
 	char* request;
 	int size, offset;
-	int (*callback)(char*, void*, char*);
+	int (*callback)(char*, struct bgpq_expander*, struct bgpq_request*);
 	void *udata;
-	char* response;
-	int rsize, roffset;
+	unsigned depth;
 };
 
 struct bgpq_expander {
 	struct sx_radix_tree* tree;
-	struct sx_slentry* macroses;
-	struct sx_slentry* rsets;
-	struct sx_slentry* already;
+	STAILQ_HEAD(sx_slentries, sx_slentry) macroses, rsets;
+	RB_HEAD(tentree, sx_tentry) already, stoplist;
 	int family;
 	char* sources;
 	uint32_t asnumber;
@@ -57,6 +61,7 @@ struct bgpq_expander {
 	char* format;
 	unsigned maxlen;
 	STAILQ_HEAD(bgpq_requests, bgpq_request) wq, rq;
+	int fd, cdepth;
 };
 
 
@@ -66,6 +71,7 @@ int bgpq_expander_add_rset(struct bgpq_expander* b, char* set);
 int bgpq_expander_add_as(struct bgpq_expander* b, char* as);
 int bgpq_expander_add_prefix(struct bgpq_expander* b, char* prefix);
 int bgpq_expander_add_prefix_range(struct bgpq_expander* b, char* prefix);
+int bgpq_expander_add_stop(struct bgpq_expander* b, char* object);
 
 int bgpq_expand(struct bgpq_expander* b);
 
