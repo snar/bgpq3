@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -245,10 +246,18 @@ main(int argc, char* argv[])
 						*d='\r';
 						d++;
 						c+=2;
+					} else if(*(c+1)=='t') {
+						*d='\t';
+						d++;
+						c+=2;
 					} else if(*(c+1)=='\\') {
 						*d='\\';
 						d++;
 						c+=2;
+					} else {
+						sx_report(SX_FATAL, "Unsupported escape \%c (0x%2.2x) "
+							"in '%s'\n", isprint(*c)?*c:20, *c, optarg);
+						exit(1);
 					};
 				} else {
 					if(c!=d) {
