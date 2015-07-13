@@ -276,6 +276,8 @@ bgpq_expanded_macro_limit(char* as, struct bgpq_expander* b,
 			SX_DEBUG(debug_expander, ".. some error adding as %s (in "
 				"response to %s)\n", as, req->request);
 		};
+	} else if (!strcasecmp(as, "ANY")) {
+		return 0;
 	} else {
 		sx_report(SX_ERROR, "unexpected object '%s' in expanded_macro_limit "
 			"(in response to %s)\n", as, req->request);
