@@ -1,3 +1,10 @@
+untagged yet (2015-07-13)
+    - bugfix: stoplist shall be able to catch AS numbers as promised.
+    - bugfix: bgpq3 shall not hang at unknown escapes in -M..
+    - gotcha: "ANY" object in recursive mode ignored: shut complaints on
+     "ERROR:unexpected object 'ANY' in expanded_macro_limit (in response
+      to !iAS-SET-SCOPESKY)" (object contains mbrs-by-ref: ANY).
+
 0.1.32-rc5 (2015-07-12)
     - feature: -L <depth>: limit recursion depth when expanding as-sets
       (default: not limited). Based on idea by Eugene Demidov.
