@@ -265,6 +265,11 @@ bgpq_expanded_macro_limit(char* as, struct bgpq_expander* b,
 				b->cdepth?(b->cdepth+1):(req->depth+1));
 		};
 	} else if(!strncasecmp(as, "AS", 2)) {
+		struct sx_tentry tkey = { .text = as };
+		if (RB_FIND(tentree, &b->stoplist, &tkey)) {
+			SX_DEBUG(debug_expander>2,"%s is in the stoplist, ignore\n", as);
+			return 0;
+		};
 		if(bgpq_expander_add_as(b, as)) {
 			SX_DEBUG(debug_expander>2, ".. added asn %s\n", as);
 		} else {
