@@ -3,6 +3,10 @@
 
 #if HAVE_SYS_QUEUE_H
 #include <sys/queue.h>
+/* OpenBSD-current as of 2015-08-30 does not define STAILQ_ENTRY anymore */
+#ifndef STAILQ_ENTRY
+#include "sys_queue.h"
+#endif
 #else
 #include "sys_queue.h"
 #endif
