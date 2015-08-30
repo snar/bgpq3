@@ -30,7 +30,7 @@
 .Nd "bgp filtering automation for cisco and juniper routers"
 .Sh SYNOPSIS
 .Nm
-.Op Fl h Ar host
+.Op Fl h Ar host[:port]
 .Op Fl S Ar sources
 .Op Fl EP
 .Oo
@@ -74,7 +74,7 @@ route-filters (Juniper).
 generate input as-path access-list.
 .It Fl G Ar number
 generate output as-path access-list.
-.It Fl h Ar host
+.It Fl h Ar host[:port]
 host running IRRD database (default: whois.radb.net).
 .It Fl J
 generate config for Juniper (default: Cisco).

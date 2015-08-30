@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host] [-S sources] [-EP] [-f asn | -G asn] [-2346AbDdJjpsX] [-F fmt] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
+	bgpq3 [-h host[:port]] [-S sources] [-EP] [-f asn | -G asn] [-2346AbDdJjpsX] [-F fmt] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -65,7 +65,7 @@ Generate output in user-defined format.
 
 Generate output as-path access-list.
 
-#### -h `host`
+#### -h `host[:port]`
 
 Host running IRRD database (default: `whois.radb.net`).
 

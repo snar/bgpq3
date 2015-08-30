@@ -4,6 +4,9 @@ untagged yet (2015-07-13)
     - gotcha: "ANY" object in recursive mode ignored: shut complaints on
      "ERROR:unexpected object 'ANY' in expanded_macro_limit (in response
       to !iAS-SET-SCOPESKY)" (object contains mbrs-by-ref: ANY).
+    (additions from 2015-08-30)
+    - bugfix: OpenBSD sys/queue.h does not have STAILQ_ interface. Untested yet.
+    - feature: alternate whois port can be configured with -h host[:port]
 
 0.1.32-rc5 (2015-07-12)
     - feature: -L <depth>: limit recursion depth when expanding as-sets
