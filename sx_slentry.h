@@ -1,12 +1,8 @@
 #ifndef SX_SLENTRY_H_
 #define SX_SLENTRY_H_
 
-#if HAVE_SYS_QUEUE_H
+#if HAVE_SYS_QUEUE_H && HAVE_STAILQ_IN_SYS_QUEUE
 #include <sys/queue.h>
-/* OpenBSD-current as of 2015-08-30 does not define STAILQ_ENTRY anymore */
-#ifndef STAILQ_ENTRY
-#include "sys_queue.h"
-#endif
 #else
 #include "sys_queue.h"
 #endif

@@ -1,11 +1,8 @@
 #ifndef BGPQ3_H_
 #define BGPQ3_H_
 
-#if HAVE_SYS_QUEUE_H
+#if HAVE_SYS_QUEUE_H && HAVE_STAILQ_IN_SYS_QUEUE
 #include <sys/queue.h>
-#ifndef STAILQ_ENTRY
-#include "sys_queue.h"
-#endif
 #else
 #include "sys_queue.h"
 #endif

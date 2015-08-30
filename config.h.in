@@ -12,6 +12,9 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* sys/queue.h have STAILQ_ */
+#undef HAVE_STAILQ_IN_SYS_QUEUE
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
