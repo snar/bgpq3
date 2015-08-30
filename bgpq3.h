@@ -3,6 +3,9 @@
 
 #if HAVE_SYS_QUEUE_H
 #include <sys/queue.h>
+#ifndef STAILQ_ENTRY
+#include "sys_queue.h"
+#endif
 #else
 #include "sys_queue.h"
 #endif
