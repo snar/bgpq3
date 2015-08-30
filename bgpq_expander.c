@@ -58,6 +58,7 @@ bgpq_expander_init(struct bgpq_expander* b, int af)
 	memset(b->asn32s[0],0,8192);
 	b->identify=1;
 	b->server="whois.radb.net";
+	b->port="43";
 
 	STAILQ_INIT(&b->wq);
 	STAILQ_INIT(&b->rq);
@@ -714,7 +715,7 @@ bgpq_expand(struct bgpq_expander* b)
 
 	hints.ai_socktype=SOCK_STREAM;
 
-	err=getaddrinfo(b->server,"43",&hints,&res);
+	err=getaddrinfo(b->server,b->port,&hints,&res);
 	if(err) {
 		sx_report(SX_ERROR,"Unable to resolve %s: %s\n",
 			b->server, gai_strerror(err));

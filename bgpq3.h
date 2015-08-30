@@ -58,6 +58,7 @@ struct bgpq_expander {
 	int piped;
 	char* match;
 	char* server;
+	char* port;
 	char* format;
 	unsigned maxlen;
 	STAILQ_HEAD(bgpq_requests, bgpq_request) wq, rq;

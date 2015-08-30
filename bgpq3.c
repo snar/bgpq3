@@ -26,7 +26,7 @@ extern int expand_special_asn;
 int
 usage(int ecode)
 {
-	printf("\nUsage: bgpq3 [-h host] [-S sources] [-P|E|G <num>|f <num>]"
+	printf("\nUsage: bgpq3 [-h host[:port]] [-S sources] [-P|E|G <num>|f <num>]"
 		" [-2346AbDJjXd] [-R len] <OBJECTS>...\n");
 	printf(" -2        : allow routes belonging to as23456 (transition-as) "
 		"(default: false)\n");
@@ -44,7 +44,8 @@ usage(int ecode)
 	printf(" -F fmt    : generate output in user-defined format\n");
 	printf(" -G number : generate output as-path access-list\n");
 	printf(" -h host   : host running IRRD software (whois.radb.net by "
-		"default)\n");
+		"default)\n"
+		"             (use host:port to specify alternate port)\n");
 	printf(" -J        : generate config for JunOS (Cisco IOS by default)\n");
 	printf(" -j        : generate JSON output (Cisco IOS by default)\n");
 	printf(" -M match  : extra match conditions for JunOS route-filters\n");
@@ -178,8 +179,15 @@ main(int argc, char* argv[])
 			expander.vendor=V_FORMAT;
 			expander.format=optarg;
 			break;
-		case 'h': expander.server=optarg;
+		case 'h': {
+			char* d=strchr(optarg, ':');
+			expander.server=optarg;
+			if(d) {
+				*d=0;
+				expander.port=d+1;
+			};
 			break;
+		};
 		case 'J': if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_JUNIPER;
 			break;
