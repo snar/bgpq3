@@ -266,7 +266,7 @@ sx_prefix_snprintf(struct sx_prefix* p, char* rbuffer, int srb)
 
 int
 sx_prefix_snprintf_fmt(struct sx_prefix* p, char* buffer, int size,
-	const char* format)
+	char *b, const char* format)
 {
 	unsigned off=0;
 	const char* c=format;
@@ -283,6 +283,9 @@ sx_prefix_snprintf_fmt(struct sx_prefix* p, char* buffer, int size,
 					break;
 				case '%':
 					buffer[off++]='%';
+					break;
+				case 'N':
+					off+=snprintf(buffer+off,size-off,"%s",b);
 					break;
 				default :
 					sx_report(SX_ERROR, "Unknown format char '%c'\n", *(c+1));
