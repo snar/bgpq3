@@ -1,12 +1,17 @@
-untagged yet (2015-07-13)
+untagged yet (2015-09-23)
     - bugfix: stoplist shall be able to catch AS numbers as promised.
     - bugfix: bgpq3 shall not hang at unknown escapes in -M..
     - gotcha: "ANY" object in recursive mode ignored: shut complaints on
      "ERROR:unexpected object 'ANY' in expanded_macro_limit (in response
       to !iAS-SET-SCOPESKY)" (object contains mbrs-by-ref: ANY).
     (additions from 2015-08-30)
-    - bugfix: OpenBSD sys/queue.h does not have STAILQ_ interface. Untested yet.
+    - bugfix: OpenBSD sys/queue.h does not have STAILQ_ interface.
+      Thanks to Pedro Caetano for reporting and testing.
     - feature: alternate whois port can be configured with -h host[:port]
+    - feature: new format char %N (object name) in formatted output.
+      Thanks to Denis Fondras.
+    - feature: new format chars %m (prefix mask) and %i (inverse mask) in
+      formatted output.
 
 0.1.32-rc5 (2015-07-12)
     - feature: -L <depth>: limit recursion depth when expanding as-sets

@@ -646,7 +646,8 @@ bgpq3_print_format_prefix(struct sx_radix_node* n, void* ff)
 	if(!f)
 		f=stdout;
 	memset(prefix, 0, sizeof(prefix));
-	sx_prefix_snprintf_fmt(&n->prefix, prefix, sizeof(prefix), b->format);
+	sx_prefix_snprintf_fmt(&n->prefix, prefix, sizeof(prefix),
+		b->name?b->name:"NN", b->format);
 	fprintf(f, "%s", prefix);
 };
 

@@ -271,7 +271,8 @@ example below:
 	ipfw add pass all from 91.219.30.0/24 to any
 	ipfw add pass all from 193.193.192.0/19 to any
 
-Recognized format characters: '%n' - network, '%l' - mask length.
+Recognized format characters: '%n' - network, '%l' - mask length,
+'%N' - object name, '%m' - object mask and '%i' - inversed mask.
 Recognized escape characters: '\n' - new line, '\t' - tabulation.
 Please note that no new lines inserted automatically after each sentence,
 you have to add them into format string manually, elsewhere output will

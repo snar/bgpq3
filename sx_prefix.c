@@ -47,6 +47,33 @@ sx_prefix_adjust_masklen(struct sx_prefix* p)
 	};
 };
 
+void
+sx_prefix_mask(struct sx_prefix* p, struct sx_prefix* q)
+{
+	int i;
+	memset(q->addr.addrs, 0, sizeof(q->addr.addrs));
+	q->family=p->family;
+	q->masklen=p->masklen;
+	for(i=0;i<p->masklen/8;i++)
+		q->addr.addrs[i]=0xff;
+	for(i=1;i<=p->masklen%8;i++)
+		q->addr.addrs[p->masklen/8]|=(1<<(8-i));
+};
+
+void
+sx_prefix_imask(struct sx_prefix* p, struct sx_prefix* q)
+{
+	int i;
+	memset(q->addr.addrs, 0xff, sizeof(q->addr.addrs));
+	q->family=p->family;
+	q->masklen=p->masklen;
+	for(i=0;i<p->masklen/8;i++)
+		q->addr.addrs[i]=0;
+	for(i=1;i<=p->masklen%8;i++)
+		q->addr.addrs[p->masklen/8]&=~(1<<(8-i));
+};
+
+
 int
 sx_prefix_parse(struct sx_prefix* p, int af, char* text)
 {
@@ -266,10 +293,11 @@ sx_prefix_snprintf(struct sx_prefix* p, char* rbuffer, int srb)
 
 int
 sx_prefix_snprintf_fmt(struct sx_prefix* p, char* buffer, int size,
-	const char* format)
+	const char* name, const char* format)
 {
 	unsigned off=0;
 	const char* c=format;
+	struct sx_prefix q;
 	while(*c) {
 		if(*c=='%') {
 			switch(*(c+1)) {
@@ -283,6 +311,19 @@ sx_prefix_snprintf_fmt(struct sx_prefix* p, char* buffer, int size,
 					break;
 				case '%':
 					buffer[off++]='%';
+					break;
+				case 'N':
+					off+=snprintf(buffer+off,size-off,"%s",name);
+					break;
+				case 'm':
+					sx_prefix_mask(p, &q);
+					inet_ntop(p->family,&q.addr,buffer+off,size-off);
+					off=strlen(buffer);
+					break;
+				case 'i':
+					sx_prefix_imask(p, &q);
+					inet_ntop(p->family,&q.addr,buffer+off,size-off);
+					off=strlen(buffer);
 					break;
 				default :
 					sx_report(SX_ERROR, "Unknown format char '%c'\n", *(c+1));
