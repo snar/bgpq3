@@ -1,4 +1,7 @@
-untagged yet (2015-09-23)
+untagged yet (2016-05-10)
+    - feature: IOS XR mode now supports as-paths (ios-regexs). Thanks
+      to Tassos Chatzithomaoglou for examples and proofreading.
+    (additions from 2015-09-23)
     - bugfix: stoplist shall be able to catch AS numbers as promised.
     - bugfix: bgpq3 shall not hang at unknown escapes in -M..
     - gotcha: "ANY" object in recursive mode ignored: shut complaints on

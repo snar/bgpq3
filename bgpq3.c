@@ -305,6 +305,8 @@ main(int argc, char* argv[])
 		if(expander.generation==T_ASPATH) {
 			if(expander.vendor==V_CISCO) {
 				expander.aswidth=4;
+			} else if(expander.vendor==V_CISCO_XR) {
+				expander.aswidth=6;
 			} else if(expander.vendor==V_JUNIPER) {
 				expander.aswidth=8;
 			} else if(expander.vendor==V_BIRD) {
@@ -313,6 +315,8 @@ main(int argc, char* argv[])
 		} else if(expander.generation==T_OASPATH) {
 			if(expander.vendor==V_CISCO) {
 				expander.aswidth=5;
+			} else if(expander.vendor==V_CISCO_XR) {
+				expander.aswidth=7;
 			} else if(expander.vendor==V_JUNIPER) {
 				expander.aswidth=8;
 			};
@@ -323,8 +327,10 @@ main(int argc, char* argv[])
 		expander.generation=T_PREFIXLIST;
 	};
 
-	if(expander.vendor==V_CISCO_XR && expander.generation!=T_PREFIXLIST) {
-		sx_report(SX_FATAL, "Sorry, only prefix-sets supported for IOS XR\n");
+	if(expander.vendor==V_CISCO_XR && expander.generation!=T_PREFIXLIST &&
+		expander.generation!=T_ASPATH && expander.generation!=T_OASPATH) {
+		sx_report(SX_FATAL, "Sorry, only prefix-sets and as-paths "
+			"supported for IOS XR\n");
 	};
 	if(expander.vendor==V_BIRD && expander.generation!=T_PREFIXLIST &&
 		expander.generation!=T_ASPATH) {
@@ -536,4 +542,4 @@ main(int argc, char* argv[])
 
 	return 0;
 };
-			
+

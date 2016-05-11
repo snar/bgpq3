@@ -80,6 +80,45 @@ bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 		fprintf(f,"ip as-path access-list %s deny .*\n", b->name?b->name:"NN");
 	return 0;
 };
+
+int
+bgpq3_print_cisco_xr_aspath(FILE* f, struct bgpq_expander* b)
+{
+	int nc=0, i, j, k, comma=0;
+	fprintf(f, "as-path-set %s", b->name?b->name:"NN");
+	if(b->asn32s[b->asnumber/65536] &&
+		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
+		(0x80>>(b->asnumber%8))) {
+		fprintf(f,"\n  ios-regex '^%u(_%u)*$'", b->asnumber,b->asnumber);
+		comma=1;
+	};
+	for(k=0;k<65536;k++) {
+		if(!b->asn32s[k]) continue;
+
+		for(i=0;i<8192;i++) {
+			for(j=0;j<8;j++) {
+				if(b->asn32s[k][i]&(0x80>>j)) {
+					if(k*65536+i*8+j==b->asnumber) continue;
+					if(!nc) {
+						fprintf(f,"%s\n  ios-regex '^%u(_[0-9]+)*_(%u",
+							comma?",":"", b->asnumber,k*65536+i*8+j);
+						comma=1;
+					} else {
+						fprintf(f,"|%u",k*65536+i*8+j);
+					}
+					nc++;
+					if(nc==b->aswidth) {
+						fprintf(f,")$'");
+						nc=0;
+					};
+				};
+			};
+		};
+	};
+	if(nc) fprintf(f,")$'");
+	fprintf(f,"\nend-set\n");
+	return 0;
+};
 int
 bgpq3_print_cisco_oaspath(FILE* f, struct bgpq_expander* b)
 {
@@ -136,6 +175,44 @@ bgpq3_print_cisco_oaspath(FILE* f, struct bgpq_expander* b)
 	if(nc) fprintf(f,")$\n");
 	if(empty)
 		fprintf(f,"ip as-path access-list %s deny .*\n", b->name?b->name:"NN");
+	return 0;
+};
+
+int
+bgpq3_print_cisco_xr_oaspath(FILE* f, struct bgpq_expander* b)
+{
+	int nc=0, i, j, k, comma=0;
+	fprintf(f, "as-path-set %s", b->name?b->name:"NN");
+	if(b->asn32s[b->asnumber/65536] &&
+		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
+			(0x80>>(b->asnumber%8))) {
+		fprintf(f,"\n  ios-regex '^(_%u)*$'",b->asnumber);
+		comma=1;
+	};
+	for(k=0;k<65536;k++) {
+		if(!b->asn32s[k]) continue;
+		for(i=0;i<8192;i++) {
+			for(j=0;j<8;j++) {
+				if(b->asn32s[k][i]&(0x80>>j)) {
+					if(k*65536+i*8+j==b->asnumber) continue;
+					if(!nc) {
+						fprintf(f,"%s\n  ios-regex '^(_[0-9]+)*_(%u",
+							comma?",":"", k*65536+i*8+j);
+						comma=1;
+					} else {
+						fprintf(f,"|%u",k*65536+i*8+j);
+					}
+					nc++;
+					if(nc==b->aswidth) {
+						fprintf(f,")$'");
+						nc=0;
+					};
+				};
+			};
+		};
+	};
+	if(nc) fprintf(f,")$'");
+	fprintf(f,"\nend-set\n");
 	return 0;
 };
 		
@@ -233,6 +310,8 @@ bgpq3_print_aspath(FILE* f, struct bgpq_expander* b)
 		return bgpq3_print_juniper_aspath(f,b);
 	} else if(b->vendor==V_CISCO) {
 		return bgpq3_print_cisco_aspath(f,b);
+	} else if(b->vendor==V_CISCO_XR) {
+		return bgpq3_print_cisco_xr_aspath(f,b);
 	} else if(b->vendor==V_JSON) {
 		return bgpq3_print_json_aspath(f,b);
 	} else if(b->vendor==V_BIRD) {
@@ -250,6 +329,8 @@ bgpq3_print_oaspath(FILE* f, struct bgpq_expander* b)
 		return bgpq3_print_juniper_oaspath(f,b);
 	} else if(b->vendor==V_CISCO) {
 		return bgpq3_print_cisco_oaspath(f,b);
+	} else if(b->vendor==V_CISCO_XR) {
+		return bgpq3_print_cisco_xr_oaspath(f,b);
 	} else {
 		sx_report(SX_FATAL,"Unknown vendor %i\n", b->vendor);
 	};
