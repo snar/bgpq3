@@ -1,4 +1,5 @@
 untagged yet (2016-05-10)
+    - fix: was not able to build on Solaris. Thanks to Mansoor Ali Khan.
     - feature: IOS XR mode now supports as-paths (ios-regexs). Thanks
       to Tassos Chatzithomaoglou for examples and proofreading.
     (additions from 2015-09-23)
