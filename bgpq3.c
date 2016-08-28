@@ -59,14 +59,14 @@ usage(int ecode)
 	printf(" -r len    : allow more specific routes from masklen specified\n");
 	printf(" -R len    : allow more specific routes up to specified masklen\n");
 	printf(" -s        : generate sequence numbers in prefix-lists (IOS only)\n");
-	printf(" -S sources: use only specified sources (default:"
+	printf(" -S sources: use only specified sources (recommended:"
 		" RADB,RIPE,APNIC)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
 	printf(" -W len    : specify max-entries on as-path line (use 0 for "
 		"infinity)\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
-	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2015\n\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2016\n\n");
 	exit(ecode);
 };
 

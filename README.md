@@ -119,7 +119,7 @@ Generate sequence numbers in IOS-style prefix-lists.
 
 #### -S `sources`
 
-Use specified sources only (default: RADB,RIPE,APNIC).
+Use specified sources only (recommended: RADB,RIPE,APNIC).
 
 #### -T      
 

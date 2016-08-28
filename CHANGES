@@ -1,3 +1,8 @@
+0.1.33 (2016-08-28)
+    - rollback 0.1.32-rc2 (2015-07-01) change: by default all IRRD sources
+      are allowed by default. Documentation updated to mark radb,ripe,apnic
+      as 'recommended', not as 'preset default'.
+
 untagged yet (2016-05-10)
     - fix: was not able to build on Solaris. Thanks to Mansoor Ali Khan.
     - feature: IOS XR mode now supports as-paths (ios-regexs). Thanks

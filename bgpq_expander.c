@@ -46,7 +46,7 @@ bgpq_expander_init(struct bgpq_expander* b, int af)
 	if(!b->tree) goto fixups;
 
 	b->family=af;
-	b->sources="ripe,radb,apnic";
+	b->sources="";
 	b->name="NN";
 	b->aswidth=8;
 	b->asn32s[0]=malloc(8192);
