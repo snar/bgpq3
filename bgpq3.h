@@ -16,6 +16,7 @@ typedef enum {
 	V_CISCO_XR,
 	V_JSON,
 	V_BIRD,
+	V_OPENBGPD,
 	V_FORMAT
 } bgpq_vendor_t;
 

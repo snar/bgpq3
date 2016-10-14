@@ -37,7 +37,7 @@
 .Fl f Ar asn |
 .Fl G Ar asn 
 .Oc
-.Op Fl 346AbDdJjsX
+.Op Fl 346ABbDdJjsX
 .Op Fl r Ar len
 .Op Fl R Ar len
 .Op Fl m Ar max
@@ -61,6 +61,8 @@ generate IPv6 prefix/access-lists (IPv4 by default).
 .It Fl A
 try to aggregate prefix-lists as much as possible (not all output
 formats supported).
+.It Fl B
+generate output in OpenBGPD format (default: Cisco)
 .It Fl b
 generate output in BIRD format (default: Cisco).
 .It Fl d

@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host[:port]] [-S sources] [-EP] [-f asn | -G asn] [-2346AbDdJjpsX] [-F fmt] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
+	bgpq3 [-h host[:port]] [-S sources] [-EP] [-f asn | -G asn] [-2346ABbDdJjpsX] [-F fmt] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -35,6 +35,10 @@ Generate IPv6 prefix/access-lists (IPv4 by default).
 
 Try to aggregate generated filters as much as possible (not all output formats
 supported).
+
+#### -B
+
+Generate output in OpenBGPD format (default: Cisco).
 
 #### -b
 

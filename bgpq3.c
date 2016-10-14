@@ -27,7 +27,7 @@ int
 usage(int ecode)
 {
 	printf("\nUsage: bgpq3 [-h host[:port]] [-S sources] [-P|E|G <num>|f <num>]"
-		" [-2346AbDJjXd] [-R len] <OBJECTS>...\n");
+		" [-2346ABbDJjXd] [-R len] <OBJECTS>...\n");
 	printf(" -2        : allow routes belonging to as23456 (transition-as) "
 		"(default: false)\n");
 	printf(" -3        : assume that your device is asn32-safe\n");
@@ -35,6 +35,7 @@ usage(int ecode)
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -A        : try to aggregate Cisco prefix-lists or Juniper "
 			"route-filters\n             as much as possible\n");
+	printf(" -B        : generate OpenBGPD output (Cisco IOS by default)\n");
 	printf(" -b        : generate BIRD output (Cisco IOS by default)\n");
 	printf(" -d        : generate some debugging output\n");
 	printf(" -D        : use asdot notation in as-path (Cisco only)\n");
@@ -56,11 +57,11 @@ usage(int ecode)
 		" list\n");
 	printf(" -P        : generate prefix-list (default, just for backward"
 		" compatibility)\n");
-	printf(" -r len    : allow more specific routes from masklen specified\n");
 	printf(" -R len    : allow more specific routes up to specified masklen\n");
-	printf(" -s        : generate sequence numbers in prefix-lists (IOS only)\n");
+	printf(" -r len    : allow more specific routes from masklen specified\n");
 	printf(" -S sources: use only specified sources (recommended:"
 		" RADB,RIPE,APNIC)\n");
+	printf(" -s        : generate sequence numbers in prefix-lists (IOS only)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
 	printf(" -W len    : specify max-entries on as-path line (use 0 for "
 		"infinity)\n");
@@ -81,8 +82,8 @@ exclusive()
 void
 vendor_exclusive()
 {
-	fprintf(stderr, "-b (BIRD), -F (formatted), -J (JunOS), -j (JSON) "
-		"and -X (IOS XR) options are mutually exclusive\n");
+	fprintf(stderr, "-b (BIRD), -B (OpenBGPD), -F (formatted), -J (JunOS), "
+		"-j (JSON) and -X (IOS XR) options are mutually exclusive\n");
 	exit(1);
 };
 
@@ -134,7 +135,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346AbdDEF:S:jJf:l:L:m:M:W:Ppr:R:G:Th:Xs"))
+	while((c=getopt(argc,argv,"2346AbBdDEF:S:jJf:l:L:m:M:W:Ppr:R:G:Th:Xs"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -167,6 +168,11 @@ main(int argc, char* argv[])
 		case 'b':
 			if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_BIRD;
+			break;
+		case 'B':
+			if(expander.vendor) vendor_exclusive();
+			expander.vendor=V_OPENBGPD;
+			expander.asn32=1;
 			break;
 		case 'd': debug_expander++;
 			break;
