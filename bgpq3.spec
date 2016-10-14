@@ -1,12 +1,12 @@
 Name:           bgpq3
-Version:        0.1.31
+Version:        0.1.33
 Release:        0%{?dist}
 
 Group:          System/Utilities
 Summary:        Automate BGP filter generation based on routing database information
 URL:            http://snar.spb.ru/prog/bgpq3/
 License:        BSD
-Source0:        http://snar.spb.ru/prog/bgpq3/bgpq3-0.1.31.tgz
+Source0:        https://github.com/snar/bgpq3/archive/v0.1.33.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %description
@@ -14,6 +14,8 @@ You are running BGP in your network and want to automate filter generation for y
 
 %prep
 %setup -q
+
+%global debug_package %{nil}
 
 %build
 ./configure --prefix=$RPM_BUILD_ROOT%{_prefix} --mandir=%{_mandir}
@@ -24,17 +26,19 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/usr/bin
 make install
 
-%clean
-rm -rf $RPM_BUILD_ROOT
-
 %files
 %defattr(-,root,root,-)
 /usr/bin/bgpq3
 /usr/man/man8/bgpq3.8.gz
 %doc COPYRIGHT CHANGES
 
+%clean
+rm -rf $RPM_BUILD_ROOT
 
 %changelog
+* Fri Oct 14 2016 Alexandre Snarskii <snar@snar.spb.ru> 0.1.33
+- Version updated
+
 * Tue Jun 23 Alexandre Snarskii <snar@snar.spb.ru> 0.1.31
 - Version updated
 
