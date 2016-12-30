@@ -35,15 +35,17 @@
 .Op Fl EP
 .Oo
 .Fl f Ar asn |
+.Fl F Ar fmt |
 .Fl G Ar asn 
 .Oc
-.Op Fl 346ABbDdJjsX
+.Op Fl 2346ABbDdJjsX
 .Op Fl r Ar len
 .Op Fl R Ar len
 .Op Fl m Ar max
 .Op Fl W Ar len
 .Ar OBJECTS
 .Op "..."
+.Op EXCEPT OBJECTS
 .Sh DESCRIPTION
 The
 .Nm 
@@ -52,6 +54,8 @@ access-lists, policy-statement terms and as-path lists based on RADB data.
 .Pp
 The options are as follows: 
 .Bl -tag -width Ds
+.It Fl 2
+accept routes registered for as23456 (transition-as) (default: false)
 .It Fl 3
 assume that your device is asn32-safe.
 .It Fl 4 
@@ -74,6 +78,8 @@ generate extended access-list (Cisco) or policy-statement term using
 route-filters (Juniper).
 .It Fl f Ar number
 generate input as-path access-list.
+.It Fl F Ar fmt
+generate output in user-defined format.
 .It Fl G Ar number
 generate output as-path access-list.
 .It Fl h Ar host[:port]
@@ -89,6 +95,10 @@ maximum prefix-length of accepted prefixes (default: 32 for IPv4 and
 extra match conditions for Juniper route-filters.
 .It Fl l Ar name 
 name of generated entry.
+.It Fl L Ar limit
+limit recursion depth when expanding as-sets.
+.It Fl p
+accept routes registered for private ASNs (default: disabled)
 .It Fl P
 generate prefix-list (default, backward compatibility).
 .It Fl r Ar len
@@ -107,6 +117,8 @@ generate as-path strings of no more than len items (use 0 for inifinity).
 generate config for Cisco IOS XR devices (plain IOS by default).
 .It Ar OBJECTS 
 means networks (in prefix format), autonomous systems, as-sets and route-sets.
+.It Ar EXCEPT OBJECTS
+those objects will be excluded from expansion.
 .El
 .Sh EXAMPLES
 Generating named juniper prefix-filter for AS20597: 
@@ -160,7 +172,7 @@ Well, for Juniper we can generate even more interesting policy-options,
 using -M <extra match conditions>, -R <len> and hierarchical names: 
 .nf
 .RS
-./bgpq3 -AJEl eltel/specifics -r 29 -R 32 -M "community blackhole" AS20597
+~>bgpq3 -AJEl eltel/specifics -r 29 -R 32 -M "community blackhole" AS20597
 policy-options {
  policy-statement eltel {
   term specifics {
@@ -184,7 +196,7 @@ replace:
 .fi
 generated policy-option term now allows all specifics with prefix-length
 between /29 and /32 for eltel networks if they match with special community 
-'blackhole' (defined elsewhere in configuration).
+blackhole (defined elsewhere in configuration).
 .Pp
 Of course, this version supports IPv6 (-6): 
 .nf
@@ -230,6 +242,32 @@ ip as-path access-list NN permit ^112(_[0-9]+)*_(35052|41720|43628|44450)$
 .Pp
 AS196611 is no more in the list, however, AS23456 (transition AS)
 would be added to list if it were not present. 
+.Sh USER-DEFINED FORMAT
+If you want to generate configuration not for routers, but for some
+other programs/systems, you may use user-defined formatting, like in
+example below:
+.nf
+.RS
+user@host:~>bgpq3 -F "ipfw add pass all from %n/%l to any\\n" as3254
+ipfw add pass all from 62.244.0.0/18 to any
+ipfw add pass all from 91.219.29.0/24 to any
+ipfw add pass all from 91.219.30.0/24 to any
+ipfw add pass all from 193.193.192.0/19 to any
+.RE
+.fi
+.Pp
+Recognized format characters: %n - network, %l - mask length,
+%N - object name, %m - object mask and %i - inversed mask.
+Recognized escape characters: \\n - new line, \\t - tabulation.
+Please note that no new lines inserted automatically after each sentence,
+you have to add them into format string manually, elsewhere output will
+be in one line (sometimes it makes sense):
+.nf
+.RS
+user@host:~>bgpq3 -6F "%n/%l; " as-eltel
+2001:1b00::/32; 2620:4f:8000::/48; 2a04:bac0::/29; 2a05:3a80::/48;
+.RE
+.fi
 .Sh DIAGNOSTICS
 When everything is OK, 
 .Nm
