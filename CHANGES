@@ -1,5 +1,6 @@
 untagged yet
     - sync man-page with readme.md
+    - socket() EAFNOSUPPORT error handling
 
 0.1.33 (2016-10-14)
     - OpenBGPD support (-B). Submitted by Peter Hessler.

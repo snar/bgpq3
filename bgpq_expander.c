@@ -725,7 +725,7 @@ bgpq_expand(struct bgpq_expander* b)
 	for(rp=res; rp; rp=rp->ai_next) {
 		fd=socket(rp->ai_family,rp->ai_socktype,0);
 		if(fd==-1) {
-			if(errno==EPROTONOSUPPORT) continue;
+			if(errno==EPROTONOSUPPORT || errno==EAFNOSUPPORT) continue;
 			sx_report(SX_ERROR,"Unable to create socket: %s\n",
 				strerror(errno));
 			exit(1);
