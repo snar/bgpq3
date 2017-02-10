@@ -67,7 +67,7 @@ usage(int ecode)
 		"infinity)\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
-	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2016\n\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2017\n\n");
 	exit(ecode);
 };
 
