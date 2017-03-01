@@ -335,8 +335,7 @@ bgpq3_print_nokia_aspath(FILE* f, struct bgpq_expander* b)
 	if(b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65535][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
-		fprintf(f,"  entry %u expression \"^%u(%u)*$\"\n", lineNo, b->asnumber,
-			b->asnumber);
+		fprintf(f,"  entry %u expression \"%u+\"\n", lineNo, b->asnumber);
 		lineNo++;
 	};
 	for(k=0;k<65536;k++) {
@@ -346,14 +345,14 @@ bgpq3_print_nokia_aspath(FILE* f, struct bgpq_expander* b)
 				if(b->asn32s[k][i]&(0x80>>j)) {
 					if(k*65536+i*8+j==b->asnumber) continue;
 					if(!nc) {
-						fprintf(f,"  entry %u expression \"^%u(.)*(%u",
+						fprintf(f,"  entry %u expression \"%u.*[%u",
 							lineNo,b->asnumber,k*65536+i*8+j);
 					} else {
-						fprintf(f,"|%u",k*65536+i*8+j);
+						fprintf(f," %u",k*65536+i*8+j);
 					};
 					nc++;
 					if(nc==b->aswidth) {
-						fprintf(f,")$\"\n");
+						fprintf(f,"]\"\n");
 						nc=0;
 						lineNo++;
 					};
@@ -361,9 +360,9 @@ bgpq3_print_nokia_aspath(FILE* f, struct bgpq_expander* b)
 			};
 		};
 	};
-	if(nc) fprintf(f,")$\"\n");
+	if(nc) fprintf(f,"]\"\n");
 	else if(lineNo==1)
-		fprintf(f,"  entry 1 \"!.*\"\n");
+		fprintf(f,"  entry 1 \"\"\n");
 	fprintf(f,"exit\ncommit\n");
 	return 0;
 };
@@ -380,8 +379,7 @@ bgpq3_print_nokia_oaspath(FILE* f, struct bgpq_expander* b)
 	if(b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
-		fprintf(f,"  entry %u expression \"^%u(%u)*$\"\n", lineNo, b->asnumber,
-			b->asnumber);
+		fprintf(f,"  entry %u expression \"%u+\"\n", lineNo, b->asnumber);
 		lineNo++;
 	};
 	for(k=0;k<65536;k++) {
@@ -392,14 +390,14 @@ bgpq3_print_nokia_oaspath(FILE* f, struct bgpq_expander* b)
 				if(b->asn32s[k][i]&(0x80>>j)) {
 					if(k*65536+i*8+j==b->asnumber) continue;
 					if(!nc) {
-						fprintf(f,"  entry %u expression \"^(.)*(%u",
+						fprintf(f,"  entry %u expression \".*[%u",
 							lineNo,k*65536+i*8+j);
 					} else {
-						fprintf(f,"|%u",k*65536+i*8+j);
+						fprintf(f," %u",k*65536+i*8+j);
 					}
 					nc++;
 					if(nc==b->aswidth) {
-						fprintf(f,")$\"\n");
+						fprintf(f,"]\"\n");
 						nc=0;
 						lineNo++;
 					};
@@ -407,9 +405,9 @@ bgpq3_print_nokia_oaspath(FILE* f, struct bgpq_expander* b)
 			};
 		};
 	};
-	if(nc) fprintf(f,")$\"\n");
+	if(nc) fprintf(f,"]\"\n");
 	else if(lineNo==1)
-		fprintf(f,"  entry 1 expression \"!.*\"\n");
+		fprintf(f,"  entry 1 expression \"\"\n");
 	fprintf(f,"exit\ncommit\n");
 	return 0;
 };
