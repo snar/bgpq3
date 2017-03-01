@@ -361,8 +361,6 @@ bgpq3_print_nokia_aspath(FILE* f, struct bgpq_expander* b)
 		};
 	};
 	if(nc) fprintf(f,"]\"\n");
-	else if(lineNo==1)
-		fprintf(f,"  entry 1 \"\"\n");
 	fprintf(f,"exit\ncommit\n");
 	return 0;
 };
@@ -406,8 +404,6 @@ bgpq3_print_nokia_oaspath(FILE* f, struct bgpq_expander* b)
 		};
 	};
 	if(nc) fprintf(f,"]\"\n");
-	else if(lineNo==1)
-		fprintf(f,"  entry 1 expression \"\"\n");
 	fprintf(f,"exit\ncommit\n");
 	return 0;
 };
