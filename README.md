@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host[:port]] [-S sources] [-EP] [-f asn | -F fmt | -G asn] [-2346ABbDdJjpsX] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
+	bgpq3 [-h host[:port]] [-S sources] [-EP] [-f asn | -F fmt | -G asn] [-12346ABbDdJjpsX] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -18,6 +18,10 @@ extended access-lists, policy-statement terms and as-path lists based on
 RADB data.
 
 The options are as follows:
+
+#### -1
+
+Generate output in raw format, one prefix per line (default: Cisco).
 
 #### -2
 
