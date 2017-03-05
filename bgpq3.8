@@ -38,7 +38,7 @@
 .Fl F Ar fmt |
 .Fl G Ar asn 
 .Oc
-.Op Fl 2346ABbDdJjsX
+.Op Fl 2346ABbDdJjNsX
 .Op Fl r Ar len
 .Op Fl R Ar len
 .Op Fl m Ar max
@@ -74,8 +74,8 @@ enable some debugging output.
 .It Fl D
 use asdot notation for Cisco as-path access-lists.
 .It Fl E
-generate extended access-list (Cisco) or policy-statement term using 
-route-filters (Juniper).
+generate extended access-list (Cisco), policy-statement term using
+route-filters (Juniper) or [ip|ipv6]-prefix-list (Nokia).
 .It Fl f Ar number
 generate input as-path access-list.
 .It Fl F Ar fmt
@@ -88,15 +88,17 @@ host running IRRD database (default: whois.radb.net).
 generate config for Juniper (default: Cisco).
 .It Fl j
 generate output in JSON format (default: Cisco).
+.It Fl l Ar name 
+name of generated entry.
+.It Fl L Ar limit
+limit recursion depth when expanding as-sets.
 .It Fl m Ar len
 maximum prefix-length of accepted prefixes (default: 32 for IPv4 and 
 128 for IPv6).
 .It Fl M Ar match 
 extra match conditions for Juniper route-filters.
-.It Fl l Ar name 
-name of generated entry.
-.It Fl L Ar limit
-limit recursion depth when expanding as-sets.
+.It Fl N
+generate config for Nokia SR OS (Cisco IOS by default).
 .It Fl p
 accept routes registered for private ASNs (default: disabled)
 .It Fl P

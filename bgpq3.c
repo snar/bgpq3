@@ -39,8 +39,9 @@ usage(int ecode)
 	printf(" -b        : generate BIRD output (Cisco IOS by default)\n");
 	printf(" -d        : generate some debugging output\n");
 	printf(" -D        : use asdot notation in as-path (Cisco only)\n");
-	printf(" -E        : generate extended access-list(Cisco) or "
-		"route-filter(Juniper)\n");
+	printf(" -E        : generate extended access-list(Cisco), "
+		"route-filter(Juniper) or\n"
+		"             [ip|ipv6]-prefix-list (Nokia)\n");
 	printf(" -f number : generate input as-path access-list\n");
 	printf(" -F fmt    : generate output in user-defined format\n");
 	printf(" -G number : generate output as-path access-list\n");
@@ -388,6 +389,12 @@ main(int argc, char* argv[])
 		exit(1);
 	};
 
+	if(aggregate && expander.vendor==V_NOKIA) {
+		sx_report(SX_FATAL, "Sorry, aggregation (-A) is not supported on "
+			"Nokia equipment (-N)\n");
+		exit(1);
+	};
+
 	if(aggregate && expander.generation<T_PREFIXLIST) {
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) used only for prefix-"
 			"lists, extended access-lists and route-filters\n");
@@ -444,6 +451,17 @@ main(int argc, char* argv[])
 					"Use route-filters (-E) instead\n", refineLow);
 			};
 		};
+
+		if(expander.vendor==V_NOKIA) {
+			if(refine) {
+				sx_report(SX_FATAL, "Sorry, more-specific filters (-R %u) "
+					"not supported on Nokia (-N)\n", refine);
+			} else {
+				sx_report(SX_FATAL, "Sorry, more-specific filters (-r %u) "
+					"not supported on Nokia (-N)\n", refineLow);
+			};
+		};
+
 		if(expander.generation<T_PREFIXLIST) {
 			if(refine) {
 				sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
