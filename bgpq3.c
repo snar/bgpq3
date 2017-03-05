@@ -39,8 +39,9 @@ usage(int ecode)
 	printf(" -b        : generate BIRD output (Cisco IOS by default)\n");
 	printf(" -d        : generate some debugging output\n");
 	printf(" -D        : use asdot notation in as-path (Cisco only)\n");
-	printf(" -E        : generate extended access-list(Cisco) or "
-		"route-filter(Juniper)\n");
+	printf(" -E        : generate extended access-list(Cisco), "
+		"route-filter(Juniper) or\n"
+		"             [ip|ipv6]-prefix-list (Nokia)\n");
 	printf(" -f number : generate input as-path access-list\n");
 	printf(" -F fmt    : generate output in user-defined format\n");
 	printf(" -G number : generate output as-path access-list\n");
@@ -55,6 +56,7 @@ usage(int ecode)
 	printf(" -L depth  : limit recursion depth (default: unlimited)\n"),
 	printf(" -l name   : use specified name for generated access/prefix/.."
 		" list\n");
+	printf(" -N        : generate config for Nokia SR OS (Cisco IOS by default)\n");
 	printf(" -P        : generate prefix-list (default, just for backward"
 		" compatibility)\n");
 	printf(" -R len    : allow more specific routes up to specified masklen\n");
@@ -83,7 +85,7 @@ void
 vendor_exclusive()
 {
 	fprintf(stderr, "-b (BIRD), -B (OpenBGPD), -F (formatted), -J (JunOS), "
-		"-j (JSON) and -X (IOS XR) options are mutually exclusive\n");
+		"-j (JSON), -N (NOKIA SR OS) and -X (IOS XR) options are mutually exclusive\n");
 	exit(1);
 };
 
@@ -135,7 +137,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346AbBdDEF:S:jJf:l:L:m:M:W:Ppr:R:G:Th:Xs"))
+	while((c=getopt(argc,argv,"2346AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:Xs"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -284,6 +286,9 @@ main(int argc, char* argv[])
 			*d=0;
 			};
 			break;
+		case 'N': if(expander.vendor) vendor_exclusive();
+			expander.vendor=V_NOKIA;
+			break;
 		case 'T': pipelining=0;
 			break;
 		case 's': expander.sequence=1;
@@ -317,6 +322,8 @@ main(int argc, char* argv[])
 				expander.aswidth=8;
 			} else if(expander.vendor==V_BIRD) {
 				expander.aswidth=10;
+			} else if(expander.vendor==V_NOKIA) {
+				expander.aswidth=8;
 			};
 		} else if(expander.generation==T_OASPATH) {
 			if(expander.vendor==V_CISCO) {
@@ -324,6 +331,8 @@ main(int argc, char* argv[])
 			} else if(expander.vendor==V_CISCO_XR) {
 				expander.aswidth=7;
 			} else if(expander.vendor==V_JUNIPER) {
+				expander.aswidth=8;
+			} else if(expander.vendor==V_NOKIA) {
 				expander.aswidth=8;
 			};
 		};
@@ -377,6 +386,12 @@ main(int argc, char* argv[])
 	if(aggregate && expander.vendor==V_FORMAT) {
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) is not compatible with "
 			"formatted output (-F <fmt>)\n");
+		exit(1);
+	};
+
+	if(aggregate && expander.vendor==V_NOKIA) {
+		sx_report(SX_FATAL, "Sorry, aggregation (-A) is not supported on "
+			"Nokia equipment (-N)\n");
 		exit(1);
 	};
 
@@ -436,6 +451,17 @@ main(int argc, char* argv[])
 					"Use route-filters (-E) instead\n", refineLow);
 			};
 		};
+
+		if(expander.vendor==V_NOKIA) {
+			if(refine) {
+				sx_report(SX_FATAL, "Sorry, more-specific filters (-R %u) "
+					"not supported on Nokia (-N)\n", refine);
+			} else {
+				sx_report(SX_FATAL, "Sorry, more-specific filters (-r %u) "
+					"not supported on Nokia (-N)\n", refineLow);
+			};
+		};
+
 		if(expander.generation<T_PREFIXLIST) {
 			if(refine) {
 				sx_report(SX_FATAL, "Sorry, more-specific filter (-R %u) "
