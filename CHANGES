@@ -1,4 +1,6 @@
-untagged yet
+0.1.35-rc (2017-30-05)
+	- Nokia SR OS (formerly Alcatel-Lucent) support. Based on submission by
+    Michail Litvak.
     - sync man-page with readme.md
     - socket() EAFNOSUPPORT error handling
 
