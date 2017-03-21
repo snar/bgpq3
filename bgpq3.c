@@ -503,6 +503,12 @@ main(int argc, char* argv[])
 			"only with Juniper route-filters\n");
 	};
 
+	if((expander.generation==T_ASPATH || expander.generation==T_OASPATH) &&
+		af != AF_INET) {
+		sx_report(SX_FATAL, "Sorry, -6 makes no sense with as-path (-f/-G) "
+			"generation\n");
+	};
+
 	if(!argv[0])
 		usage(1);
 
