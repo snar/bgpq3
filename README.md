@@ -63,7 +63,7 @@ Use asdot notation for Cisco as-path access-lists.
 #### -E      
 
 Generate extended access-list (Cisco) or policy-statement term using
-route-filters (Juniper).
+route-filters (Juniper) or [ip|ipv6]-prefix-list (Nokia)
 
 #### -f `AS number`
 
@@ -96,6 +96,10 @@ Maximum length of accepted prefixes (default: `32` for IPv4, `128` for IPv6).
 #### -M `match`
 
 Extra match conditions for Juniper route-filters. See the examples section.
+
+#### -N
+
+Generate config for Nokia SR OS (former Alcatel-Lucent) (default: Cisco)
 
 #### -l `name`
 
