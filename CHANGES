@@ -1,3 +1,6 @@
+untagged yet (2017-06-12)
+    - OpenBSD (and possibly others) need <sys/select.h>
+
 0.1.35-rc (2017-30-05)
 	- Nokia SR OS (formerly Alcatel-Lucent) support. Based on submission by
     Michail Litvak.

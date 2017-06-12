@@ -3,7 +3,7 @@ AC_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_INSTALL
 
-AC_CHECK_HEADERS([sys/cdefs.h sys/queue.h sys/tree.h])
+AC_CHECK_HEADERS([sys/cdefs.h sys/queue.h sys/tree.h sys/select.h])
 
 AC_MSG_CHECKING([for STAILQ_ interface in queue.h])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([

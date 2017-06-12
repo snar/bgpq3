@@ -4,6 +4,9 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 #include <assert.h>
 #include <fcntl.h>
