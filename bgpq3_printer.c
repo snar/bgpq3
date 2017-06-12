@@ -427,6 +427,7 @@ bgpq3_print_aspath(FILE* f, struct bgpq_expander* b)
 		return bgpq3_print_nokia_aspath(f,b);
 	} else {
 		sx_report(SX_FATAL,"Unknown vendor %i\n", b->vendor);
+		return 1;
 	};
 	return 0;
 };
@@ -446,6 +447,7 @@ bgpq3_print_oaspath(FILE* f, struct bgpq_expander* b)
 		return bgpq3_print_nokia_oaspath(f,b);
 	} else {
 		sx_report(SX_FATAL,"Unknown vendor %i\n", b->vendor);
+		return 1;
 	};
 	return 0;
 };
@@ -879,6 +881,7 @@ bgpq3_print_openbgpd_prefixlist(FILE* f, struct bgpq_expander* b)
 	} else {
 		fprintf(f, "# generated prefix-list %s (AS %u) is empty\n", bname, b->asnumber);
 		fprintf(f, "deny from AS %u\n", b->asnumber);
+		return 1;
 	};
 	return 0;
 };
@@ -897,6 +900,7 @@ bgpq3_print_cisco_prefixlist(FILE* f, struct bgpq_expander* b)
 		fprintf(f, "%s prefix-list %s deny %s\n",
 			(b->family==AF_INET) ? "ip" : "ipv6", bname,
 			(b->family==AF_INET) ? "0.0.0.0/0" : "::/0");
+		return 1;
 	};
 	return 0;
 };
@@ -931,6 +935,7 @@ bgpq3_print_bird_prefixlist(FILE* f, struct bgpq_expander* b)
 		fprintf(f,"\n];\n");
 	} else {
 		SX_DEBUG(debug_expander, "skip empty prefix-list in BIRD format\n");
+		return 1;
 	};
 	return 0;
 };
@@ -991,6 +996,7 @@ bgpq3_print_cisco_eacl(FILE* f, struct bgpq_expander* b)
 	} else {
 		fprintf(f,"! generated access-list %s is empty\n", bname);
 		fprintf(f,"ip access-list extended %s deny any any\n", bname);
+		return 1;
 	};
 	return 0;
 };
@@ -1006,6 +1012,7 @@ bgpq3_print_nokia_ipprefixlist(FILE* f, struct bgpq_expander* b)
 		sx_radix_tree_foreach(b->tree,bgpq3_print_nokia_ipfilter,f);
 	} else {
 		fprintf(f,"# generated ip-prefix-list %s is empty\n", bname);
+		return 1;
 	};
 	fprintf(f,"exit\n");
 	return 0;
