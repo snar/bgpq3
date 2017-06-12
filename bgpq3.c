@@ -28,6 +28,7 @@ usage(int ecode)
 {
 	printf("\nUsage: bgpq3 [-h host[:port]] [-S sources] [-P|E|G <num>|f <num>]"
 		" [-2346ABbDJjXd] [-R len] <OBJECTS>...\n");
+	printf(" -1        : generate raw output (Cisco IOS by default)\n");
 	printf(" -2        : allow routes belonging to as23456 (transition-as) "
 		"(default: false)\n");
 	printf(" -3        : assume that your device is asn32-safe\n");
@@ -84,7 +85,7 @@ exclusive()
 void
 vendor_exclusive()
 {
-	fprintf(stderr, "-b (BIRD), -B (OpenBGPD), -F (formatted), -J (JunOS), "
+	fprintf(stderr, "-1 (raw), -b (BIRD), -B (OpenBGPD), -F (formatted), -J (JunOS), "
 		"-j (JSON), -N (NOKIA SR OS) and -X (IOS XR) options are mutually exclusive\n");
 	exit(1);
 };
@@ -137,9 +138,13 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:Xs"))
+	while((c=getopt(argc,argv,"12346AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:Xs"))
 		!=EOF) {
 	switch(c) {
+		case '1':
+			if(expander.vendor) vendor_exclusive();
+			expander.vendor=V_RAW;
+			break;
 		case '2':
 			expand_as23456=1;
 			break;
@@ -340,6 +345,17 @@ main(int argc, char* argv[])
 
 	if(!expander.generation) {
 		expander.generation=T_PREFIXLIST;
+	};
+
+	if(aggregate && expander.vendor==V_RAW) {
+		sx_report(SX_FATAL, "Sorry, aggregation (-A) does not work in"
+				" raw prefix-lists\n");
+		exit(1);
+	};
+
+	if(expander.vendor==V_RAW && expander.generation!=T_PREFIXLIST) {
+		sx_report(SX_FATAL, "Sorry, only prefix-lists supported in raw output\n");
+		exit(1);
 	};
 
 	if(expander.vendor==V_CISCO_XR && expander.generation!=T_PREFIXLIST &&

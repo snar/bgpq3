@@ -17,6 +17,7 @@ typedef enum {
 	V_JSON,
 	V_BIRD,
 	V_OPENBGPD,
+	V_RAW,
 	V_FORMAT,
 	V_NOKIA
 } bgpq_vendor_t;
