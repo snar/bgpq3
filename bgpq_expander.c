@@ -20,6 +20,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#if __OpenBSD__
+#include <sys/select.h>
+#endif
+
+
 #include "bgpq3.h"
 #include "sx_report.h"
 #include "sx_maxsockbuf.h"

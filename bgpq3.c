@@ -568,13 +568,13 @@ main(int argc, char* argv[])
 		default    :
 		case T_NONE: sx_report(SX_FATAL,"Unreachable point... call snar\n");
 			exit(1);
-		case T_ASPATH: bgpq3_print_aspath(stdout,&expander);
+		case T_ASPATH: return bgpq3_print_aspath(stdout,&expander);
 			break;
-		case T_OASPATH: bgpq3_print_oaspath(stdout,&expander);
+		case T_OASPATH: return bgpq3_print_oaspath(stdout,&expander);
 			break;
-		case T_PREFIXLIST: bgpq3_print_prefixlist(stdout,&expander);
+		case T_PREFIXLIST: return bgpq3_print_prefixlist(stdout,&expander);
 			break;
-		case T_EACL: bgpq3_print_eacl(stdout,&expander);
+		case T_EACL: return bgpq3_print_eacl(stdout,&expander);
 			break;
 	};
 
