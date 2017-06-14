@@ -137,7 +137,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:Xs"))
+	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:Xs"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -162,6 +162,9 @@ main(int argc, char* argv[])
 			af=AF_INET6;
 			expander.family=AF_INET6;
 			expander.tree->family=AF_INET6;
+			break;
+		case 'a':
+			parseasnumber(&expander,optarg);
 			break;
 		case 'A':
 			if(aggregate) debug_aggregation++;
