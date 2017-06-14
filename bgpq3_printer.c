@@ -870,7 +870,14 @@ int
 bgpq3_print_openbgpd_prefixlist(FILE* f, struct bgpq_expander* b)
 {
 	bname=b->name ? b->name : "NN";
-	if (!sx_radix_tree_empty(b->tree)) {
+	if (sx_radix_tree_empty(b->tree)) {
+		fprintf(f, "# generated prefix-list %s (AS %u) is empty\n", bname,
+			b->asnumber);
+		if (!b->asnumber)
+			fprintf(f, "# use -a <asn> to generate \"deny from ASN <asn>\" "
+				"instead of this list\n");
+	};
+	if (!sx_radix_tree_empty(b->tree) || !b->asnumber) {
 		if(b->name){
 			if(strcmp(b->name, "NN") != 0) {
 				fprintf(f, "%s=\"", b->name);
@@ -886,9 +893,7 @@ bgpq3_print_openbgpd_prefixlist(FILE* f, struct bgpq_expander* b)
 		}
 		fprintf(f, "\n");
 	} else {
-		fprintf(f, "# generated prefix-list %s (AS %u) is empty\n", bname,
-			b->asnumber);
-		fprintf(f, "%sdeny from AS %u\n", b->asnumber ? "": "#", b->asnumber);
+		fprintf(f, "deny from AS %u\n", b->asnumber);
 	};
 	return 0;
 };
