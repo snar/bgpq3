@@ -39,6 +39,7 @@
 .Fl G Ar asn 
 .Oc
 .Op Fl 2346ABbDdJjNsX
+.Op Fl a Ar asn
 .Op Fl r Ar len
 .Op Fl R Ar len
 .Op Fl m Ar max
@@ -65,6 +66,8 @@ generate IPv6 prefix/access-lists (IPv4 by default).
 .It Fl A
 try to aggregate prefix-lists as much as possible (not all output
 formats supported).
+.It Fl a Ar asn
+specify what asn shall be denied in case of empty prefix-list (OpenBGPD)
 .It Fl B
 generate output in OpenBGPD format (default: Cisco)
 .It Fl b

@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host[:port]] [-S sources] [-EP] [-f asn | -F fmt | -G asn] [-2346ABbDdJjpsX] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
+	bgpq3 [-h host[:port]] [-S sources] [-EP] [-f asn | -F fmt | -G asn] [-2346ABbDdJjpsX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -39,6 +39,10 @@ Generate IPv6 prefix/access-lists (IPv4 by default).
 
 Try to aggregate generated filters as much as possible (not all output formats
 supported).
+
+#### -a asn
+
+Specify ASN that shall be denied in case of empty prefix-list (OpenBGPD).
 
 #### -B
 

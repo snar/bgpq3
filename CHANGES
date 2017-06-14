@@ -1,7 +1,10 @@
-untagged yet (2017-06-14)
-    - OpenBSD (and possibly others) need <sys/select.h>
-    - openbgpd output shall not emit 'deny any from any' in case of empty
+0.1.35-rc2 (2017-06-14)
+    - OpenBSD need <sys/select.h>. Reported by Denis Fondras.
+    - OpenBGPD output shall not emit 'deny any from any' in case of empty
     prefix-list. New flag -a <asn> introduced to allow peer-as indication.
+    When this flag is not specified, empty prefix-list is generated (will
+    not be accepted by OpenBGPD).
+    Reported by Denis Fondras
 
 0.1.35-rc (2017-30-05)
 	- Nokia SR OS (formerly Alcatel-Lucent) support. Based on submission by
