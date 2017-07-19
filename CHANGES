@@ -1,3 +1,7 @@
+untagged yet (2017-07-19)
+    - too large (>124bytes) sources list was not handled correctly.
+    Reported by Pier Carlo Chiodi.
+
 0.1.35-rc2 (2017-06-14)
     - OpenBSD need <sys/select.h>. Reported by Denis Fondras.
     - OpenBGPD output shall not emit 'deny any from any' in case of empty

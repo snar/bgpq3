@@ -769,12 +769,15 @@ bgpq_expand(struct bgpq_expander* b)
 	};
 
 	if(b->sources && b->sources[0]!=0) {
-		char sources[128];
+		int slen = strlen(b->sources)+4;
+		if (slen < 128)
+			slen = 128;
+		char sources[slen];
 		snprintf(sources,sizeof(sources),"!s%s\n", b->sources);
 		SX_DEBUG(debug_expander,"Requesting sources %s", sources);
 		write(fd, sources, strlen(sources));
-		memset(sources, 0, sizeof(sources));
-		read(fd, sources, sizeof(sources));
+		memset(sources, 0, slen);
+		read(fd, sources, slen);
 		SX_DEBUG(debug_expander,"Got answer %s", sources);
 		if(sources[0]!='C') {
 			sx_report(SX_ERROR, "Invalid source(s) '%s': %s\n", b->sources,
