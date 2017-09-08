@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host[:port]] [-S sources] [-EP] [-f asn | -F fmt | -G asn] [-2346ABbDdJjpsX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
+	bgpq3 [-h host[:port]] [-S sources] [-EPz] [-f asn | -F fmt | -G asn] [-2346ABbDdJjpsX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -148,6 +148,10 @@ Generate as-path strings of a given length maximum (0 for infinity).
 #### -X      
 
 Generate config for Cisco IOS XR devices (plain IOS by default).
+
+#### -z
+
+Generate Juniper route-filter-list (JunOS 16.2+).
 
 ####  `OBJECTS`
 

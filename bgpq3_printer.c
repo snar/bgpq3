@@ -639,6 +639,8 @@ bgpq3_print_openbgpd_aspath(FILE* f, struct bgpq_expander* b)
 	return 0;
 };
 
+static int jrfilter_prefixed=1;
+
 void
 bgpq3_print_jrfilter(struct sx_radix_node* n, void* ff)
 {
@@ -648,13 +650,17 @@ bgpq3_print_jrfilter(struct sx_radix_node* n, void* ff)
 	if(!f) f=stdout;
 	sx_prefix_snprintf(&n->prefix,prefix,sizeof(prefix));
 	if(!n->isAggregate) {
-		fprintf(f,"    route-filter %s exact;\n", prefix);
+		fprintf(f,"    %s%s exact;\n",
+			jrfilter_prefixed ? "route-filter " : "", prefix);
 	} else {
 		if(n->aggregateLow>n->prefix.masklen) {
-			fprintf(f,"    route-filter %s prefix-length-range /%u-/%u;\n",
+			fprintf(f,"    %s%s prefix-length-range /%u-/%u;\n",
+				jrfilter_prefixed ? "route-filter " : "",
 				prefix,n->aggregateLow,n->aggregateHi);
 		} else {
-			fprintf(f,"    route-filter %s upto /%u;\n", prefix,n->aggregateHi);
+			fprintf(f,"    %s%s upto /%u;\n",
+				jrfilter_prefixed ? "route-filter " : "",
+				prefix,n->aggregateHi);
 		};
 	};
 checkSon:
@@ -852,6 +858,7 @@ bgpq3_print_juniper_routefilter(FILE* f, struct bgpq_expander* b)
 			fprintf(f,"    %s;\n",b->match);
 	};
 	if(!sx_radix_tree_empty(b->tree)) {
+		jrfilter_prefixed=1;
 		sx_radix_tree_foreach(b->tree,bgpq3_print_jrfilter,f);
 	} else {
 		fprintf(f,"    route-filter %s/0 orlonger reject;\n",
@@ -1054,6 +1061,32 @@ bgpq3_print_eacl(FILE* f, struct bgpq_expander* b)
 		case V_OPENBGPD: return bgpq3_print_openbgpd_prefixlist(f,b);
 		case V_FORMAT: sx_report(SX_FATAL, "unreachable point\n");
 		case V_NOKIA: return bgpq3_print_nokia_ipprefixlist(f,b);
+	};
+	return 0;
+};
+
+int
+bgpq3_print_juniper_route_filter_list(FILE* f, struct bgpq_expander* b)
+{
+	fprintf(f, "policy-options {\nreplace:\n  route-filter-list %s {\n",
+		b->name?b->name:"NN");
+	if (sx_radix_tree_empty(b->tree)) {
+		fprintf(f, "    route-filter %s/0 orlonger reject;\n",
+			b->tree->family == AF_INET ? "0.0.0.0" : "::");
+	} else {
+		jrfilter_prefixed=0;
+		sx_radix_tree_foreach(b->tree,bgpq3_print_jrfilter,f);
+	};
+	fprintf(f, "  }\n}\n");
+	return 0;
+};
+
+int
+bgpq3_print_route_filter_list(FILE* f, struct bgpq_expander* b)
+{
+	switch(b->vendor) {
+		case V_JUNIPER: return bgpq3_print_juniper_route_filter_list(f,b);
+		default: sx_report(SX_FATAL, "unreachable point\n");
 	};
 	return 0;
 };

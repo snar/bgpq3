@@ -137,7 +137,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:Xs"))
+	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:Xsz"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -308,6 +308,10 @@ main(int argc, char* argv[])
 		case 'X': if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_CISCO_XR;
 			break;
+		case 'z':
+			if(expander.generation) exclusive();
+			expander.generation=T_ROUTE_FILTER_LIST;
+			break;
 		default : usage(1);
 	};
 	};
@@ -368,6 +372,10 @@ main(int argc, char* argv[])
 			"compatible with -R/-r options\n");
 		exit(1);
 	};
+	if(expander.generation==T_ROUTE_FILTER_LIST && expander.vendor!=V_JUNIPER) {
+		sx_report(SX_FATAL, "Route-filter-lists (-z) supported for Juniper (-J)"
+			" output only\n");
+	};
 
 	if(expander.asdot && expander.vendor!=V_CISCO) {
 		sx_report(SX_FATAL,"asdot notation supported only for Cisco, "
@@ -381,8 +389,9 @@ main(int argc, char* argv[])
 	if(aggregate && expander.vendor==V_JUNIPER &&
 		expander.generation==T_PREFIXLIST) {
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) does not work in"
-			" Juniper prefix-lists\nYou can try route-filters (-E) instead"
-			" of prefix-lists (-P, default)\n");
+			" Juniper prefix-lists\nYou can try route-filters (-E) "
+			"or route-filter-lists (-z) instead of prefix-lists "
+			"(-P, default)\n");
 		exit(1);
 	};
 
@@ -447,11 +456,13 @@ main(int argc, char* argv[])
 			if(refine) {
 				sx_report(SX_FATAL, "Sorry, more-specific filters (-R %u) "
 					"is not supported for Juniper prefix-lists.\n"
-					"Use router-filters (-E) instead\n", refine);
+					"Use router-filters (-E) or route-filter-lists (-z) "
+					"instead\n", refine);
 			} else {
 				sx_report(SX_FATAL, "Sorry, more-specific filters (-r %u) "
 					"is not supported for Juniper prefix-lists.\n"
-					"Use route-filters (-E) instead\n", refineLow);
+					"Use route-filters (-E) or route-filter-lists (-z) "
+					"instead\n", refineLow);
 			};
 		};
 
@@ -568,7 +579,6 @@ main(int argc, char* argv[])
 		sx_radix_tree_aggregate(expander.tree);
 
 	switch(expander.generation) {
-		default    :
 		case T_NONE: sx_report(SX_FATAL,"Unreachable point... call snar\n");
 			exit(1);
 		case T_ASPATH: bgpq3_print_aspath(stdout,&expander);
@@ -578,6 +588,9 @@ main(int argc, char* argv[])
 		case T_PREFIXLIST: bgpq3_print_prefixlist(stdout,&expander);
 			break;
 		case T_EACL: bgpq3_print_eacl(stdout,&expander);
+			break;
+		case T_ROUTE_FILTER_LIST:
+			bgpq3_print_route_filter_list(stdout, &expander);
 			break;
 	};
 

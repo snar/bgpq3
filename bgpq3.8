@@ -32,7 +32,7 @@
 .Nm
 .Op Fl h Ar host[:port]
 .Op Fl S Ar sources
-.Op Fl EP
+.Op Fl EPz
 .Oo
 .Fl f Ar asn |
 .Fl F Ar fmt |
@@ -120,6 +120,8 @@ disable pipelining.
 generate as-path strings of no more than len items (use 0 for inifinity).
 .It Fl X
 generate config for Cisco IOS XR devices (plain IOS by default).
+.It Fl z
+generate route-filter-lists (JunOS 16.2+).
 .It Ar OBJECTS 
 means networks (in prefix format), autonomous systems, as-sets and route-sets.
 .It Ar EXCEPT OBJECTS

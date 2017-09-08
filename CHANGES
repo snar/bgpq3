@@ -1,4 +1,5 @@
-untagged yet (2017-07-19)
+untagged yet (2017-09-08)
+    - initial support for Juniper route-filter-lists (JunOS 16.2+).
     - too large (>124bytes) sources list was not handled correctly.
     Reported by Pier Carlo Chiodi.
 

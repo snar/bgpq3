@@ -26,7 +26,8 @@ typedef enum {
 	T_ASPATH,
 	T_OASPATH,
 	T_PREFIXLIST,	
-	T_EACL
+	T_EACL,
+	T_ROUTE_FILTER_LIST
 } bgpq_gen_t;
 
 struct bgpq_expander;
@@ -82,6 +83,7 @@ int bgpq3_print_prefixlist(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_eacl(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_aspath(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_oaspath(FILE* f, struct bgpq_expander* b);
+int bgpq3_print_route_filter_list(FILE* f, struct bgpq_expander* b);
 
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char* dst, const char* src, size_t size);
