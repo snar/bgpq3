@@ -18,7 +18,8 @@ typedef enum {
 	V_BIRD,
 	V_OPENBGPD,
 	V_FORMAT,
-	V_NOKIA
+	V_NOKIA,
+	V_VYATTA
 } bgpq_vendor_t;
 
 typedef enum {

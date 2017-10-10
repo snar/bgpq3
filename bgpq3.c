@@ -65,6 +65,7 @@ usage(int ecode)
 		" RADB,RIPE,APNIC)\n");
 	printf(" -s        : generate sequence numbers in prefix-lists (IOS only)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
+	printf(" -V        : generate config for Vyatta/VyOS/EdgeOS (Cisco IOS by default)\n");
 	printf(" -W len    : specify max-entries on as-path line (use 0 for "
 		"infinity)\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
@@ -85,7 +86,7 @@ void
 vendor_exclusive()
 {
 	fprintf(stderr, "-b (BIRD), -B (OpenBGPD), -F (formatted), -J (JunOS), "
-		"-j (JSON), -N (NOKIA SR OS) and -X (IOS XR) options are mutually exclusive\n");
+		"-j (JSON), -N (NOKIA SR OS), -X (IOS XR) -V (Vyatta) options are mutually exclusive\n");
 	exit(1);
 };
 
@@ -137,7 +138,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:Xsz"))
+	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NVW:Ppr:R:G:Th:Xsz"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -298,6 +299,9 @@ main(int argc, char* argv[])
 			break;
 		case 'S': expander.sources=optarg;
 			break;
+		case 'V': if(expander.vendor) vendor_exclusive();
+			expander.vendor=V_VYATTA;
+                        break;
 		case 'W': expander.aswidth=atoi(optarg);
 			if(expander.aswidth<0) {
 				sx_report(SX_FATAL,"Invalid as-width: %s\n", optarg);
@@ -405,6 +409,12 @@ main(int argc, char* argv[])
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) is not supported on "
 			"Nokia equipment (-N)\n");
 		exit(1);
+	};
+
+	if(expander.vendor==V_VYATTA && expander.generation!=T_PREFIXLIST &&
+		expander.generation!=T_ASPATH && expander.generation!=T_OASPATH) {
+		sx_report(SX_FATAL, "Sorry, only prefix-sets and as-paths "
+			"supported for Vyatta output\n");
 	};
 
 	if(aggregate && expander.generation<T_PREFIXLIST) {
