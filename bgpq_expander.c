@@ -468,6 +468,10 @@ have:
 			unsigned long togot=strtoul(response+1,&eon,10);
 			char* recvbuffer=malloc(togot+2);
 			int offset = 0;
+			if (!recvbuffer) {
+				sx_report(SX_FATAL, "error allocating %lu bytes: %s\n",
+					togot+2, strerror(errno));
+			};
 			memset(recvbuffer,0,togot+2);
 
 			if(!eon || *eon!='\n') {
@@ -626,8 +630,12 @@ repeat:
 	if(response[0]=='A') {
 		char* eon, *c;
 		long togot=strtoul(response+1,&eon,10);
-		char recvbuffer[togot+2];
+		char *recvbuffer = malloc(togot+2);
 		int  offset = 0;
+		if (!recvbuffer) {
+			sx_report(SX_FATAL, "Error allocating %lu bytes: %s\n",
+				togot+2, strerror(errno));
+		};
 
 		if(eon && *eon!='\n') {
 			sx_report(SX_ERROR,"A-code finised with wrong char '%c' (%s)\n",
@@ -692,6 +700,7 @@ have3:
 			c+=spn+1;
 		};
 		memset(recvbuffer, 0, togot+2);
+		free(recvbuffer);
 	} else if(response[0]=='C') {
 		/* no data */
 	} else if(response[0]=='D') {
