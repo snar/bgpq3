@@ -335,7 +335,7 @@ SEE ALSO
 --------
 
 1. [Routing Arbiter](http://www.radb.net/)
-2. [draft-michaelson-4byte-as-representation-05.txt](http://www.ietf.org/internet-drafts/draft-michaelson-4byte-as-representation-05.txt)
+2. [draft-michaelson-4byte-as-representation-05](https://tools.ietf.org/html/draft-michaelson-4byte-as-representation-05)
      for information on 'asdot' and 'asplain' notations.
 3. [Cisco documentation](http://www.cisco.com/en/US/prod/collateral/iosswrel/ps6537/ps6554/ps6599/data_sheet_C78-521821.html)
      for information on Cisco implementation of ASN32.
