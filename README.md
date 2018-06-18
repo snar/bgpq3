@@ -141,6 +141,11 @@ Use specified sources only (recommended: RADB,RIPE,APNIC).
 
 Disable pipelining. (not recommended)
 
+#### -V
+
+Generate config for Vyatta/VyOS/EdgeOS (default: Cisco)
+
+
 #### -W `length`
 
 Generate as-path strings of a given length maximum (0 for infinity).

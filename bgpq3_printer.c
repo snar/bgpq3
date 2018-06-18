@@ -19,6 +19,8 @@ extern int debug_expander;
 int bgpq3_print_json_aspath(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_bird_aspath(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_openbgpd_aspath(FILE* f, struct bgpq_expander* b);
+int bgpq3_print_vyatta_aspath(FILE* f, struct bgpq_expander* b);
+int bgpq3_print_vyatta_oaspath(FILE* f, struct bgpq_expander* b);
 
 int
 bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
@@ -120,6 +122,7 @@ bgpq3_print_cisco_xr_aspath(FILE* f, struct bgpq_expander* b)
 	fprintf(f,"\nend-set\n");
 	return 0;
 };
+
 int
 bgpq3_print_cisco_oaspath(FILE* f, struct bgpq_expander* b)
 {
@@ -429,6 +432,8 @@ bgpq3_print_aspath(FILE* f, struct bgpq_expander* b)
 		return bgpq3_print_openbgpd_aspath(f,b);
 	} else if(b->vendor==V_NOKIA) {
 		return bgpq3_print_nokia_aspath(f,b);
+	} else if(b->vendor==V_VYATTA) {
+		return bgpq3_print_vyatta_aspath(f,b);
 	} else {
 		sx_report(SX_FATAL,"Unknown vendor %i\n", b->vendor);
 	};
@@ -448,6 +453,8 @@ bgpq3_print_oaspath(FILE* f, struct bgpq_expander* b)
 		return bgpq3_print_openbgpd_oaspath(f,b);
 	} else if(b->vendor==V_NOKIA) {
 		return bgpq3_print_nokia_oaspath(f,b);
+	} else if(b->vendor==V_VYATTA) {
+		return bgpq3_print_vyatta_oaspath(f,b);
 	} else {
 		sx_report(SX_FATAL,"Unknown vendor %i\n", b->vendor);
 	};
@@ -1003,6 +1010,141 @@ bgpq3_print_nokia_prefixlist(FILE* f, struct bgpq_expander* b)
 };
 
 int
+bgpq3_print_vyatta_aspath(FILE* f, struct bgpq_expander* b)
+{
+	int nc=0, lineNo=1, i, j, k;
+	fprintf(f,"delete policy as-path-list %s\n", b->name?b->name:"NN");
+
+	if(b->asn32s[b->asnumber/65536] &&
+		b->asn32s[b->asnumber/65535][(b->asnumber%65536)/8]&
+		(0x80>>(b->asnumber%8))) {
+		fprintf(f,"set policy as-path-list %s rule %u action permit\n",
+			b->name?b->name:"NN",lineNo);
+		fprintf(f,"set policy as-path-list %s rule %u regex '^%u(_%u)*$'\n",
+			b->name?b->name:"NN",lineNo,b->asnumber,b->asnumber);
+		lineNo++;
+	};
+	for(k=0;k<65536;k++) {
+		if(!b->asn32s[k]) continue;
+		for(i=0;i<8192;i++) {
+			for(j=0;j<8;j++) {
+				if(b->asn32s[k][i]&(0x80>>j)) {
+					if(k*65536+i*8+j==b->asnumber) continue;
+					if(!nc) {
+						fprintf(f,"set policy as-path-list %s rule %u action permit\n",
+							b->name?b->name:"NN",lineNo);
+						fprintf(f,"set policy as-path-list %s rule %u regex '^%u(_[0-9]+)*_(%u",
+							b->name?b->name:"NN",lineNo,b->asnumber,k*65536+i*8+j);
+					} else {
+						fprintf(f,"|%u",k*65536+i*8+j);
+					};
+					nc++;
+					if(nc==b->aswidth) {
+						fprintf(f,")$'\n");
+						nc=0;
+						lineNo++;
+					};
+				};
+			};
+		};
+	};
+	if(nc) fprintf(f,")$'\n");
+	return 0;
+};
+
+int
+bgpq3_print_vyatta_oaspath(FILE* f, struct bgpq_expander* b)
+{
+	int nc=0, lineNo=1, i, j, k;
+	fprintf(f,"delete policy as-path-list %s\n", b->name?b->name:"NN");
+
+	if(b->asn32s[b->asnumber/65536] &&
+		b->asn32s[b->asnumber/65535][(b->asnumber%65536)/8]&
+		(0x80>>(b->asnumber%8))) {
+		fprintf(f,"set policy as-path-list %s rule %u action permit\n",
+			b->name?b->name:"NN",lineNo);
+		fprintf(f,"set policy as-path-list %s rule %u regex '^(_%u)*$'\n",
+			b->name?b->name:"NN",lineNo,b->asnumber);
+		lineNo++;
+	};
+	for(k=0;k<65536;k++) {
+		if(!b->asn32s[k]) continue;
+		for(i=0;i<8192;i++) {
+			for(j=0;j<8;j++) {
+				if(b->asn32s[k][i]&(0x80>>j)) {
+					if(k*65536+i*8+j==b->asnumber) continue;
+					if(!nc) {
+						fprintf(f,"set policy as-path-list %s rule %u action permit\n",
+							b->name?b->name:"NN",lineNo);
+						fprintf(f,"set policy as-path-list %s rule %u regex '^(_[0-9]+)*_(%u",
+							b->name?b->name:"NN",lineNo,k*65536+i*8+j);
+					} else {
+						fprintf(f,"|%u",k*65536+i*8+j);
+					};
+					nc++;
+					if(nc==b->aswidth) {
+						fprintf(f,")$'\n");
+						nc=0;
+						lineNo++;
+					};
+				};
+			};
+		};
+	};
+	if(nc) fprintf(f,")$'\n");
+	return 0;
+};
+
+void
+bgpq3_print_vprefix(struct sx_radix_node* n, void* ff)
+{
+	char prefix[128];
+	FILE* f=(FILE*)ff;
+	if(!f) f=stdout;
+	if(n->isGlue) goto checkSon;
+	sx_prefix_snprintf(&n->prefix,prefix,sizeof(prefix));
+	seq++;
+	if(n->isAggregate) {
+		if(n->aggregateLow>n->prefix.masklen) {
+			fprintf(f,"set policy prefix-list%s %s rule %i action permit\n",
+				n->prefix.family==AF_INET6?"6":"",bname?bname:"NN",seq);
+			fprintf(f,"set policy prefix-list%s %s rule %i prefix %s\n",
+				n->prefix.family==AF_INET6?"6":"",bname?bname:"NN",seq,prefix);
+			fprintf(f,"set policy prefix-list%s %s rule %i ge %u\n",
+				n->prefix.family==AF_INET6?"6":"",bname?bname:"NN",seq,n->aggregateLow);
+			fprintf(f,"set policy prefix-list%s %s rule %i le %u\n",
+				n->prefix.family==AF_INET6?"6":"",bname?bname:"NN",seq,n->aggregateHi);
+		} else {
+			fprintf(f,"set policy prefix-list%s %s rule %i action permit\n",
+				n->prefix.family==AF_INET6?"6":"",bname?bname:"NN",seq);
+			fprintf(f,"set policy prefix-list%s %s rule %i prefix %s\n",
+				n->prefix.family==AF_INET6?"6":"",bname?bname:"NN",seq,prefix);
+			fprintf(f,"set policy prefix-list%s %s rule %i le %u\n",
+				n->prefix.family==AF_INET6?"6":"",bname?bname:"NN",seq,n->aggregateHi);
+		};
+	} else {
+			fprintf(f,"set policy prefix-list%s %s rule %i action permit\n",
+				n->prefix.family==AF_INET6?"6":"",bname?bname:"NN",seq);
+			fprintf(f,"set policy prefix-list%s %s rule %i prefix %s\n",
+				n->prefix.family==AF_INET6?"6":"",bname?bname:"NN",seq,prefix);
+	};
+checkSon:
+	if(n->son)
+		bgpq3_print_vprefix(n->son,ff);
+};
+
+int
+bgpq3_print_vyatta_prefixlist(FILE* f, struct bgpq_expander* b)
+{
+	bname=b->name ? b->name : "NN";
+	seq=b->sequence;
+	fprintf(f,"delete policy prefix-list%s %s\n",
+		(b->family==AF_INET6)?"6":"",bname);
+	sx_radix_tree_foreach(b->tree,bgpq3_print_vprefix,f);
+	return 0;
+};
+
+int
 bgpq3_print_cisco_eacl(FILE* f, struct bgpq_expander* b)
 {
 	bname=b->name ? b->name : "NN";
@@ -1045,6 +1187,7 @@ bgpq3_print_prefixlist(FILE* f, struct bgpq_expander* b)
 		case V_OPENBGPD: return bgpq3_print_openbgpd_prefixlist(f,b);
 		case V_FORMAT: return bgpq3_print_format_prefixlist(f,b);
 		case V_NOKIA: return bgpq3_print_nokia_prefixlist(f,b);
+		case V_VYATTA: return bgpq3_print_vyatta_prefixlist(f,b);
 	};
 	return 0;
 };
@@ -1061,6 +1204,7 @@ bgpq3_print_eacl(FILE* f, struct bgpq_expander* b)
 		case V_OPENBGPD: return bgpq3_print_openbgpd_prefixlist(f,b);
 		case V_FORMAT: sx_report(SX_FATAL, "unreachable point\n");
 		case V_NOKIA: return bgpq3_print_nokia_ipprefixlist(f,b);
+		case V_VYATTA: sx_report(SX_FATAL, "unreachable point\n");
 	};
 	return 0;
 };
