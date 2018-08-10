@@ -400,14 +400,14 @@ bgpq3_print_huawei_aspath(FILE* f, struct bgpq_expander* b)
 					};
 					nc++;
 					if(nc==b->aswidth) {
-						fprintf(f,")\n");
+						fprintf(f,")$\n");
 						nc=0;
 					};
 				};
 			};
 		};
 	};
-	if(nc) fprintf(f,")\n");
+	if(nc) fprintf(f,")$\n");
 	if(empty)
 		fprintf(f,"ip as-path-filter %s deny .*\n", b->name?b->name:"NN");
 	return 0;
@@ -444,14 +444,14 @@ bgpq3_print_huawei_oaspath(FILE* f, struct bgpq_expander* b)
 					nc++;
 					empty=0;
 					if(nc==b->aswidth) {
-						fprintf(f,")\n");
+						fprintf(f,")$\n");
 						nc=0;
 					};
 				};
 			};
 		};
 	};
-	if(nc) fprintf(f,")\n");
+	if(nc) fprintf(f,")$\n");
 	if(empty)
 		fprintf(f, "ip as-path-filter %s deny .*\n", b->name?b->name:"NN");
 	return 0;
