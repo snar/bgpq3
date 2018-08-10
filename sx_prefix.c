@@ -280,15 +280,22 @@ sx_prefix_fprint(FILE* f, struct sx_prefix* p)
 };
 
 int
-sx_prefix_snprintf(struct sx_prefix* p, char* rbuffer, int srb)
+sx_prefix_snprintf_sep(struct sx_prefix* p, char* rbuffer, int srb, char* sep)
 {
 	char buffer[128];
+	if(!sep) sep="/";
 	if(!p) {
 		snprintf(rbuffer,srb,"(null)");
 		return 0;
 	};
 	inet_ntop(p->family,&p->addr,buffer,sizeof(buffer));
-	return snprintf(rbuffer,srb,"%s/%i",buffer,p->masklen);
+	return snprintf(rbuffer,srb,"%s%s%i",buffer,sep,p->masklen);
+};
+
+int
+sx_prefix_snprintf(struct sx_prefix* p, char* rbuffer, int srb)
+{
+	return sx_prefix_snprintf_sep(p, rbuffer, srb, "/");
 };
 
 int

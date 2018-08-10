@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host[:port]] [-S sources] [-EPz] [-f asn | -F fmt | -G asn] [-2346ABbDdJjpsX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
+	bgpq3 [-h host[:port]] [-S sources] [-EPz] [-f asn | -F fmt | -G asn] [-2346ABbDdJjpsUX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -140,6 +140,10 @@ Use specified sources only (recommended: RADB,RIPE,APNIC).
 #### -T      
 
 Disable pipelining. (not recommended)
+
+#### -U
+
+Generate output in Huawei format (default: Cisco).
 
 #### -W `length`
 

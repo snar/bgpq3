@@ -18,7 +18,8 @@ typedef enum {
 	V_BIRD,
 	V_OPENBGPD,
 	V_FORMAT,
-	V_NOKIA
+	V_NOKIA,
+	V_HUAWEI
 } bgpq_vendor_t;
 
 typedef enum {
@@ -90,4 +91,3 @@ size_t strlcpy(char* dst, const char* src, size_t size);
 #endif
 
 #endif
-	

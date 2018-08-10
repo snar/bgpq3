@@ -37,13 +37,13 @@ usage(int ecode)
 			"route-filters\n             as much as possible\n");
 	printf(" -B        : generate OpenBGPD output (Cisco IOS by default)\n");
 	printf(" -b        : generate BIRD output (Cisco IOS by default)\n");
-	printf(" -d        : generate some debugging output\n");
 	printf(" -D        : use asdot notation in as-path (Cisco only)\n");
+	printf(" -d        : generate some debugging output\n");
 	printf(" -E        : generate extended access-list(Cisco), "
 		"route-filter(Juniper) or\n"
 		"             [ip|ipv6]-prefix-list (Nokia)\n");
-	printf(" -f number : generate input as-path access-list\n");
 	printf(" -F fmt    : generate output in user-defined format\n");
+	printf(" -f number : generate input as-path access-list\n");
 	printf(" -G number : generate output as-path access-list\n");
 	printf(" -h host   : host running IRRD software (whois.radb.net by "
 		"default)\n"
@@ -65,11 +65,12 @@ usage(int ecode)
 		" RADB,RIPE,APNIC)\n");
 	printf(" -s        : generate sequence numbers in prefix-lists (IOS only)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
+	printf(" -U        : generate config for Huawei (Cisco IOS by default)\n");
 	printf(" -W len    : specify max-entries on as-path line (use 0 for "
 		"infinity)\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
-	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2017\n\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2018\n\n");
 	exit(ecode);
 };
 
@@ -85,7 +86,8 @@ void
 vendor_exclusive()
 {
 	fprintf(stderr, "-b (BIRD), -B (OpenBGPD), -F (formatted), -J (JunOS), "
-		"-j (JSON), -N (NOKIA SR OS) and -X (IOS XR) options are mutually exclusive\n");
+		"-j (JSON), -N (NOKIA SR OS), -U (Huawei) and -X (IOS XR) options "
+		"are mutually exclusive\n");
 	exit(1);
 };
 
@@ -137,7 +139,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:Xsz"))
+	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:UXsz"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -179,9 +181,9 @@ main(int argc, char* argv[])
 			expander.vendor=V_OPENBGPD;
 			expander.asn32=1;
 			break;
-		case 'd': debug_expander++;
-			break;
 		case 'D': expander.asdot=1;
+			break;
+		case 'd': debug_expander++;
 			break;
 		case 'E': if(expander.generation) exclusive();
 			expander.generation=T_EACL;
@@ -189,6 +191,16 @@ main(int argc, char* argv[])
 		case 'F': if(expander.vendor) exclusive();
 			expander.vendor=V_FORMAT;
 			expander.format=optarg;
+			break;
+		case 'f':
+			if(expander.generation) exclusive();
+			expander.generation=T_ASPATH;
+			parseasnumber(&expander,optarg);
+			break;
+		case 'G':
+			if(expander.generation) exclusive();
+			expander.generation=T_OASPATH;
+			parseasnumber(&expander,optarg);
 			break;
 		case 'h': {
 			char* d=strchr(optarg, ':');
@@ -204,16 +216,6 @@ main(int argc, char* argv[])
 			break;
 		case 'j': if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_JSON;
-			break;
-		case 'f':
-			if(expander.generation) exclusive();
-			expander.generation=T_ASPATH;
-			parseasnumber(&expander,optarg);
-			break;
-		case 'G':
-			if(expander.generation) exclusive();
-			expander.generation=T_OASPATH;
-			parseasnumber(&expander,optarg);
 			break;
 		case 'p':
 			expand_special_asn=1;
@@ -298,6 +300,10 @@ main(int argc, char* argv[])
 			break;
 		case 'S': expander.sources=optarg;
 			break;
+		case 'U':
+			if(expander.vendor) exclusive();
+			expander.vendor=V_HUAWEI;
+			break;
 		case 'W': expander.aswidth=atoi(optarg);
 			if(expander.aswidth<0) {
 				sx_report(SX_FATAL,"Invalid as-width: %s\n", optarg);
@@ -372,6 +378,11 @@ main(int argc, char* argv[])
 			"compatible with -R/-r options\n");
 		exit(1);
 	};
+	if(expander.vendor==V_HUAWEI && expander.generation!=T_ASPATH &&
+		expander.generation!=T_OASPATH && expander.generation != T_PREFIXLIST)
+		sx_report(SX_FATAL, "Sorry, only as-paths and prefix-lists supported "
+			"for Huawei output\n");
+
 	if(expander.generation==T_ROUTE_FILTER_LIST && expander.vendor!=V_JUNIPER) {
 		sx_report(SX_FATAL, "Route-filter-lists (-z) supported for Juniper (-J)"
 			" output only\n");

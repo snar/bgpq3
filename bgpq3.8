@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007-2017 Alexandre Snarskii
+.\" Copyright (c) 2007-2018 Alexandre Snarskii
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 .Fl F Ar fmt |
 .Fl G Ar asn 
 .Oc
-.Op Fl 2346ABbDdJjNsX
+.Op Fl 2346ABbDdJjNsXU
 .Op Fl a Ar asn
 .Op Fl r Ar len
 .Op Fl R Ar len
@@ -118,6 +118,8 @@ use specified sources only (recommended: RADB,RIPE,APNIC).
 disable pipelining. 
 .It Fl W Ar len
 generate as-path strings of no more than len items (use 0 for inifinity).
+.It Fl U
+generate config for Huawei devices (Cisco IOS by default)
 .It Fl X
 generate config for Cisco IOS XR devices (plain IOS by default).
 .It Fl z
