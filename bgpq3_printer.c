@@ -374,7 +374,7 @@ bgpq3_print_huawei_aspath(FILE* f, struct bgpq_expander* b)
 {
 	int nc=0, i, j, k, empty=1;
 
-	fprintf(f,"no ip as-path-filter %s\n",
+	fprintf(f,"undo ip as-path-filter %s\n",
 		b->name ? b->name : "NN");
 
 	if(b->asn32s[b->asnumber/65536] &&
@@ -418,7 +418,7 @@ bgpq3_print_huawei_oaspath(FILE* f, struct bgpq_expander* b)
 {
 	int nc=0, i, j, k, empty=1;
 
-	fprintf(f,"no ip as-path-filter %s\n",
+	fprintf(f,"undo ip as-path-filter %s\n",
 		b->name ? b->name : "NN");
 
 	if(b->asn32s[b->asnumber/65536] &&
@@ -1084,7 +1084,7 @@ bgpq3_print_huawei_prefixlist(FILE* f, struct bgpq_expander* b)
 {
 	bname=b->name ? b->name : "NN";
 	seq=b->sequence;
-	fprintf(f,"no ip %s-prefix %s\n",
+	fprintf(f,"undo ip %s-prefix %s\n",
 		(b->family==AF_INET)?"ip":"ipv6",bname);
 	if (!sx_radix_tree_empty(b->tree)) {
 		sx_radix_tree_foreach(b->tree,bgpq3_print_hprefix,f);
