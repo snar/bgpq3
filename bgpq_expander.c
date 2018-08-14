@@ -305,7 +305,11 @@ int
 bgpq_expanded_v6prefix(char* prefix, struct bgpq_expander* ex,
 	struct bgpq_request* req)
 {
-	bgpq_expander_add_prefix(ex,prefix);
+	char* d = strchr(prefix, '^');
+	if (!d)
+		bgpq_expander_add_prefix(ex,prefix);
+	else
+		bgpq_expander_add_prefix_range(ex,prefix);
 	return 1;
 };
 

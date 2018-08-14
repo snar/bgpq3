@@ -242,10 +242,19 @@ sx_prefix_range_parse(struct sx_radix_tree* tree, int af, int maxlen,
 			text, min, p.masklen);
 		return 0;
 	};
-	SX_DEBUG(debug_expander, "parsed prefix-range %s as %lu-%lu\n",
-		text, min, max);
+	if (af == AF_INET && max > 32) {
+		sx_report(SX_ERROR, "Invalid prefix-range %s: max %lu > 32\n",
+			text, max);
+		return 0;
+	} else if (af == AF_INET6 && max > 128) {
+		sx_report(SX_ERROR, "Invalid ipv6 prefix-range %s: max %lu > 128\n",
+			text, max);
+		return 0;
+	};
 	if (max > maxlen)
 		max = maxlen;
+	SX_DEBUG(debug_expander, "parsed prefix-range %s as %lu-%lu (maxlen: %u)\n",
+		text, min, max, maxlen);
 	sx_radix_tree_insert_specifics(tree, p, min, max);
 	return 1;
 };

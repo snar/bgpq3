@@ -4,6 +4,7 @@ untagged yet (2018-08-10)
     Reported by Pier Carlo Chiodi.
 	- initial support for Huawei format (prefix-lists and as-path filters)
 	New flag -U. Requested by Alexander Wagberg.
+	- fix ipv6 prefix-ranges. Reported by Jay Ford.
 
 0.1.35-rc2 (2017-06-14)
     - OpenBSD need <sys/select.h>. Reported by Denis Fondras.
