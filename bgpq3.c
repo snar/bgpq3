@@ -40,8 +40,9 @@ usage(int ecode)
 	printf(" -D        : use asdot notation in as-path (Cisco only)\n");
 	printf(" -d        : generate some debugging output\n");
 	printf(" -E        : generate extended access-list(Cisco), "
-		"route-filter(Juniper) or\n"
-		"             [ip|ipv6]-prefix-list (Nokia)\n");
+		"route-filter(Juniper)\n"
+		"             [ip|ipv6]-prefix-list (Nokia) or prefix-set (OpenBGPD)"
+		"\n");
 	printf(" -F fmt    : generate output in user-defined format\n");
 	printf(" -f number : generate input as-path access-list\n");
 	printf(" -G number : generate output as-path access-list\n");

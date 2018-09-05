@@ -63,7 +63,8 @@ Use asdot notation for Cisco as-path access-lists.
 #### -E      
 
 Generate extended access-list (Cisco) or policy-statement term using
-route-filters (Juniper) or [ip|ipv6]-prefix-list (Nokia)
+route-filters (Juniper), [ip|ipv6]-prefix-list (Nokia) or prefix-filter
+(OpenBGPD)
 
 #### -f `AS number`
 
