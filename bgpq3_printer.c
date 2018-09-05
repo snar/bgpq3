@@ -1007,19 +1007,9 @@ bgpq3_print_openbgpd_prefixlist(FILE* f, struct bgpq_expander* b)
 				"instead of this list\n");
 	};
 	if (!sx_radix_tree_empty(b->tree) || !b->asnumber) {
-		if(b->name){
-			if(strcmp(b->name, "NN") != 0) {
-				fprintf(f, "%s=\"", b->name);
-			}
-		}
-		fprintf(f,"prefix { \\");
+		fprintf(f,"prefix-set %s { \\", b->name);
 		sx_radix_tree_foreach(b->tree,bgpq3_print_openbgpd_prefix,f);
 		fprintf(f, "\n\t}");
-		if(b->name){
-			if(strcmp(b->name, "NN") != 0) {
-				fprintf(f, "\"");
-			}
-		}
 		fprintf(f, "\n");
 	} else {
 		fprintf(f, "deny from AS %u\n", b->asnumber);
