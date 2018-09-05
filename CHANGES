@@ -7,6 +7,10 @@ untagged yet (2018-09-05)
 	- fix ipv6 prefix-ranges. Reported by Jay Ford.
     - OpenBGPd change: -E now generates prefix-set instead of prefix-list.
     Based on submission by Denis Fondras
+    - new option -w, allowing to 'validate' AS numbers included in as-path
+    access-lists: only those AS having registered route-objects are allowed.
+    By default checks route[4] presence, to check route6 objects shall be
+    used together with -6.
 
 0.1.35-rc2 (2017-06-14)
     - OpenBSD need <sys/select.h>. Reported by Denis Fondras.

@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
+#include <limits.h>
 #include <string.h>
 #include <strings.h>
 #include <stdarg.h>
@@ -381,6 +382,38 @@ bgpq_pipeline(struct bgpq_expander* b,
 };
 
 static void
+bgpq_expander_invalidate_asn(struct bgpq_expander* b, const char* q)
+{
+	   if (!strncmp(q, "!gas", 4) || !strncmp(q, "!6as", 4)) {
+		   char* eptr;
+		   unsigned long asn = strtoul(q+4, &eptr, 10), asn0, asn1 = 0;
+		   if (!asn || asn == ULONG_MAX || asn >= 4294967295 ||
+			   (eptr && *eptr != '\n' && *eptr != '\r' && *eptr != '.')) {
+			   sx_report(SX_ERROR, "some problem invalidating asn %s\n", q);
+			   return;
+		   };
+		   if (eptr && (*eptr == '\r' || *eptr == '\n')) {
+			   asn1 = asn;
+			   asn0 = 0;
+		   } else if (eptr && *eptr == '.') {
+			   asn0 = asn;
+			   asn1 = strtoul(eptr+1, &eptr, 10);
+		   };
+		   if (asn >= 65536) {
+			   asn1 = asn % 65536;
+			   asn0 = asn / 65536;
+		   };
+		   if (!b->asn32s[asn0] ||
+			   !(b->asn32s[asn0][asn1/8] & (0x80 >> (asn1 % 8)))) {
+			   sx_report(SX_NOTICE, "strange, invalidating inactive asn %lu(%s)\n",
+				   asn, q);
+		   } else {
+			   b->asn32s[asn0][asn1/8] &= ~(0x80 >> (asn1 % 8));
+		   };
+	   };
+};
+
+static void
 bgpq_write(struct bgpq_expander* b)
 {
 	while(!STAILQ_EMPTY(&b->wq)) {
@@ -561,10 +594,12 @@ have3:
 		} else if(response[0]=='C') {
 			/* No data */
 			SX_DEBUG(debug_expander,"No data expanding %s\n", req->request);
+			if (b->validate_asns) bgpq_expander_invalidate_asn(b, req->request);
 		} else if(response[0]=='D') {
 			/* .... */
 			SX_DEBUG(debug_expander,"Key not found expanding %s\n",
 				req->request);
+			if (b->validate_asns) bgpq_expander_invalidate_asn(b, req->request);
 		} else if(response[0]=='E') {
 			sx_report(SX_ERROR, "Multiple keys expanding %s: %s\n",
 				req->request, response);
@@ -707,8 +742,10 @@ have3:
 		free(recvbuffer);
 	} else if(response[0]=='C') {
 		/* no data */
+		if (b->validate_asns) bgpq_expander_invalidate_asn(b, request);
 	} else if(response[0]=='D') {
 		/* ... */
+		if (b->validate_asns) bgpq_expander_invalidate_asn(b, request);
 	} else if(response[0]=='E') {
 		/* XXXXXX */
 	} else if(response[0]=='F') {
@@ -831,7 +868,7 @@ bgpq_expand(struct bgpq_expander* b)
 			bgpq_read(b);
 	};
 
-	if(b->generation>=T_PREFIXLIST) {
+	if(b->generation>=T_PREFIXLIST || b->validate_asns) {
 		unsigned i, j, k;
 		STAILQ_FOREACH(mc, &b->rsets, next) {
 			if(b->family==AF_INET) {

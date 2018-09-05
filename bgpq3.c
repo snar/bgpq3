@@ -27,7 +27,7 @@ int
 usage(int ecode)
 {
 	printf("\nUsage: bgpq3 [-h host[:port]] [-S sources] [-P|E|G <num>|f <num>]"
-		" [-2346ABbDJjXd] [-R len] <OBJECTS>...\n");
+		" [-2346ABbDdJjwXz] [-R len] <OBJECTS>...\n");
 	printf(" -2        : allow routes belonging to as23456 (transition-as) "
 		"(default: false)\n");
 	printf(" -3        : assume that your device is asn32-safe\n");
@@ -69,6 +69,8 @@ usage(int ecode)
 	printf(" -U        : generate config for Huawei (Cisco IOS by default)\n");
 	printf(" -W len    : specify max-entries on as-path line (use 0 for "
 		"infinity)\n");
+	printf(" -w        : 'validate' AS numbers: accept only ones with "
+		"registered routes\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
 	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2018\n\n");
@@ -140,7 +142,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:UXsz"))
+	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:UwXsz"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -311,6 +313,8 @@ main(int argc, char* argv[])
 				exit(1);
 			};
 			widthSet=1;
+			break;
+		case 'w': expander.validate_asns=1;
 			break;
 		case 'X': if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_CISCO_XR;
@@ -530,8 +534,14 @@ main(int argc, char* argv[])
 	};
 
 	if((expander.generation==T_ASPATH || expander.generation==T_OASPATH) &&
-		af != AF_INET) {
+		af != AF_INET && !expander.validate_asns) {
 		sx_report(SX_FATAL, "Sorry, -6 makes no sense with as-path (-f/-G) "
+			"generation\n");
+	};
+
+	if (expander.validate_asns && expander.generation != T_ASPATH &&
+		expander.generation != T_OASPATH) {
+		sx_report(SX_FATAL, "Sorry, -w makes sense only for as-path (-f/-G) "
 			"generation\n");
 	};
 
