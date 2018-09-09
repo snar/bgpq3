@@ -1028,23 +1028,12 @@ int
 bgpq3_print_openbgpd_prefixset(FILE* f, struct bgpq_expander* b)
 {
 	bname=b->name ? b->name : "NN";
-	if (sx_radix_tree_empty(b->tree)) {
-		fprintf(f, "# generated prefix-set %s (AS %u) is empty\n", bname,
-			b->asnumber);
-		if (!b->asnumber)
-			fprintf(f, "# use -a <asn> to generate \"deny from ASN <asn>\" "
-				"instead of this list\n");
-	};
-	if (!sx_radix_tree_empty(b->tree) || !b->asnumber) {
-		fprintf(f,"prefix-set %s {", b->name);
+	fprintf(f,"prefix-set %s {", b->name);
+	if (!sx_radix_tree_empty(b->tree))
 		sx_radix_tree_foreach(b->tree,bgpq3_print_openbgpd_prefix,f);
-		fprintf(f, "\n}\n");
-	} else {
-		fprintf(f, "deny from AS %u\n", b->asnumber);
-	};
+	fprintf(f, "\n}\n");
 	return 0;
 };
-
 
 int
 bgpq3_print_cisco_prefixlist(FILE* f, struct bgpq_expander* b)
