@@ -558,7 +558,6 @@ bgpq3_print_jprefix(struct sx_radix_node* n, void* ff)
 };
 
 static int   needscomma=0;
-static int   prefixset=0;
 
 void
 bgpq3_print_json_prefix(struct sx_radix_node* n, void* ff)
@@ -685,7 +684,6 @@ void
 bgpq3_print_openbgpd_prefix(struct sx_radix_node* n, void* ff)
 {
 	char prefix[128];
-	int  pc = needscomma & prefixset;
 	FILE* f=(FILE*)ff;
 	if(n->isGlue)
 		goto checkSon;
@@ -693,16 +691,15 @@ bgpq3_print_openbgpd_prefix(struct sx_radix_node* n, void* ff)
 		f=stdout;
 	sx_prefix_snprintf(&n->prefix, prefix, sizeof(prefix));
 	if (!n->isAggregate) {
-		fprintf(f, "%s\n\t%s", pc ? "," : " \\", prefix);
+		fprintf(f, "\n\t%s \\", prefix);
 	} else if (n->aggregateLow == n->aggregateHi) {
-		fprintf(f, "%s\n\t%s prefixlen = %u",
-			pc ? "," : " \\", prefix, n->aggregateHi);
+		fprintf(f, "\n\t%s prefixlen = %u \\", prefix, n->aggregateHi);
 	} else if (n->aggregateLow > n->prefix.masklen) {
-		fprintf(f, "%s\n\t%s prefixlen %u - %u",
-			pc ? "," : " \\", prefix, n->aggregateLow, n->aggregateHi);
+		fprintf(f, "\n\t%s prefixlen %u - %u \\",
+			prefix, n->aggregateLow, n->aggregateHi);
 	} else {
-		fprintf(f, "%s\n\t%s prefixlen %u - %u",
-			pc ? "," : " \\", prefix, n->prefix.masklen, n->aggregateHi);
+		fprintf(f, "\n\t%s prefixlen %u - %u \\",
+			prefix, n->prefix.masklen, n->aggregateHi);
 	};
 	needscomma=1;
 checkSon:
@@ -1013,9 +1010,9 @@ bgpq3_print_openbgpd_prefixlist(FILE* f, struct bgpq_expander* b)
 				fprintf(f, "%s=\"", b->name);
 			}
 		}
-		fprintf(f,"prefix {");
+		fprintf(f,"prefix { \\");
 		sx_radix_tree_foreach(b->tree,bgpq3_print_openbgpd_prefix,f);
-		fprintf(f, " \\\n\t}");
+		fprintf(f, "\n\t}");
 		if(b->name){
 			if(strcmp(b->name, "NN") != 0) {
 				fprintf(f, "\"");
@@ -1040,8 +1037,7 @@ bgpq3_print_openbgpd_prefixset(FILE* f, struct bgpq_expander* b)
 				"instead of this list\n");
 	};
 	if (!sx_radix_tree_empty(b->tree) || !b->asnumber) {
-		fprintf(f,"prefix-set %s { ", b->name);
-		prefixset=1;
+		fprintf(f,"prefix-set %s { \\", b->name);
 		sx_radix_tree_foreach(b->tree,bgpq3_print_openbgpd_prefix,f);
 		fprintf(f, "\n\t}\n");
 	} else {
