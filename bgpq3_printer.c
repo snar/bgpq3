@@ -710,7 +710,9 @@ checkSon:
 int
 bgpq3_print_openbgpd_aspath(FILE* f, struct bgpq_expander* b)
 {
-	int i, j, k, lineNo=0;
+	int i, j, k, nc=0;
+
+	fprintf(f, "as-set %s {", b->name?b->name:"NN");
 
 	for(k=0;k<65536;k++) {
 		if(!b->asn32s[k]) continue;
@@ -718,15 +720,16 @@ bgpq3_print_openbgpd_aspath(FILE* f, struct bgpq_expander* b)
 		for(i=0;i<8192;i++) {
 			for(j=0;j<8;j++) {
 				if(b->asn32s[k][i]&(0x80>>j)) {
-					fprintf(f, "allow from AS %u AS %u\n", b->asnumber,
-						k*65536+i*8+j);
-					lineNo++;
+					fprintf(f, "%s%u",
+					    nc == 0 ? "\n\t" : " ", k*65536+i*8+j);
+					nc++;
+					if(nc==b->aswidth)
+						nc=0;
 				};
 			};
 		};
 	};
-	if(!lineNo)
-		fprintf(f, "deny from AS %u\n", b->asnumber);
+	fprintf(f, "\n}\n");
 	return 0;
 };
 
