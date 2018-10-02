@@ -1,4 +1,4 @@
-untagged yet (2018-09-05)
+untagged yet (2018-10-02)
     - initial support for Juniper route-filter-lists (JunOS 16.2+).
     - too large (>124bytes) sources list was not handled correctly.
     Reported by Pier Carlo Chiodi.
@@ -11,6 +11,7 @@ untagged yet (2018-09-05)
     access-lists: only those AS having registered route-objects are allowed.
     By default checks route[4] presence, to check route6 objects shall be
     used together with -6.
+    - cleanup OpenBGPd prefix-sets. Submitted by Claudio Jeker.
 
 0.1.35-rc2 (2017-06-14)
     - OpenBSD need <sys/select.h>. Reported by Denis Fondras.
