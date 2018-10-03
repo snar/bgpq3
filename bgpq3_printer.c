@@ -19,6 +19,7 @@ extern int debug_expander;
 int bgpq3_print_json_aspath(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_bird_aspath(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_openbgpd_aspath(FILE* f, struct bgpq_expander* b);
+int bgpq3_print_openbgpd_asset(FILE* f, struct bgpq_expander* b);
 
 int
 bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
@@ -546,6 +547,27 @@ bgpq3_print_oaspath(FILE* f, struct bgpq_expander* b)
 	return 0;
 };
 
+int
+bgpq3_print_asset(FILE* f, struct bgpq_expander* b)
+{
+	switch(b->vendor) {
+	case V_JUNIPER:
+	case V_CISCO:
+	case V_CISCO_XR:
+	case V_BIRD:
+	case V_NOKIA:
+	case V_HUAWEI:
+	case V_FORMAT:
+		sx_report(SX_FATAL, "as-sets (-t) supported for json and openbgpd "
+			"only\n");
+		return -1;
+	case V_JSON:
+		return bgpq3_print_json_aspath(f,b);
+	case V_OPENBGPD:
+		return bgpq3_print_openbgpd_asset(f,b);
+	};
+};
+
 void
 bgpq3_print_jprefix(struct sx_radix_node* n, void* ff)
 {
@@ -704,6 +726,31 @@ bgpq3_print_openbgpd_prefix(struct sx_radix_node* n, void* ff)
 checkSon:
 	if(n->son)
 		bgpq3_print_openbgpd_prefix(n->son, ff);
+};
+
+int
+bgpq3_print_openbgpd_asset(FILE* f, struct bgpq_expander* b)
+{
+	int i, j, k, nc=0;
+
+	fprintf(f, "as-set %s {", b->name?b->name:"NN");
+
+	for(k=0;k<65536;k++) {
+		if(!b->asn32s[k]) continue;
+
+		for(i=0;i<8192;i++) {
+			for(j=0;j<8;j++) {
+				if(b->asn32s[k][i]&(0x80>>j)) {
+					fprintf(f, "%s%u", nc==0 ? "\n\t" : " ", k*65536+i*8+j);
+					nc++;
+					if(nc==b->aswidth)
+						nc=0;
+				};
+			};
+		};
+	};
+	fprintf(f, "\n}\n");
+	return 0;
 };
 
 int

@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host[:port]] [-S sources] [-EPz] [-f asn | -F fmt | -G asn] [-2346ABbDdJjpsUX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
+	bgpq3 [-h host[:port]] [-S sources] [-EPz] [-f asn | -F fmt | -G asn | -t] [-2346ABbDdJjpsUX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -137,6 +137,10 @@ Generate sequence numbers in IOS-style prefix-lists.
 #### -S `sources`
 
 Use specified sources only (recommended: RADB,RIPE,APNIC).
+
+#### -t
+
+Generate as-sets for OpenBGPD (OpenBSD 6.4+) and JSON formats.
 
 #### -T      
 

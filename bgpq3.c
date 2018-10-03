@@ -26,7 +26,7 @@ extern int expand_special_asn;
 int
 usage(int ecode)
 {
-	printf("\nUsage: bgpq3 [-h host[:port]] [-S sources] [-P|E|G <num>|f <num>]"
+	printf("\nUsage: bgpq3 [-h host[:port]] [-S sources] [-P|E|G <num>|f <num>|t]"
 		" [-2346ABbDdJjwXz] [-R len] <OBJECTS>...\n");
 	printf(" -2        : allow routes belonging to as23456 (transition-as) "
 		"(default: false)\n");
@@ -66,6 +66,8 @@ usage(int ecode)
 		" RADB,RIPE,APNIC)\n");
 	printf(" -s        : generate sequence numbers in prefix-lists (IOS only)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
+	printf(" -t        : generate as-sets for OpenBGPD (OpenBSD 6.4+) and "
+		"JSON formats\n");
 	printf(" -U        : generate config for Huawei (Cisco IOS by default)\n");
 	printf(" -W len    : specify max-entries on as-path line (use 0 for "
 		"infinity)\n");
@@ -80,7 +82,7 @@ usage(int ecode)
 void
 exclusive()
 {
-	fprintf(stderr,"-E, -f <asnum>, -G <asnum> and -P are mutually "
+	fprintf(stderr,"-E, -f <asnum>, -G <asnum>, -P and -t are mutually "
 		"exclusive\n");
 	exit(1);
 };
@@ -142,7 +144,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:Th:UwXsz"))
+	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:tTh:UwXsz"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -297,6 +299,10 @@ main(int argc, char* argv[])
 		case 'N': if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_NOKIA;
 			break;
+		case 't':
+			if(expander.generation) exclusive();
+			expander.generation=T_ASSET;
+			break;
 		case 'T': pipelining=0;
 			break;
 		case 's': expander.sequence=1;
@@ -371,7 +377,7 @@ main(int argc, char* argv[])
 			"for BIRD output\n");
 	};
 	if(expander.vendor==V_JSON && expander.generation!=T_PREFIXLIST &&
-		expander.generation!=T_ASPATH) {
+		expander.generation!=T_ASPATH && expander.generation!=T_ASSET) {
 		sx_report(SX_FATAL, "Sorry, only prefix-lists and as-paths supported "
 			"for JSON output\n");
 	};
@@ -391,6 +397,11 @@ main(int argc, char* argv[])
 	if(expander.generation==T_ROUTE_FILTER_LIST && expander.vendor!=V_JUNIPER) {
 		sx_report(SX_FATAL, "Route-filter-lists (-z) supported for Juniper (-J)"
 			" output only\n");
+	};
+	if(expander.generation==T_ASSET && expander.vendor!=V_JSON &&
+		expander.vendor!=V_OPENBGPD) {
+		sx_report(SX_FATAL, "As-Sets (-t) supported for JSON (-j) and OpenBGPD"
+			" (-B) output only\n");
 	};
 
 	if(expander.asdot && expander.vendor!=V_CISCO) {
@@ -606,6 +617,8 @@ main(int argc, char* argv[])
 		case T_ASPATH: bgpq3_print_aspath(stdout,&expander);
 			break;
 		case T_OASPATH: bgpq3_print_oaspath(stdout,&expander);
+			break;
+		case T_ASSET: bgpq3_print_asset(stdout,&expander);
 			break;
 		case T_PREFIXLIST: bgpq3_print_prefixlist(stdout,&expander);
 			break;
