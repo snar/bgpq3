@@ -140,7 +140,7 @@ Use specified sources only (recommended: RADB,RIPE,APNIC).
 
 #### -t
 
-Generate as-sets for OpenBGPD (OpenBSD 6.4+) and JSON formats.
+Generate as-sets for OpenBGPD (OpenBSD 6.4+), BIRD and JSON formats.
 
 #### -T      
 

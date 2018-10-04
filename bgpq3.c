@@ -66,8 +66,8 @@ usage(int ecode)
 		" RADB,RIPE,APNIC)\n");
 	printf(" -s        : generate sequence numbers in prefix-lists (IOS only)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
-	printf(" -t        : generate as-sets for OpenBGPD (OpenBSD 6.4+) and "
-		"JSON formats\n");
+	printf(" -t        : generate as-sets for OpenBGPD (OpenBSD 6.4+), BIRD "
+		"and JSON formats\n");
 	printf(" -U        : generate config for Huawei (Cisco IOS by default)\n");
 	printf(" -W len    : specify max-entries on as-path line (use 0 for "
 		"infinity)\n");
