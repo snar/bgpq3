@@ -372,14 +372,14 @@ main(int argc, char* argv[])
 			"supported for IOS XR\n");
 	};
 	if(expander.vendor==V_BIRD && expander.generation!=T_PREFIXLIST &&
-		expander.generation!=T_ASPATH) {
-		sx_report(SX_FATAL, "Sorry, only prefix-lists and as-paths supported "
-			"for BIRD output\n");
+		expander.generation!=T_ASPATH && expander.generation!=T_ASSET) {
+		sx_report(SX_FATAL, "Sorry, only prefix-lists and as-paths/as-sets "
+			"supported for BIRD output\n");
 	};
 	if(expander.vendor==V_JSON && expander.generation!=T_PREFIXLIST &&
 		expander.generation!=T_ASPATH && expander.generation!=T_ASSET) {
-		sx_report(SX_FATAL, "Sorry, only prefix-lists and as-paths supported "
-			"for JSON output\n");
+		sx_report(SX_FATAL, "Sorry, only prefix-lists and as-paths/as-sets "
+			"supported for JSON output\n");
 	};
 	if(expander.vendor==V_FORMAT && expander.generation!=T_PREFIXLIST)
 		sx_report(SX_FATAL, "Sorry, only prefix-lists supported in formatted "
@@ -399,9 +399,9 @@ main(int argc, char* argv[])
 			" output only\n");
 	};
 	if(expander.generation==T_ASSET && expander.vendor!=V_JSON &&
-		expander.vendor!=V_OPENBGPD) {
-		sx_report(SX_FATAL, "As-Sets (-t) supported for JSON (-j) and OpenBGPD"
-			" (-B) output only\n");
+		expander.vendor!=V_OPENBGPD && expander.vendor!=V_BIRD) {
+		sx_report(SX_FATAL, "As-Sets (-t) supported for JSON (-j), OpenBGPD "
+			"(-B) and BIRD (-b) output only\n");
 	};
 
 	if(expander.asdot && expander.vendor!=V_CISCO) {
