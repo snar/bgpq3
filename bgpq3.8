@@ -39,7 +39,7 @@
 .Fl G Ar asn 
 .Fl t
 .Oc
-.Op Fl 2346ABbDdJjNsXU
+.Op Fl 2346ABbDdJjNnsXU
 .Op Fl a Ar asn
 .Op Fl r Ar len
 .Op Fl R Ar len
@@ -102,8 +102,10 @@ maximum prefix-length of accepted prefixes (default: 32 for IPv4 and
 128 for IPv6).
 .It Fl M Ar match 
 extra match conditions for Juniper route-filters.
+.It Fl n
+generate config for Nokia SR OS MD-CLI (Cisco IOS by default)
 .It Fl N
-generate config for Nokia SR OS (Cisco IOS by default).
+generate config for Nokia SR OS classic CLI (Cisco IOS by default).
 .It Fl p
 accept routes registered for private ASNs (default: disabled)
 .It Fl P

@@ -27,14 +27,13 @@ int
 usage(int ecode)
 {
 	printf("\nUsage: bgpq3 [-h host[:port]] [-S sources] [-P|E|G <num>|f <num>|t]"
-		" [-2346ABbDdJjwXz] [-R len] <OBJECTS>...\n");
+		" [-2346ABbDdJjNnwXz] [-R len] <OBJECTS>...\n");
 	printf(" -2        : allow routes belonging to as23456 (transition-as) "
 		"(default: false)\n");
 	printf(" -3        : assume that your device is asn32-safe\n");
 	printf(" -4        : generate IPv4 prefix-lists (default)\n");
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
-	printf(" -A        : try to aggregate Cisco prefix-lists or Juniper "
-			"route-filters\n             as much as possible\n");
+	printf(" -A        : try to aggregate prefix-lists/route-filters\n");
 	printf(" -B        : generate OpenBGPD output (Cisco IOS by default)\n");
 	printf(" -b        : generate BIRD output (Cisco IOS by default)\n");
 	printf(" -D        : use asdot notation in as-path (Cisco only)\n");
@@ -57,7 +56,10 @@ usage(int ecode)
 	printf(" -L depth  : limit recursion depth (default: unlimited)\n"),
 	printf(" -l name   : use specified name for generated access/prefix/.."
 		" list\n");
-	printf(" -N        : generate config for Nokia SR OS (Cisco IOS by default)\n");
+	printf(" -N        : generate config for Nokia SR OS classic CLI "
+		"(Cisco IOS by default)\n");
+	printf(" -n        : generate config for Nokia SR OS MD-CLI (Cisco IOS "
+		"by default)\n");
 	printf(" -P        : generate prefix-list (default, just for backward"
 		" compatibility)\n");
 	printf(" -R len    : allow more specific routes up to specified masklen\n");
@@ -91,8 +93,8 @@ void
 vendor_exclusive()
 {
 	fprintf(stderr, "-b (BIRD), -B (OpenBGPD), -F (formatted), -J (JunOS), "
-		"-j (JSON), -N (NOKIA SR OS), -U (Huawei) and -X (IOS XR) options "
-		"are mutually exclusive\n");
+		"-j (JSON), -N (Nokia SR OS classic), -n (Nokia SR OS MD-CLI), "
+		"-U (Huawei) and -X (IOS XR) options are mutually exclusive\n");
 	exit(1);
 };
 
@@ -144,7 +146,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NW:Ppr:R:G:tTh:UwXsz"))
+	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NnW:Ppr:R:G:tTh:UwXsz"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -299,6 +301,9 @@ main(int argc, char* argv[])
 		case 'N': if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_NOKIA;
 			break;
+		case 'n': if(expander.vendor) vendor_exclusive();
+			expander.vendor=V_NOKIA_MD;
+			break;
 		case 't':
 			if(expander.generation) exclusive();
 			expander.generation=T_ASSET;
@@ -346,7 +351,7 @@ main(int argc, char* argv[])
 				expander.aswidth=8;
 			} else if(expander.vendor==V_BIRD) {
 				expander.aswidth=10;
-			} else if(expander.vendor==V_NOKIA) {
+			} else if(expander.vendor==V_NOKIA || expander.vendor==V_NOKIA_MD) {
 				expander.aswidth=8;
 			};
 		} else if(expander.generation==T_OASPATH) {
@@ -356,7 +361,7 @@ main(int argc, char* argv[])
 				expander.aswidth=7;
 			} else if(expander.vendor==V_JUNIPER) {
 				expander.aswidth=8;
-			} else if(expander.vendor==V_NOKIA) {
+			} else if(expander.vendor==V_NOKIA || expander.vendor==V_NOKIA_MD) {
 				expander.aswidth=8;
 			};
 		};
@@ -430,7 +435,15 @@ main(int argc, char* argv[])
 
 	if(aggregate && expander.vendor==V_NOKIA) {
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) is not supported on "
-			"Nokia equipment (-N)\n");
+			"Nokia classic CLI (-N)\n");
+		exit(1);
+	};
+
+	if(aggregate && expander.vendor==V_NOKIA_MD &&
+		expander.generation!=T_EACL) {
+		sx_report(SX_FATAL, "Sorry, aggregation (-A) is not supported with "
+			"match-lists on Nokia MD-CLI. You can try prefix-lists (-E) "
+			"instead\n");
 		exit(1);
 	};
 
@@ -496,10 +509,10 @@ main(int argc, char* argv[])
 		if(expander.vendor==V_NOKIA) {
 			if(refine) {
 				sx_report(SX_FATAL, "Sorry, more-specific filters (-R %u) "
-					"not supported on Nokia (-N)\n", refine);
+					"not supported on Nokia classic CLI (-N)\n", refine);
 			} else {
 				sx_report(SX_FATAL, "Sorry, more-specific filters (-r %u) "
-					"not supported on Nokia (-N)\n", refineLow);
+					"not supported on Nokia classic CLI (-N)\n", refineLow);
 			};
 		};
 

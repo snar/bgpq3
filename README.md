@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host[:port]] [-S sources] [-EPz] [-f asn | -F fmt | -G asn | -t] [-2346ABbDdJjpsUX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
+	bgpq3 [-h host[:port]] [-S sources] [-EPz] [-f asn | -F fmt | -G asn | -t] [-2346ABbDdJjNnpsUX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -98,9 +98,13 @@ Maximum length of accepted prefixes (default: `32` for IPv4, `128` for IPv6).
 
 Extra match conditions for Juniper route-filters. See the examples section.
 
+#### -n
+
+Generate config for Nokia SR OS (former Alcatel-Lucent) MD-CLI (default: Cisco)
+
 #### -N
 
-Generate config for Nokia SR OS (former Alcatel-Lucent) (default: Cisco)
+Generate config for Nokia SR OS (former Alcatel-Lucent) classic CLI (default: Cisco)
 
 #### -l `name`
 

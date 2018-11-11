@@ -19,7 +19,8 @@ typedef enum {
 	V_OPENBGPD,
 	V_FORMAT,
 	V_NOKIA,
-	V_HUAWEI
+	V_HUAWEI,
+	V_NOKIA_MD
 } bgpq_vendor_t;
 
 typedef enum {
