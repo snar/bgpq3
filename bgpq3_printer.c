@@ -1405,7 +1405,7 @@ bgpq3_print_prefixlist(FILE* f, struct bgpq_expander* b)
 		case V_OPENBGPD: return bgpq3_print_openbgpd_prefixlist(f,b);
 		case V_FORMAT: return bgpq3_print_format_prefixlist(f,b);
 		case V_NOKIA: return bgpq3_print_nokia_prefixlist(f,b);
-		case V_NOKIA_MD: return bgpq3_print_nokia_md_prefixlist(f,b);
+		case V_NOKIA_MD: return bgpq3_print_nokia_md_ipprefixlist(f,b);
 		case V_HUAWEI: return bgpq3_print_huawei_prefixlist(f,b);
 	};
 	return 0;
@@ -1423,7 +1423,7 @@ bgpq3_print_eacl(FILE* f, struct bgpq_expander* b)
 		case V_OPENBGPD: return bgpq3_print_openbgpd_prefixset(f,b);
 		case V_FORMAT: sx_report(SX_FATAL, "unreachable point\n");
 		case V_NOKIA: return bgpq3_print_nokia_ipprefixlist(f,b);
-		case V_NOKIA_MD: return bgpq3_print_nokia_md_ipprefixlist(f,b);
+		case V_NOKIA_MD: return bgpq3_print_nokia_md_prefixlist(f,b);
 		case V_HUAWEI: return sx_report(SX_FATAL, "unreachable point\n");
 	};
 	return 0;

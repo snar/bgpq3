@@ -440,9 +440,9 @@ main(int argc, char* argv[])
 	};
 
 	if(aggregate && expander.vendor==V_NOKIA_MD &&
-		expander.generation!=T_EACL) {
+		expander.generation!=T_PREFIXLIST) {
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) is not supported with "
-			"match-lists on Nokia MD-CLI. You can try prefix-lists (-E) "
+			"match-lists (-E) on Nokia MD-CLI. You can try prefix-lists (-P) "
 			"instead\n");
 		exit(1);
 	};
