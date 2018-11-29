@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <netdb.h>
 #include <limits.h>
 #include <string.h>
@@ -886,35 +887,19 @@ bgpq_expand(struct bgpq_expander* b)
 					if(b->asn32s[k][i]&(0x80>>j)) {
 						if(b->family==AF_INET6) {
 							if(!pipelining) {
-								if(k>0)
-									bgpq_expand_irrd(b, bgpq_expanded_v6prefix,
-										NULL, "!6as%u.%u\r\n", k, i*8+j);
-								else
-									bgpq_expand_irrd(b, bgpq_expanded_v6prefix,
-										NULL,"!6as%u\r\n", i*8+j);
+								bgpq_expand_irrd(b, bgpq_expanded_v6prefix,
+										NULL, "!6as%" PRId64 "\n", (k<<16)+i*8+j);
 							} else {
-								if(k>0)
-									bgpq_pipeline(b, bgpq_expanded_v6prefix,
-										NULL, "!6as%u.%u\r\n", k, i*8+j);
-								else
-									bgpq_pipeline(b,bgpq_expanded_v6prefix,
-										NULL, "!6as%u\r\n", i*8+j);
+								bgpq_pipeline(b, bgpq_expanded_v6prefix,
+										NULL, "!6as%" PRId64 "\n", (k<<16)+i*8+j);
 							};
 						} else {
 							if(!pipelining) {
-								if(k>0)
-									bgpq_expand_irrd(b, bgpq_expanded_prefix,
-										NULL,"!gas%u.%u\n", k, i*8+j);
-								else
-									bgpq_expand_irrd(b, bgpq_expanded_prefix,
-										NULL,"!gas%u\n", i*8+j);
+								bgpq_expand_irrd(b, bgpq_expanded_prefix,
+										NULL, "!gas%" PRId64 "\n", (k<<16)+i*8+j);
 							} else {
-								if(k>0)
-									bgpq_pipeline(b, bgpq_expanded_prefix,
-										NULL, "!gas%u.%u\n", k, i*8+j);
-								else
-									bgpq_pipeline(b, bgpq_expanded_prefix,
-										NULL, "!gas%u\n", i*8+j);
+								bgpq_pipeline(b, bgpq_expanded_prefix,
+										NULL, "!gas%" PRId64 "\n", (k<<16)+i*8+j);
 							};
 						};
 					};
