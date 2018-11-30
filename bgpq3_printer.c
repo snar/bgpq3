@@ -642,22 +642,16 @@ int
 bgpq3_print_asset(FILE* f, struct bgpq_expander* b)
 {
 	switch(b->vendor) {
-	case V_JUNIPER:
-	case V_CISCO:
-	case V_CISCO_XR:
-	case V_NOKIA:
-	case V_NOKIA_MD:
-	case V_HUAWEI:
-	case V_FORMAT:
-		sx_report(SX_FATAL, "as-sets (-t) supported for JSON, OpenBGPD "
-			"and BIRD only\n");
-		return -1;
 	case V_JSON:
 		return bgpq3_print_json_aspath(f,b);
 	case V_OPENBGPD:
 		return bgpq3_print_openbgpd_asset(f,b);
 	case V_BIRD:
 		return bgpq3_print_bird_aspath(f,b);
+	default:
+		sx_report(SX_FATAL, "as-sets (-t) supported for JSON, OpenBGPD "
+			"and BIRD only\n");
+		return -1;
 	};
 };
 
