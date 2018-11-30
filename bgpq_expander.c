@@ -10,6 +10,7 @@
 
 #include <assert.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
@@ -384,33 +385,24 @@ bgpq_pipeline(struct bgpq_expander* b,
 static void
 bgpq_expander_invalidate_asn(struct bgpq_expander* b, const char* q)
 {
-	   if (!strncmp(q, "!gas", 4) || !strncmp(q, "!6as", 4)) {
-		   char* eptr;
-		   unsigned long asn = strtoul(q+4, &eptr, 10), asn0, asn1 = 0;
-		   if (!asn || asn == ULONG_MAX || asn >= 4294967295 ||
-			   (eptr && *eptr != '\n' && *eptr != '\r' && *eptr != '.')) {
-			   sx_report(SX_ERROR, "some problem invalidating asn %s\n", q);
-			   return;
-		   };
-		   if (eptr && (*eptr == '\r' || *eptr == '\n')) {
-			   asn1 = asn;
-			   asn0 = 0;
-		   } else if (eptr && *eptr == '.') {
-			   asn0 = asn;
-			   asn1 = strtoul(eptr+1, &eptr, 10);
-		   };
-		   if (asn >= 65536) {
-			   asn1 = asn % 65536;
-			   asn0 = asn / 65536;
-		   };
-		   if (!b->asn32s[asn0] ||
-			   !(b->asn32s[asn0][asn1/8] & (0x80 >> (asn1 % 8)))) {
-			   sx_report(SX_NOTICE, "strange, invalidating inactive asn %lu(%s)\n",
-				   asn, q);
-		   } else {
-			   b->asn32s[asn0][asn1/8] &= ~(0x80 >> (asn1 % 8));
-		   };
-	   };
+	if (!strncmp(q, "!gas", 4) || !strncmp(q, "!6as", 4)) {
+		char* eptr;
+		unsigned long asn = strtoul(q+4, &eptr, 10), asn0, asn1 = 0;
+		if (!asn || asn == ULONG_MAX || asn >= 4294967295 ||
+			(eptr && *eptr != '\n')) {
+			sx_report(SX_ERROR, "some problem invalidating asn %s\n", q);
+			return;
+		};
+		asn1 = asn % 65536;
+		asn0 = asn / 65536;
+		if (!b->asn32s[asn0] ||
+			!(b->asn32s[asn0][asn1/8] & (0x80 >> (asn1 % 8)))) {
+			sx_report(SX_NOTICE, "strange, invalidating inactive asn %lu(%s)\n",
+				asn, q);
+		} else {
+			b->asn32s[asn0][asn1/8] &= ~(0x80 >> (asn1 % 8));
+		};
+	};
 };
 
 static void
@@ -869,7 +861,7 @@ bgpq_expand(struct bgpq_expander* b)
 	};
 
 	if(b->generation>=T_PREFIXLIST || b->validate_asns) {
-		unsigned i, j, k;
+		uint32_t i, j, k;
 		STAILQ_FOREACH(mc, &b->rsets, next) {
 			if(b->family==AF_INET) {
 				bgpq_expand_irrd(b, bgpq_expanded_prefix, NULL, "!i%s,1\n",
@@ -886,35 +878,19 @@ bgpq_expand(struct bgpq_expander* b)
 					if(b->asn32s[k][i]&(0x80>>j)) {
 						if(b->family==AF_INET6) {
 							if(!pipelining) {
-								if(k>0)
-									bgpq_expand_irrd(b, bgpq_expanded_v6prefix,
-										NULL, "!6as%u.%u\r\n", k, i*8+j);
-								else
-									bgpq_expand_irrd(b, bgpq_expanded_v6prefix,
-										NULL,"!6as%u\r\n", i*8+j);
+								bgpq_expand_irrd(b, bgpq_expanded_v6prefix,
+									NULL, "!6as%" PRIu32 "\n", (k<<16)+i*8+j);
 							} else {
-								if(k>0)
-									bgpq_pipeline(b, bgpq_expanded_v6prefix,
-										NULL, "!6as%u.%u\r\n", k, i*8+j);
-								else
-									bgpq_pipeline(b,bgpq_expanded_v6prefix,
-										NULL, "!6as%u\r\n", i*8+j);
+								bgpq_pipeline(b, bgpq_expanded_v6prefix,
+									NULL, "!6as%" PRIu32 "\n", (k<<16)+i*8+j);
 							};
 						} else {
 							if(!pipelining) {
-								if(k>0)
-									bgpq_expand_irrd(b, bgpq_expanded_prefix,
-										NULL,"!gas%u.%u\n", k, i*8+j);
-								else
-									bgpq_expand_irrd(b, bgpq_expanded_prefix,
-										NULL,"!gas%u\n", i*8+j);
+								bgpq_expand_irrd(b, bgpq_expanded_prefix,
+									NULL, "!gas%" PRIu32 "\n", (k<<16)+i*8+j);
 							} else {
-								if(k>0)
-									bgpq_pipeline(b, bgpq_expanded_prefix,
-										NULL, "!gas%u.%u\n", k, i*8+j);
-								else
-									bgpq_pipeline(b, bgpq_expanded_prefix,
-										NULL, "!gas%u\n", i*8+j);
+								bgpq_pipeline(b, bgpq_expanded_prefix,
+									NULL, "!gas%" PRIu32 "\n", (k<<16)+i*8+j);
 							};
 						};
 					};
