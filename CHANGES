@@ -16,6 +16,8 @@ untagged yet (2018-11-11)
     JSON formats. Based on submission by Claudio Jeker.
     - new flag -n: support for Nokia SR OS MD-CLI. Based on examples
     provided by Greg Hankins.
+    - irrd queries for asn32 changed from asdot to asplain notation.
+    Thanks to Troy2914 for heads up.
 
 0.1.35-rc2 (2017-06-14)
     - OpenBSD need <sys/select.h>. Reported by Denis Fondras.
