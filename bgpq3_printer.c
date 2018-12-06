@@ -701,6 +701,8 @@ int
 bgpq3_print_json_aspath(FILE* f, struct bgpq_expander* b)
 {
 	int nc=0, i, j, k;
+
+	needscomma = 0;
 	fprintf(f,"{\"%s\": [", b->name?b->name:"NN");
 
 	for(k=0;k<65536;k++) {
@@ -1231,6 +1233,7 @@ bgpq3_print_cisco_prefixlist(FILE* f, struct bgpq_expander* b)
 int
 bgpq3_print_ciscoxr_prefixlist(FILE* f, struct bgpq_expander* b)
 {
+	needscomma = 0;
 	bname=b->name ? b->name : "NN";
 	fprintf(f,"no prefix-set %s\nprefix-set %s\n", bname, bname);
 	sx_radix_tree_foreach(b->tree,bgpq3_print_cprefixxr,f);
@@ -1241,6 +1244,7 @@ bgpq3_print_ciscoxr_prefixlist(FILE* f, struct bgpq_expander* b)
 int
 bgpq3_print_json_prefixlist(FILE* f, struct bgpq_expander* b)
 {
+	needscomma = 0;
 	fprintf(f,"{ \"%s\": [",
 		b->name?b->name:"NN");
 	sx_radix_tree_foreach(b->tree,bgpq3_print_json_prefix,f);
@@ -1251,6 +1255,7 @@ bgpq3_print_json_prefixlist(FILE* f, struct bgpq_expander* b)
 int
 bgpq3_print_bird_prefixlist(FILE* f, struct bgpq_expander* b)
 {
+	needscomma = 0;
 	if (!sx_radix_tree_empty(b->tree)) {
 		fprintf(f,"%s = [",
 			b->name?b->name:"NN");
