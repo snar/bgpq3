@@ -30,6 +30,7 @@ clean:
 	rm -rf *.o *.core core.* core
 
 install: bgpq3
+	if test ! -d @bindir@ ; then mkdir -p @bindir@ ; fi
 	${INSTALL} -c -s -m 755 bgpq3 @bindir@
 	if test ! -d @prefix@/man/man8 ; then mkdir -p @prefix@/man/man8 ; fi
 	${INSTALL} -m 644 bgpq3.8 @prefix@/man/man8
