@@ -756,6 +756,9 @@ bgpq_expand(struct bgpq_expander* b)
 	int fd=-1, err, ret;
 	struct sx_slentry* mc;
 	struct addrinfo hints, *res=NULL, *rp;
+	struct linger sl;
+	sl.l_onoff = 1;
+	sl.l_linger = 5;
 	memset(&hints,0,sizeof(struct addrinfo));
 
 	hints.ai_socktype=SOCK_STREAM;
@@ -773,6 +776,13 @@ bgpq_expand(struct bgpq_expander* b)
 			if(errno==EPROTONOSUPPORT || errno==EAFNOSUPPORT) continue;
 			sx_report(SX_ERROR,"Unable to create socket: %s\n",
 				strerror(errno));
+			exit(1);
+		};
+		if (setsockopt(fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(struct linger))) {
+			sx_report(SX_ERROR,"Unable to set linger on socket: %s\n",
+				strerror(errno));
+			shutdown(fd, SHUT_RDWR);
+			close(fd);
 			exit(1);
 		};
 		err=connect(fd,rp->ai_addr,rp->ai_addrlen);
@@ -906,6 +916,11 @@ bgpq_expand(struct bgpq_expander* b)
 	};
 
 	write(fd, "!q\n",3);
+	if (pipelining) {
+		int fl = fcntl(fd, F_GETFL);
+		fl &= ~O_NONBLOCK;
+		fcntl(fd, F_SETFL, fl);
+	};
 	shutdown(fd, SHUT_RDWR);
 	close(fd);
 	return 1;
