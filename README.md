@@ -13,7 +13,9 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-The bgpq3 utility is used to generate configuration (prefix-lists, extended access-lists, policy-statement terms and as-path lists) based on RADB data.
+The bgpq3 utility is used to generate configuration (prefix-lists,
+extended access-lists, policy-statement terms and as-path lists)
+based on RADB data.
 
 The options are as follows:
 
