@@ -13,7 +13,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-The bgpq3 utility used to generate Cisco and Juniper prefix-lists,
+The bgpq3 utility used to generate Cisco, Juniper, Nokia and Huawei prefix-lists,
 extended access-lists, policy-statement terms and as-path lists based on
 RADB data.
 
