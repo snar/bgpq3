@@ -1,7 +1,7 @@
 NAME
 ----
 
-`bgpq3` - bgp filtering automation for Cisco and Juniper routers
+`bgpq3` - bgp filtering automation tool
 
 SYNOPSIS
 --------
@@ -13,9 +13,9 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-The bgpq3 utility used to generate Cisco and Juniper prefix-lists,
-extended access-lists, policy-statement terms and as-path lists based on
-RADB data.
+The bgpq3 utility used to generate configuration (prefix-lists,
+extended access-lists, policy-statement terms and as-path lists)
+based on RADB data.
 
 The options are as follows:
 
