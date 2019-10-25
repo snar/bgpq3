@@ -433,16 +433,24 @@ main(int argc, char* argv[])
 		exit(1);
 	};
 
-	if(aggregate && expander.vendor==V_NOKIA) {
-		sx_report(SX_FATAL, "Sorry, aggregation (-A) is not supported on "
-			"Nokia classic CLI (-N)\n");
-		exit(1);
-	};
-
-	if(aggregate && expander.vendor==V_NOKIA_MD &&
+	if(aggregate && (expander.vendor==V_NOKIA_MD || expander.vendor==V_NOKIA) &&
 		expander.generation!=T_PREFIXLIST) {
 		sx_report(SX_FATAL, "Sorry, aggregation (-A) is not supported with "
-			"match-lists (-E) on Nokia MD-CLI. You can try prefix-lists (-P) "
+			"ip-prefix-lists (-E) on Nokia. You can try prefix-lists (-P) "
+			"instead\n");
+		exit(1);
+	};
+	if(refine && (expander.vendor==V_NOKIA_MD || expander.vendor==V_NOKIA) &&
+		expander.generation!=T_PREFIXLIST) {
+		sx_report(SX_FATAL, "Sorry, more-specifics (-R) is not supported with "
+			"ip-prefix-lists (-E) on Nokia. You can try prefix-lists (-P) "
+			"instead\n");
+		exit(1);
+	};
+	if(refineLow && (expander.vendor==V_NOKIA_MD || expander.vendor==V_NOKIA) &&
+		expander.generation!=T_PREFIXLIST) {
+		sx_report(SX_FATAL, "Sorry, more-specifics (-r) is not supported with "
+			"ip-prefix-lists (-E) on Nokia. You can try prefix-lists (-P) "
 			"instead\n");
 		exit(1);
 	};
@@ -503,16 +511,6 @@ main(int argc, char* argv[])
 					"is not supported for Juniper prefix-lists.\n"
 					"Use route-filters (-E) or route-filter-lists (-z) "
 					"instead\n", refineLow);
-			};
-		};
-
-		if(expander.vendor==V_NOKIA) {
-			if(refine) {
-				sx_report(SX_FATAL, "Sorry, more-specific filters (-R %u) "
-					"not supported on Nokia classic CLI (-N)\n", refine);
-			} else {
-				sx_report(SX_FATAL, "Sorry, more-specific filters (-r %u) "
-					"not supported on Nokia classic CLI (-N)\n", refineLow);
 			};
 		};
 

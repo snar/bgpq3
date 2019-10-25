@@ -1,3 +1,10 @@
+0.1.36-pre (2019-10-25):
+    - minor documentation cleanup: bgpq3 supports much more vendors
+    than just Cisco and Juniper. Copyright years updated.
+    - Nokia SR OS "classic" actually supports aggregation and
+    and more-specific filtering in prefix-lists. Thanks to mfisher128
+    for reporting.
+
 0.1.35 (2018-11-30):
     - initial support for Juniper route-filter-lists (JunOS 16.2+).
     - too large (>124bytes) sources list was not handled correctly.
