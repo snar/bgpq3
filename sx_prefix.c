@@ -209,7 +209,7 @@ sx_prefix_range_parse(struct sx_radix_tree* tree, int af, int maxlen,
 	};
 	*d = '^';
 	if (af && p.family != af) {
-		sx_report(SX_ERROR, "Ignoring prefix %s, wrong af %i\n", text,
+		SX_DEBUG(debug_expander, "Ignoring prefix %s, wrong af %i\n", text,
 			p.family);
 		return 0;
 	};
