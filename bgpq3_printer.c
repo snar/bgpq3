@@ -1156,7 +1156,7 @@ bgpq3_print_juniper_routefilter(FILE* f, struct bgpq_expander* b)
 		jrfilter_prefixed=1;
 		sx_radix_tree_foreach(b->tree,bgpq3_print_jrfilter,f);
 	} else {
-		fprintf(f,"    route-filter %s/0 orlonger reject;\n",
+		fprintf(f,"    %s/0 orlonger reject;\n",
 			b->tree->family == AF_INET ? "0.0.0.0" : "::");
 	};
 	if(c) {
@@ -1429,7 +1429,7 @@ bgpq3_print_juniper_route_filter_list(FILE* f, struct bgpq_expander* b)
 	fprintf(f, "policy-options {\nreplace:\n  route-filter-list %s {\n",
 		b->name?b->name:"NN");
 	if (sx_radix_tree_empty(b->tree)) {
-		fprintf(f, "    route-filter %s/0 orlonger reject;\n",
+		fprintf(f, "    %s/0 orlonger reject;\n",
 			b->tree->family == AF_INET ? "0.0.0.0" : "::");
 	} else {
 		jrfilter_prefixed=0;
