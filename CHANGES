@@ -1,4 +1,5 @@
-0.1.36-pre (2019-11-08):
+0.1.36-pre (2020-01-31):
+    - fix empty route-filter-lists generation. Reported by Antti Ristimäki.
     - minor documentation cleanup: bgpq3 supports much more vendors
     than just Cisco and Juniper. Copyright years updated.
     - Nokia SR OS "classic" actually supports aggregation and
