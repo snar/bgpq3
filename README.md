@@ -140,7 +140,7 @@ Generate sequence numbers in IOS-style prefix-lists.
 
 #### -S `sources`
 
-Use specified sources only (recommended: RADB,RIPE,APNIC).
+Use specified database sources only (example: RIPE,APNIC,RADB).
 
 #### -t
 
@@ -313,6 +313,53 @@ be in one line (sometimes it makes sense):
 
 	user@host:~>bgpq3 -6F "%n/%l; " as-eltel
 	2001:1b00::/32; 2620:4f:8000::/48; 2a04:bac0::/29; 2a05:3a80::/48;
+
+NOTES ON 'Database Sources' (-S) flag
+-------------------------------------
+
+By default `bgpq3` trusts to data from all databases mirrored into RADB.
+Unfortunately, not all these databases are equal in how much can we
+trust their data. RIR maintained databases (AFRINIC,ARIN,APNIC and RIPE)
+shall be trusted more than the others because they are indeed have the
+knowledge about which address space allocated to this or that ASn,
+other databases lack this knowledge and can (and, actually, do) contain
+some stale data: noone but RIRs care to remove outdated route-objects
+when address space revoked from one ASn and allocated to another.
+In order to keep their filters both compact and actual, `bgpq3` users
+are encouraged to use '-S' flag to limit database sources to only
+ones they trust.
+
+General recommendations:
+* use minimal set of RIR databases (only those in which you and your
+customers have registered route-objects). Keep RIR of your home region
+first in the list.
+* use non-RIR databases only when operating in LACNIC region (for some
+reason LACNIC does not export their data to RADB) or when you are unable
+to make your customers maintain their data in RIR databases.
+* avoid using RIPE-NONAUTH as trusted source: these records were created
+in RIPE databases but for address space allocated to different RIRs,
+so RIPE had no chance to check validity of this route.
+
+Note on source ordering: order matters. When expanding as-sets,
+`IRRd` sequentally checks all sources for matching object and stops
+on first found entry. So, in case when as-set registered in multiple
+databases (with different content), generated filters may differ
+depending on source order:
+
+    snar@chumadan:~&gt;bgpq3 -S RIPE,RADB as-space
+    no ip prefix-list NN
+    ip prefix-list NN permit 195.190.32.0/19
+
+    snar@chumadan:~&gt;bgpq3 -S RADB,RIPE as-space
+    no ip prefix-list NN
+    ip prefix-list NN permit 45.4.4.0/22
+    ip prefix-list NN permit 45.4.132.0/22
+    ip prefix-list NN permit 45.6.128.0/22
+    ip prefix-list NN permit 45.65.184.0/22
+    [...]
+
+Example: as we are operating mostly in Europe and APAC, we generate most
+of our filters with '-S RIPE,APNIC,RADB'.
 
 DIAGNOSTICS
 -----------
