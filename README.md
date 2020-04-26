@@ -337,7 +337,7 @@ first in the list.
 reason LACNIC does not export their data to RADB) or when you are unable
 to make your customers maintain their data in RIR databases.
 * avoid using RIPE-NONAUTH as trusted source: these records were created
-in RIPE databases but for address space allocated to different RIRs,
+in RIPE database but for address space allocated to different RIR,
 so RIPE had no chance to check validity of this route.
 
 Note on source ordering: order matters. When expanding as-sets,
@@ -346,11 +346,11 @@ on first found entry. So, in case when as-set registered in multiple
 databases (with different content), generated filters may differ
 depending on source order:
 
-    snar@chumadan:~&gt;bgpq3 -S RIPE,RADB as-space
+    snar@host:~>bgpq3 -S RIPE,RADB as-space
     no ip prefix-list NN
     ip prefix-list NN permit 195.190.32.0/19
 
-    snar@chumadan:~&gt;bgpq3 -S RADB,RIPE as-space
+    snar@host:~>bgpq3 -S RADB,RIPE as-space
     no ip prefix-list NN
     ip prefix-list NN permit 45.4.4.0/22
     ip prefix-list NN permit 45.4.132.0/22
