@@ -1,4 +1,4 @@
-0.1.36-pre (2020-02-19):
+0.1.36-pre (2020-09-25):
     - fix empty route-filter-lists generation. Reported by Antti Ristimäki.
     - minor documentation cleanup: bgpq3 supports much more vendors
     than just Cisco and Juniper. Copyright years updated.
@@ -9,6 +9,7 @@
     to debugging: it's perfectly correct to have prefixes of different
     families in route-sets. Thanks to Jay Ford for suggestion.
     - increase select timeout to 30 sec.
+    - correct spacing for IOS-XR. Reported by Mathias Wolkert.
 
 0.1.35 (2018-11-30):
     - initial support for Juniper route-filter-lists (JunOS 16.2+).

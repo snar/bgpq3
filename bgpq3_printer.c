@@ -937,13 +937,14 @@ bgpq3_print_cprefixxr(struct sx_radix_node* n, void* ff)
 	if(n->isAggregate) {
 		if(n->aggregateLow>n->prefix.masklen) {
 			fprintf(f,"%s%s ge %u le %u",
-				needscomma?",\n ":" ", prefix, n->aggregateLow,n->aggregateHi);
+				needscomma?",\n  ":"  ", prefix, n->aggregateLow,
+				n->aggregateHi);
 		} else {
-			fprintf(f,"%s%s le %u", needscomma?",\n ":" ", prefix,
+			fprintf(f,"%s%s le %u", needscomma?",\n  ":"  ", prefix,
 				n->aggregateHi);
 		};
 	} else {
-		fprintf(f,"%s%s", needscomma?",\n ":" ", prefix);
+		fprintf(f,"%s%s", needscomma?",\n  ":"  ", prefix);
 	};
 	needscomma=1;
 checkSon:
