@@ -43,7 +43,8 @@ usage(int ecode)
 		"             [ip|ipv6]-prefix-list (Nokia) or prefix-set (OpenBGPD)"
 		"\n");
 	printf(" -F fmt    : generate output in user-defined format\n");
-	printf(" -f number : generate input as-path access-list\n");
+	printf(" -f number : generate input as-path access-list (use 0 to not "
+		"enforce first AS)\n");
 	printf(" -G number : generate output as-path access-list\n");
 	printf(" -h host   : host running IRRD software (whois.radb.net by "
 		"default)\n"
@@ -77,7 +78,7 @@ usage(int ecode)
 		"registered routes\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
-	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2020\n\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2021\n\n");
 	exit(ecode);
 };
 

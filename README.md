@@ -69,6 +69,7 @@ route-filters (Juniper), [ip|ipv6]-prefix-list (Nokia) or prefix-filter
 #### -f `AS number`
 
 Generate input as-path access-list for adjacent as `AS number`.
+(Use `-f 0` to not enforce first AS)
 
 #### -F `fmt`
 
