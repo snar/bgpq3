@@ -1,4 +1,8 @@
-0.1.36-pre (2020-12-21):
+0.1.36-pre (2021-02-21):
+    - initial support for as-transparent route-servers in import as-path
+    generation: now you can use -f 0 to not enforce first asn in path.
+    No actual changes for Bird and JSON, not yet supported for Nokia
+    (including MD) and OpenBGPD. Use case reported by Mikhail Grishin.
     - correct sequencing in empty prefix-lists. Reported by Brooks Swinnerton.
     - fix empty route-filter-lists generation. Reported by Antti Ristimäki.
     - minor documentation cleanup: bgpq3 supports much more vendors

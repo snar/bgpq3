@@ -29,12 +29,12 @@ bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 	if(b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
-		if(b->asdot && b->asnumber>65535) {
+		if(b->asdot && b->asnumber>65535) { /* b->asnumber > 0 is implied */
 			fprintf(f,"ip as-path access-list %s permit ^%u.%u(_%u.%u)*$\n",
 				b->name?b->name:"NN",b->asnumber/65536,b->asnumber%65536,
 				b->asnumber/65536,b->asnumber%65536);
 			empty=0;
-		} else {
+		} else if (b->asnumber>0) {
 			fprintf(f,"ip as-path access-list %s permit ^%u(_%u)*$\n",
 				b->name?b->name:"NN",b->asnumber,b->asnumber);
 			empty=0;
@@ -46,18 +46,26 @@ bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
 		for(i=0;i<8192;i++) {
 			for(j=0;j<8;j++) {
 				if(b->asn32s[k][i]&(0x80>>j)) {
-					if(k*65536+i*8+j==b->asnumber) continue;
+					if(b->asnumber>0 && k*65536+i*8+j==b->asnumber)
+						continue;
 					if(!nc) {
-						if(b->asdot && k>0) {
+						if(b->asdot && k>0 && b->asnumber>0) {
 							fprintf(f,"ip as-path access-list %s permit"
 								" ^%u(_[0-9]+)*_(%u.%u", b->name?b->name:"NN",
 								b->asnumber,k,i*8+j);
 							empty=0;
-						} else {
+						} else if(b->asnumber>0) {
 							fprintf(f,"ip as-path access-list %s permit"
 								" ^%u(_[0-9]+)*_(%u", b->name?b->name:"NN",
 								b->asnumber,k*65536+i*8+j);
 							empty=0;
+						} else if(b->asdot && k>0) {
+							/* b->asnumber==0 is implied */
+							fprintf(f,"ip as-path access-list %s permit"
+								" ^.*(%u.%u", b->name?b->name:"NN",k,i*8+j);
+						} else {
+							fprintf(f,"ip as-path access-list %s permit"
+								" ^.*(%u",b->name?b->name:"NN",k*65536+i*8+j);
 						};
 					} else {
 						if(b->asdot && k>0) {
@@ -88,7 +96,7 @@ bgpq3_print_cisco_xr_aspath(FILE* f, struct bgpq_expander* b)
 {
 	int nc=0, i, j, k, comma=0;
 	fprintf(f, "as-path-set %s", b->name?b->name:"NN");
-	if(b->asn32s[b->asnumber/65536] &&
+	if(b->asnumber!=0 && b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65536][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
 		fprintf(f,"\n  ios-regex '^%u(_%u)*$'", b->asnumber,b->asnumber);
@@ -100,10 +108,15 @@ bgpq3_print_cisco_xr_aspath(FILE* f, struct bgpq_expander* b)
 		for(i=0;i<8192;i++) {
 			for(j=0;j<8;j++) {
 				if(b->asn32s[k][i]&(0x80>>j)) {
-					if(k*65536+i*8+j==b->asnumber) continue;
-					if(!nc) {
+					if(b->asnumber!=0 && k*65536+i*8+j==b->asnumber)
+						continue;
+					if(!nc && b->asnumber!=0) {
 						fprintf(f,"%s\n  ios-regex '^%u(_[0-9]+)*_(%u",
 							comma?",":"", b->asnumber,k*65536+i*8+j);
+						comma=1;
+					} else if(!nc) {
+						fprintf(f,"%s\n  ios-regex '^([0-9]+_)*(%u",
+							comma?",":"",k*65536+i*8+j);
 						comma=1;
 					} else {
 						fprintf(f,"|%u",k*65536+i*8+j);
@@ -225,7 +238,7 @@ bgpq3_print_juniper_aspath(FILE* f, struct bgpq_expander* b)
 	fprintf(f,"policy-options {\nreplace:\n as-path-group %s {\n",
 		b->name?b->name:"NN");
 
-	if(b->asn32s[b->asnumber/65536] &&
+	if(b->asnumber!=0 && b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65535][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
 		fprintf(f,"  as-path a%u \"^%u(%u)*$\";\n", lineNo, b->asnumber,
@@ -237,10 +250,14 @@ bgpq3_print_juniper_aspath(FILE* f, struct bgpq_expander* b)
 		for(i=0;i<8192;i++) {
 			for(j=0;j<8;j++) {
 				if(b->asn32s[k][i]&(0x80>>j)) {
-					if(k*65536+i*8+j==b->asnumber) continue;
-					if(!nc) {
+					if(b->asnumber!=0 && k*65536+i*8+j==b->asnumber)
+						continue;
+					if(!nc && b->asnumber!=0) {
 						fprintf(f,"  as-path a%u \"^%u(.)*(%u",
 							lineNo,b->asnumber,k*65536+i*8+j);
+					} else if (!nc) {
+						fprintf(f,"  as-path a%u \"^.*(%u", lineNo,
+							k*65536+i*8+j);
 					} else {
 						fprintf(f,"|%u",k*65536+i*8+j);
 					};
@@ -422,7 +439,7 @@ bgpq3_print_huawei_aspath(FILE* f, struct bgpq_expander* b)
 	fprintf(f,"undo ip as-path-filter %s\n",
 		b->name ? b->name : "NN");
 
-	if(b->asn32s[b->asnumber/65536] &&
+	if(b->asnumber!=0 && b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65535][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
 		fprintf(f,"ip as-path-filter %s permit ^%u(%u)*$\n",
@@ -434,12 +451,16 @@ bgpq3_print_huawei_aspath(FILE* f, struct bgpq_expander* b)
 		for(i=0;i<8192;i++) {
 			for(j=0;j<8;j++) {
 				if(b->asn32s[k][i]&(0x80>>j)) {
-					if(k*65536+i*8+j==b->asnumber) continue;
-					if(!nc) {
+					if(b->asnumber!=0 && k*65536+i*8+j==b->asnumber)
+						continue;
+					if(!nc && b->asnumber!=0) {
 						fprintf(f,"ip as-path-filter %s permit ^%u([0-9]+)*"
 							"_(%u",
 							b->name?b->name:"NN",b->asnumber,k*65536+i*8+j);
 						empty=0;
+					} else if (!nc) {
+						fprintf(f,"ip as-path-filter %s permit ^.*_(%u",
+							b->name?b->name:"NN",k*65536+i*8+j);
 					} else {
 						fprintf(f,"|%u",k*65536+i*8+j);
 					};
