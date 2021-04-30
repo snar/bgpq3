@@ -400,7 +400,7 @@ SEE ALSO
      for information on 'asdot' and 'asplain' notations.
 3. [Cisco documentation](http://www.cisco.com/en/US/prod/collateral/iosswrel/ps6537/ps6554/ps6599/data_sheet_C78-521821.html)
      for information on Cisco implementation of ASN32.
-4. [JunOS prefix-lists limitation](http://www.juniper.net/techpubs/en_US/junos11.4/topics/reference/configuration-statement/prefix-list-edit-policy-options.html)
+4. [JunOS prefix-lists limitation](https://www.juniper.net/documentation/us/en/software/junos/routing-policy/topics/ref/statement/prefix-list-edit-policy-options.html)
 
 AUTHOR
 ------
