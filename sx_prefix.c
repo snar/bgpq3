@@ -866,6 +866,33 @@ setGlueUpTo(struct sx_radix_node* node, void* udata)
 	};
 };
 
+static void
+sx_radix_node_hyperaggregate(struct sx_radix_node* node, unsigned max)
+{
+	if(!node->isGlue) {
+		node->isAggregate=0;
+		if(node->l)
+			sx_radix_node_foreach(node->l, setGlueUpTo, &max);
+		if(node->r)
+			sx_radix_node_foreach(node->r, setGlueUpTo, &max);
+	} else {
+		if(node->l)
+			sx_radix_node_hyperaggregate(node->l, max);
+		if(node->r)
+			sx_radix_node_hyperaggregate(node->r, max);
+	};
+};
+
+int
+sx_radix_tree_hyperaggregate(struct sx_radix_tree* tree)
+{
+	if(tree && tree->head) {
+		unsigned max = tree->family == AF_INET ? 32 : 128;
+		sx_radix_node_hyperaggregate(tree->head, max);
+	};
+	return 0;
+};
+
 int
 sx_radix_node_refine(struct sx_radix_node* node, unsigned refine)
 {

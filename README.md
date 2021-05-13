@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host[:port]] [-S sources] [-EPz] [-f asn | -F fmt | -G asn | -t] [-2346ABbDdJjNnpsUX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
+	bgpq3 [-h host[:port]] [-S sources] [-EPz] [-f asn | -F fmt | -G asn | -t] [-2346ABbDdHJjNnpsUX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -78,6 +78,10 @@ Generate output in user-defined format.
 #### -G `number`
 
 Generate output as-path access-list.
+
+#### -H
+
+Hyperaggregation (supernets-only) mode.
 
 #### -h `host[:port]`
 
@@ -361,6 +365,49 @@ depending on source order:
 
 Example: as we are operating mostly in Europe and APAC, we generate most
 of our filters with '-S RIPE,APNIC,RADB'.
+
+Note on aggregation and hyperaggregation
+----------------------------------------
+
+First, definition: aggregation is a transformation of prefix set
+into compact representation that is exactly the same as initial set,
+i.e., no prefix that is not present in original set will not be
+allowed by aggregated set and no prefix that is present in original
+set will not be denied by aggregated set.
+Example: prefixes 10.0.0.0/24 10.0.1.0/24 10.0.0.0/22 can be aggregated
+in two route filters:
+
+      ./bgpq3 -JEA 10.0.0.0/24 10.0.1.0/24 10.0.0.0/22
+      policy-options {
+       policy-statement NN {
+      replace:
+        from {
+          route-filter 10.0.0.0/22 exact;
+          route-filter 10.0.0.0/23 prefix-length-range /24-/24;
+        }
+       }
+      }
+
+and this policy will allow specified prefixes only.
+
+While aggregation is the most correct way to build filters used in
+routing policies, sometimes it makes sense to build more relaxed
+prefix-filters: for example, when generated filters will be used
+to traffic filtering it makes no sense to include second line as
+it is already covered by first one. So, in this case we can use
+'hyperaggregation' (supernets-only) mode to include only supernets
+in output:
+
+      ./bgpq3 -JH 10.0.0.0/24 10.0.1.0/24 10.0.0.0/22
+      policy-options {
+      replace:
+       prefix-list NN {
+          10.0.0.0/22;
+       }
+      }
+
+from the perspective of traffic filtering it is correct and more
+effective than just aggregation.
 
 DIAGNOSTICS
 -----------

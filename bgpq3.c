@@ -27,7 +27,7 @@ int
 usage(int ecode)
 {
 	printf("\nUsage: bgpq3 [-h host[:port]] [-S sources] [-P|E|G <num>|f <num>|t]"
-		" [-2346ABbDdJjNnwXz] [-R len] <OBJECTS>...\n");
+		" [-2346ABbDdHJjNnwXz] [-R len] <OBJECTS>...\n");
 	printf(" -2        : allow routes belonging to as23456 (transition-as) "
 		"(default: false)\n");
 	printf(" -3        : assume that your device is asn32-safe\n");
@@ -46,6 +46,7 @@ usage(int ecode)
 	printf(" -f number : generate input as-path access-list (use 0 to not "
 		"enforce first AS)\n");
 	printf(" -G number : generate output as-path access-list\n");
+	printf(" -H        : hyper-aggregation (supernets only) mode\n");
 	printf(" -h host   : host running IRRD software (whois.radb.net by "
 		"default)\n"
 		"             (use host:port to specify alternate port)\n");
@@ -141,14 +142,14 @@ main(int argc, char* argv[])
 	int c;
 	struct bgpq_expander expander;
 	int af=AF_INET, selectedipv4 = 0, exceptmode = 0;
-	int widthSet=0, aggregate=0, refine=0, refineLow=0;
+	int widthSet=0, aggregate=0, refine=0, refineLow=0, hyperaggregate=0;
 	unsigned long maxlen=0;
 
 	bgpq_expander_init(&expander,af);
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346a:AbBdDEF:S:jJf:l:L:m:M:NnW:Ppr:R:G:tTh:UwXsz"))
+	while((c=getopt(argc,argv,"2346a:AbBdDEF:HS:jJf:l:L:m:M:NnW:Ppr:R:G:tTh:UwXsz"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -178,6 +179,10 @@ main(int argc, char* argv[])
 			parseasnumber(&expander,optarg,0);
 			break;
 		case 'A':
+			if(hyperaggregate) {
+				sx_report(SX_FATAL, "-A and -H are mutually exclusive\n");
+				exit(1);
+			};
 			if(aggregate) debug_aggregation++;
 			aggregate=1;
 			break;
@@ -210,6 +215,13 @@ main(int argc, char* argv[])
 			if(expander.generation) exclusive();
 			expander.generation=T_OASPATH;
 			parseasnumber(&expander,optarg,0);
+			break;
+		case 'H':
+			if(aggregate) {
+				sx_report(SX_FATAL, "-A and -H are mutually exclusive\n");
+				exit(1);
+			};
+			hyperaggregate=1;
 			break;
 		case 'h': {
 			char* d=strchr(optarg, ':');
@@ -463,6 +475,18 @@ main(int argc, char* argv[])
 		exit(1);
 	};
 
+	if(hyperaggregate && expander.generation<T_PREFIXLIST) {
+		sx_report(SX_FATAL, "Sorry, hyperaggregation (-H) used only for "
+			"prefix-lists, extended access-lists and route-filters\n");
+		exit(1);
+	};
+
+	if(hyperaggregate && (refine || refineLow)) {
+		sx_report(SX_FATAL, "Sorry, more-specifics (-R/-r) make no sense "
+			"in hyperaggregation/supernets-only (-H) mode\n");
+		exit(1);
+	};
+
 	if (expander.sequence && expander.vendor!=V_CISCO) {
 		sx_report(SX_FATAL, "Sorry, prefix-lists sequencing (-s) supported"
 			" only for IOS\n");
@@ -629,8 +653,11 @@ main(int argc, char* argv[])
 	if(refineLow)
 		sx_radix_tree_refineLow(expander.tree, refineLow);
 
-	if(aggregate)
+	if(aggregate || hyperaggregate)
 		sx_radix_tree_aggregate(expander.tree);
+
+	if(hyperaggregate)
+		sx_radix_tree_hyperaggregate(expander.tree);
 
 	switch(expander.generation) {
 		case T_NONE: sx_report(SX_FATAL,"Unreachable point... call snar\n");

@@ -15,6 +15,7 @@
     families in route-sets. Thanks to Jay Ford for suggestion.
     - increase select timeout to 30 sec.
     - correct spacing for IOS-XR. Reported by Mathias Wolkert.
+    - hyperaggregation (supernets-only) mode.
 
 0.1.35 (2018-11-30):
     - initial support for Juniper route-filter-lists (JunOS 16.2+).
