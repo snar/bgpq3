@@ -329,7 +329,7 @@ main(int argc, char* argv[])
 		case 'S': expander.sources=optarg;
 			break;
 		case 'U':
-			if(expander.vendor) exclusive();
+			if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_HUAWEI;
 			break;
 		case 'W': expander.aswidth=atoi(optarg);
