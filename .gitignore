@@ -1,7 +1,0 @@
-CVS/
-Makefile
-config.h
-*.o
-bgpq3
-config.log
-config.status
