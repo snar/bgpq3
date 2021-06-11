@@ -1,4 +1,4 @@
-0.1.36-pre (2021-02-21):
+0.1.36-pre (2021-06-11):
     - initial support for as-transparent route-servers in import as-path
     generation: now you can use -f 0 to not enforce first asn in path.
     No actual changes for Bird and JSON, not yet supported for Nokia
@@ -16,6 +16,7 @@
     - increase select timeout to 30 sec.
     - correct spacing for IOS-XR. Reported by Mathias Wolkert.
     - hyperaggregation (supernets-only) mode.
+    - correct Huawei as-path-filter generation. Thanks to JKejsjwq.
 
 0.1.35 (2018-11-30):
     - initial support for Juniper route-filter-lists (JunOS 16.2+).
