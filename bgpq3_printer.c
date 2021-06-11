@@ -354,7 +354,7 @@ bgpq3_print_nokia_aspath(FILE* f, struct bgpq_expander* b)
 		b->name ? b->name : "NN");
 	fprintf(f,"as-path-group \"%s\"\n", b->name ? b->name : "NN");
 
-	if(b->asn32s[b->asnumber/65536] &&
+	if(b->asnumber>0 && b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65535][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
 		fprintf(f,"  entry %u expression \"%u+\"\n", lineNo, b->asnumber);
@@ -365,10 +365,13 @@ bgpq3_print_nokia_aspath(FILE* f, struct bgpq_expander* b)
 		for(i=0;i<8192;i++) {
 			for(j=0;j<8;j++) {
 				if(b->asn32s[k][i]&(0x80>>j)) {
-					if(k*65536+i*8+j==b->asnumber) continue;
-					if(!nc) {
+					if(b->asnumber>0 && k*65536+i*8+j==b->asnumber) continue;
+					if(!nc && b->asnumber!=0) {
 						fprintf(f,"  entry %u expression \"%u.*[%u",
 							lineNo,b->asnumber,k*65536+i*8+j);
+					} else if(!nc) {
+						fprintf(f,"  entry %u expression \".*[%u",
+							lineNo,k*65536+i*8+j);
 					} else {
 						fprintf(f," %u",k*65536+i*8+j);
 					};
@@ -396,7 +399,7 @@ bgpq3_print_nokia_md_aspath(FILE* f, struct bgpq_expander* b)
 		b->name ? b->name : "NN");
 	fprintf(f,"as-path-group \"%s\" {\n", b->name ? b->name : "NN");
 
-	if(b->asn32s[b->asnumber/65536] &&
+	if(b->asnumber!=0 && b->asn32s[b->asnumber/65536] &&
 		b->asn32s[b->asnumber/65535][(b->asnumber%65536)/8]&
 		(0x80>>(b->asnumber%8))) {
 		fprintf(f,"  entry %u {\n    expression \"%u+\"\n  }\n", lineNo,
@@ -408,10 +411,13 @@ bgpq3_print_nokia_md_aspath(FILE* f, struct bgpq_expander* b)
 		for(i=0;i<8192;i++) {
 			for(j=0;j<8;j++) {
 				if(b->asn32s[k][i]&(0x80>>j)) {
-					if(k*65536+i*8+j==b->asnumber) continue;
-					if(!nc) {
+					if(b->asnumber!=0 && k*65536+i*8+j==b->asnumber) continue;
+					if(!nc && b->asnumber!=0) {
 						fprintf(f,"  entry %u {\n    expression \"%u.*[%u",
 							lineNo,b->asnumber,k*65536+i*8+j);
+					} else if(!nc) {
+						fprintf(f,"  entry %u {\n    expression \".*[%u",
+							lineNo,k*65536+i*8+j);
 					} else {
 						fprintf(f," %u",k*65536+i*8+j);
 					};

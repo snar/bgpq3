@@ -596,10 +596,6 @@ main(int argc, char* argv[])
 		(expander.vendor==V_OPENBGPD)) {
 		sx_report(SX_FATAL, "Sorry, -f 0 makes no sense with OpenBGPD\n");
 	};
-	if(expander.generation==T_ASPATH && expander.asnumber==0 &&
-		(expander.vendor==V_NOKIA || expander.vendor==V_NOKIA_MD)) {
-		sx_report(SX_FATAL, "Sorry, -f 0 is not yet implemented for Nokia\n");
-	};
 
 	if(!argv[0])
 		usage(1);

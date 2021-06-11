@@ -17,6 +17,7 @@
     - correct spacing for IOS-XR. Reported by Mathias Wolkert.
     - hyperaggregation (supernets-only) mode.
     - correct Huawei as-path-filter generation. Thanks to JKejsjwq.
+    - implement -f 0 (transparent route-server scenario) for Nokia too.
 
 0.1.35 (2018-11-30):
     - initial support for Juniper route-filter-lists (JunOS 16.2+).
