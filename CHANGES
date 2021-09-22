@@ -1,4 +1,4 @@
-0.1.36-pre (2021-06-11):
+0.1.36 (2021-09-22):
     - initial support for as-transparent route-servers in import as-path
     generation: now you can use -f 0 to not enforce first asn in path.
     No actual changes for Bird and JSON, not yet supported for Nokia
@@ -18,6 +18,7 @@
     - hyperaggregation (supernets-only) mode.
     - correct Huawei as-path-filter generation. Thanks to JKejsjwq.
     - implement -f 0 (transparent route-server scenario) for Nokia too.
+    - document IOS-XR prefix-list limitation. Thanks to Saku Ytti.
 
 0.1.35 (2018-11-30):
     - initial support for Juniper route-filter-lists (JunOS 16.2+).

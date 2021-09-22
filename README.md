@@ -435,8 +435,9 @@ Linux can be tuned in the following way:
     sysctl -w net.ipv4.tcp_wmem="4096 65536 2097152"
 
 Please note that generated prefix-lists may not fit your router's
-limitations. For example, JunOS supports only 85,325 prefixes in 
-each prefix-list [4](http://www.juniper.net/techpubs/en_US/junos11.4/topics/reference/configuration-statement/prefix-list-edit-policy-options.html). 
+limitations. For example, JunOS supports only 85,325 prefixes in
+each prefix-list [4](https://www.juniper.net/documentation/us/en/software/junos/routing-policy/topics/ref/statement/prefix-list-edit-policy-options.html).
+According to field experience [5](https://mailman.nanog.org/pipermail/nanog/2021-August/214509.html) IOS-XR prefix-sets are limited to 300001 entries.
 
 
 SEE ALSO
@@ -448,6 +449,7 @@ SEE ALSO
 3. [Cisco documentation](http://www.cisco.com/en/US/prod/collateral/iosswrel/ps6537/ps6554/ps6599/data_sheet_C78-521821.html)
      for information on Cisco implementation of ASN32.
 4. [JunOS prefix-lists limitation](https://www.juniper.net/documentation/us/en/software/junos/routing-policy/topics/ref/statement/prefix-list-edit-policy-options.html)
+5. [IOS-XR prefix-set limitation](https://mailman.nanog.org/pipermail/nanog/2021-August/214509.html)
 
 AUTHOR
 ------
