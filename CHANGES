@@ -1,3 +1,6 @@
+0.1.36.1 (2021-09-27):
+    - minor bugfix: update version number in configure and bgpq3.spec.
+
 0.1.36 (2021-09-22):
     - initial support for as-transparent route-servers in import as-path
     generation: now you can use -f 0 to not enforce first asn in path.
