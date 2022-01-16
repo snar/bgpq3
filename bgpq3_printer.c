@@ -1160,6 +1160,8 @@ bgpq3_print_juniper_prefixlist(FILE* f, struct bgpq_expander* b)
 	fprintf(f,"policy-options {\nreplace:\n prefix-list %s {\n",
 		b->name?b->name:"NN");
 	sx_radix_tree_foreach(b->tree,bgpq3_print_jprefix,f);
+	if (b->treex)
+		sx_radix_tree_foreach(b->treex, bgpq3_print_jprefix, f);
 	fprintf(f," }\n}\n");
 	return 0;
 };
@@ -1180,12 +1182,17 @@ bgpq3_print_juniper_routefilter(FILE* f, struct bgpq_expander* b)
 		if(b->match)
 			fprintf(f,"    %s;\n",b->match);
 	};
-	if(!sx_radix_tree_empty(b->tree)) {
+	if(!sx_radix_tree_empty(b->tree) || (b->treex &&
+		!sx_radix_tree_empty(b->treex))) {
 		jrfilter_prefixed=1;
 		sx_radix_tree_foreach(b->tree,bgpq3_print_jrfilter,f);
+		if (b->treex)
+			sx_radix_tree_foreach(b->treex, bgpq3_print_jrfilter, f);
 	} else {
 		fprintf(f,"    route-filter %s/0 orlonger reject;\n",
 			b->tree->family == AF_INET ? "0.0.0.0" : "::");
+		if (b->treex)
+			fprintf(f, "    route-filter ::/0 orlonger reject;\n");
 	};
 	if(c) {
 		fprintf(f, "   }\n  }\n }\n}\n");
@@ -1276,6 +1283,8 @@ bgpq3_print_json_prefixlist(FILE* f, struct bgpq_expander* b)
 	fprintf(f,"{ \"%s\": [",
 		b->name?b->name:"NN");
 	sx_radix_tree_foreach(b->tree,bgpq3_print_json_prefix,f);
+	if (b->treex)
+		sx_radix_tree_foreach(b->treex, bgpq3_print_json_prefix, f);
 	fprintf(f,"\n] }\n");
 	return 0;
 };
@@ -1334,12 +1343,13 @@ bgpq3_print_format_prefix(struct sx_radix_node* n, void* ff)
 	fprintf(f, "%s", prefix);
 };
 
-
 int
 bgpq3_print_format_prefixlist(FILE* f, struct bgpq_expander* b)
 {
 	struct fpcbdata ff = {.f=f, .b=b};
 	sx_radix_tree_foreach(b->tree,bgpq3_print_format_prefix,&ff);
+	if (b->treex)
+		sx_radix_tree_foreach(b->treex, bgpq3_print_format_prefix, &ff);
 	if (strcmp(b->format+strlen(b->format-2), "\n"))
 		fprintf(f, "\n");
 	return 0;
@@ -1460,12 +1470,17 @@ bgpq3_print_juniper_route_filter_list(FILE* f, struct bgpq_expander* b)
 {
 	fprintf(f, "policy-options {\nreplace:\n  route-filter-list %s {\n",
 		b->name?b->name:"NN");
-	if (sx_radix_tree_empty(b->tree)) {
+	if (sx_radix_tree_empty(b->tree) && (!b->treex ||
+		sx_radix_tree_empty(b->treex))) {
 		fprintf(f, "    %s/0 orlonger reject;\n",
 			b->tree->family == AF_INET ? "0.0.0.0" : "::");
+		if (b->treex)
+			fprintf(f, "    ::/0 orlonger reject;\n");
 	} else {
 		jrfilter_prefixed=0;
-		sx_radix_tree_foreach(b->tree,bgpq3_print_jrfilter,f);
+		sx_radix_tree_foreach(b->tree, bgpq3_print_jrfilter, f);
+		if (b->treex)
+			sx_radix_tree_foreach(b->treex, bgpq3_print_jrfilter, f);
 	};
 	fprintf(f, "  }\n}\n");
 	return 0;

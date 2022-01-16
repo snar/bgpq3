@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +28,7 @@ int
 usage(int ecode)
 {
 	printf("\nUsage: bgpq3 [-h host[:port]] [-S sources] [-P|E|G <num>|f <num>|t]"
-		" [-2346ABbDdHJjNnwXz] [-R len] <OBJECTS>...\n");
+		" [-2346ABbDdHJjNnwXxz] [-R len] <OBJECTS>...\n");
 	printf(" -2        : allow routes belonging to as23456 (transition-as) "
 		"(default: false)\n");
 	printf(" -3        : assume that your device is asn32-safe\n");
@@ -78,6 +79,8 @@ usage(int ecode)
 	printf(" -w        : 'validate' AS numbers: accept only ones with "
 		"registered routes\n");
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
+	printf(" -x        : generate mixed-family (both IPv4 and IPv6) prefix "
+		"filters\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
 	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2021\n\n");
 	exit(ecode);
@@ -149,7 +152,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346a:AbBdDEF:HS:jJf:l:L:m:M:NnW:Ppr:R:G:tTh:UwXsz"))
+	while((c=getopt(argc,argv,"2346a:AbBdDEF:HS:jJf:l:L:m:M:NnW:Ppr:R:G:tTh:UwXxsz"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -160,15 +163,15 @@ main(int argc, char* argv[])
 			break;
 		case '4':
 			/* do nothing, expander already configured for IPv4 */
-			if (expander.family == AF_INET6) {
-				sx_report(SX_FATAL, "-4 and -6 are mutually exclusive\n");
+			if (expander.family == AF_INET6 || expander.treex) {
+				sx_report(SX_FATAL, "-4, -6 and -x are mutually exclusive\n");
 				exit(1);
 			};
 			selectedipv4=1;
 			break;
 		case '6':
-			if (selectedipv4) {
-				sx_report(SX_FATAL, "-4 and -6 are mutually exclusive\n");
+			if (selectedipv4 || expander.treex) {
+				sx_report(SX_FATAL, "-4, -6 and -x are mutually exclusive\n");
 				exit(1);
 			};
 			af=AF_INET6;
@@ -344,6 +347,18 @@ main(int argc, char* argv[])
 		case 'X': if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_CISCO_XR;
 			break;
+		case 'x':
+			if (selectedipv4 || expander.family==AF_INET6) {
+				sx_report(SX_FATAL, "-4, -6 and -x are mutually exclusive\n");
+				exit(1);
+			};
+			expander.treex = sx_radix_tree_new(AF_INET6);
+			if (!expander.treex) {
+				sx_report(SX_FATAL, "error initializing treex: %s\n",
+					strerror(errno));
+				exit(1);
+			};
+			break;
 		case 'z':
 			if(expander.generation) exclusive();
 			expander.generation=T_ROUTE_FILTER_LIST;
@@ -484,6 +499,27 @@ main(int argc, char* argv[])
 	if(hyperaggregate && (refine || refineLow)) {
 		sx_report(SX_FATAL, "Sorry, more-specifics (-R/-r) make no sense "
 			"in hyperaggregation/supernets-only (-H) mode\n");
+		exit(1);
+	};
+	if (expander.treex && (refine || refineLow)) {
+		sx_report(SX_FATAL, "Sorry, more-specifics (-R/-r) make no sense "
+			"in mixed-af (-x) mode\n");
+		exit(1);
+	};
+	if (expander.treex && expander.generation<T_PREFIXLIST) {
+		sx_report(SX_FATAL, "Sorry, mixed-af (-x) mode can't be used for "
+			"non prefix-lists\n");
+		exit(1);
+	};
+	if (expander.treex && maxlen !=0) {
+		sx_report(SX_FATAL, "Sorry, max prefix length filter (-m) can't "
+			"be used with mixed-af (-x) mode\n");
+		exit(1);
+	};
+	if (expander.treex && !(expander.vendor == V_JUNIPER ||
+		expander.vendor == V_JSON || expander.vendor == V_FORMAT)) {
+		sx_report(SX_FATAL, "Sorry, mixed-af (-x) mode implemened for "
+			"Juniper (-J), JSON (-j) or User-Defined (-F) formats only\n");
 		exit(1);
 	};
 
@@ -649,11 +685,17 @@ main(int argc, char* argv[])
 	if(refineLow)
 		sx_radix_tree_refineLow(expander.tree, refineLow);
 
-	if(aggregate || hyperaggregate)
+	if(aggregate || hyperaggregate) {
 		sx_radix_tree_aggregate(expander.tree);
+		if (expander.treex)
+			sx_radix_tree_aggregate(expander.treex);
+	};
 
-	if(hyperaggregate)
+	if(hyperaggregate) {
 		sx_radix_tree_hyperaggregate(expander.tree);
+		if (expander.treex)
+			sx_radix_tree_hyperaggregate(expander.treex);
+	};
 
 	switch(expander.generation) {
 		case T_NONE: sx_report(SX_FATAL,"Unreachable point... call snar\n");

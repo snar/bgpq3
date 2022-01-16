@@ -45,7 +45,7 @@ struct bgpq_request {
 };
 
 struct bgpq_expander {
-	struct sx_radix_tree* tree;
+	struct sx_radix_tree* tree, *treex;
 	STAILQ_HEAD(sx_slentries, sx_slentry) macroses, rsets;
 	RB_HEAD(tentree, sx_tentry) already, stoplist;
 	int family;

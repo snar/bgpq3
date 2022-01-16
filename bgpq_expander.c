@@ -205,6 +205,10 @@ bgpq_expander_add_prefix(struct bgpq_expander* b, char* prefix)
 		sx_report(SX_ERROR,"Unable to parse prefix %s\n", prefix);
 		return 0;
 	} else if(p.family!=b->family) {
+		if (p.family == AF_INET6 && b->treex != NULL) {
+			sx_radix_tree_insert(b->treex, &p);
+			return 1;
+		};
 		SX_DEBUG(debug_expander,"Ignoring prefix %s with wrong address family\n"
 			,prefix);
 		return 0;
@@ -221,7 +225,21 @@ bgpq_expander_add_prefix(struct bgpq_expander* b, char* prefix)
 int
 bgpq_expander_add_prefix_range(struct bgpq_expander* b, char* prefix)
 {
-	return sx_prefix_range_parse(b->tree, b->family, b->maxlen, prefix);
+	struct sx_prefix p;
+	char* d = strchr(prefix, '^');
+	assert(*d);
+	*d = 0;
+	if (!sx_prefix_parse(&p, 0, prefix)) {
+		sx_report(SX_ERROR,"Unable to parse prefix %s\n", prefix);
+		return 0;
+	} else if (p.family == b->family) {
+		*d = '^';
+		return sx_prefix_range_parse(b->tree, b->family, b->maxlen, prefix);
+	} else if (p.family == AF_INET6 && b->treex != NULL) {
+		*d = '^';
+		return sx_prefix_range_parse(b->treex, AF_INET6, 0, prefix);
+	};
+	return 0;
 };
 
 int
@@ -889,18 +907,30 @@ bgpq_expand(struct bgpq_expander* b)
 						if(b->family==AF_INET6) {
 							if(!pipelining) {
 								bgpq_expand_irrd(b, bgpq_expanded_v6prefix,
-									NULL, "!6as%" PRIu32 "\n", (k<<16)+i*8+j);
+									b, "!6as%" PRIu32 "\n", (k<<16)+i*8+j);
 							} else {
 								bgpq_pipeline(b, bgpq_expanded_v6prefix,
-									NULL, "!6as%" PRIu32 "\n", (k<<16)+i*8+j);
+									b, "!6as%" PRIu32 "\n", (k<<16)+i*8+j);
+							};
+						} else if (b->treex != NULL) {
+							if (!pipelining) {
+								bgpq_expand_irrd(b, bgpq_expanded_prefix,
+									b, "!gas%" PRIu32 "\n", (k<<16)+i*8+j);
+								bgpq_expand_irrd(b, bgpq_expanded_v6prefix,
+									b, "!6as%" PRIu32 "\n", (k<<16)+i*8+j);
+							} else {
+								bgpq_pipeline(b, bgpq_expanded_prefix,
+									b, "!gas%" PRIu32 "\n", (k<<16)+i*8+j);
+								bgpq_pipeline(b, bgpq_expanded_v6prefix,
+									b, "!6as%" PRIu32 "\n", (k<<16)+i*8+j);
 							};
 						} else {
 							if(!pipelining) {
 								bgpq_expand_irrd(b, bgpq_expanded_prefix,
-									NULL, "!gas%" PRIu32 "\n", (k<<16)+i*8+j);
+									b, "!gas%" PRIu32 "\n", (k<<16)+i*8+j);
 							} else {
 								bgpq_pipeline(b, bgpq_expanded_prefix,
-									NULL, "!gas%" PRIu32 "\n", (k<<16)+i*8+j);
+									b, "!gas%" PRIu32 "\n", (k<<16)+i*8+j);
 							};
 						};
 					};

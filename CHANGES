@@ -1,3 +1,10 @@
+untagged yet (2022-01-16)
+	- initial support for mixed address-family (-x) feature: this allows
+    you to generate prefix-lists/route-filters/.. for IPv4 and IPv6 together.
+    Note: this feature is currently limited to Juniper/JSON/User-Defined
+    output formats and is not compatible with maximum prefix length (-m)
+    and more-specific (-r/-R) features.
+
 0.1.36.1 (2021-09-27):
     - minor bugfix: update version number in configure and bgpq3.spec.
 
