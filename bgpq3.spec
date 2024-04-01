@@ -1,5 +1,5 @@
 Name:           bgpq3
-Version:        0.1.36.1
+Version:        0.1.37
 Release:        0%{?dist}
 
 Group:          System/Utilities

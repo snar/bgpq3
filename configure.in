@@ -1,5 +1,5 @@
-AC_INIT(bgpq3,0.1.36.1,snar@snar.spb.ru)
-AC_CONFIG_HEADER(config.h)
+AC_INIT([bgpq3],[0.1.37],[snar@snar.spb.ru])
+AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
 AC_PROG_INSTALL
 
@@ -28,5 +28,6 @@ AC_CHECK_FUNCS(strlcpy)
 AC_CHECK_LIB(socket,socket)
 AC_CHECK_LIB(nsl,getaddrinfo)
 
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
 
