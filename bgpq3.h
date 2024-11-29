@@ -70,6 +70,7 @@ struct bgpq_expander {
 	unsigned maxlen;
 	STAILQ_HEAD(bgpq_requests, bgpq_request) wq, rq;
 	int fd, cdepth;
+	int connect;
 };
 
 

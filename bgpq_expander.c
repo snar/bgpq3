@@ -85,6 +85,7 @@ bgpq_expander_add_asset(struct bgpq_expander* b, char* as)
 	if(!b || !as) return 0;
 	le=sx_slentry_new(as);
 	STAILQ_INSERT_TAIL(&b->macroses, le, next);
+	b->connect = 1;
 	return 1;
 };
 
@@ -96,6 +97,7 @@ bgpq_expander_add_rset(struct bgpq_expander* b, char* rs)
 	le=sx_slentry_new(rs);
 	if(!le) return 0;
 	STAILQ_INSERT_TAIL(&b->rsets, le, next);
+	b->connect = 1;
 	return 1;
 };
 
@@ -178,6 +180,7 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 		} else if(!b->asn32) {
 			b->asn32s[0][23456/8]|=(0x80>>(23456%8));
 		};
+		b->connect = 1;
 		return 1;
 	};
 
@@ -194,6 +197,7 @@ bgpq_expander_add_as(struct bgpq_expander* b, char* as)
 
 	b->asn32s[0][asno/8]|=(0x80>>(asno%8));
 
+	b->connect = 1;
 	return 1;
 };
 
@@ -768,13 +772,16 @@ have3:
 	return 0;
 };
 
-int
-bgpq_expand(struct bgpq_expander* b)
+static int
+bgpq_connect(struct bgpq_expander *b)
 {
-	int fd=-1, err, ret;
-	struct sx_slentry* mc;
+	int fd, err, ret;
 	struct addrinfo hints, *res=NULL, *rp;
 	struct linger sl;
+
+	if (!b->connect)
+		return 0;
+
 	sl.l_onoff = 1;
 	sl.l_linger = 5;
 	memset(&hints,0,sizeof(struct addrinfo));
@@ -866,6 +873,16 @@ bgpq_expand(struct bgpq_expander* b)
 	if (pipelining)
 		fcntl(fd, F_SETFL, O_NONBLOCK|(fcntl(fd, F_GETFL)));
 
+	return fd;
+};
+
+int
+bgpq_expand(struct bgpq_expander* b)
+{
+	struct sx_slentry* mc;
+
+	bgpq_connect(b);
+
 	STAILQ_FOREACH(mc, &b->macroses, next) {
 		if (!b->maxdepth && RB_EMPTY(&b->stoplist)) {
 			bgpq_expand_irrd(b, bgpq_expanded_macro, b, "!i%s,1\n", mc->text);
@@ -945,14 +962,16 @@ bgpq_expand(struct bgpq_expander* b)
 		};
 	};
 
-	write(fd, "!q\n",3);
-	if (pipelining) {
-		int fl = fcntl(fd, F_GETFL);
-		fl &= ~O_NONBLOCK;
-		fcntl(fd, F_SETFL, fl);
+	if (b->connect) {
+		write(b->fd, "!q\n",3);
+		if (pipelining) {
+			int fl = fcntl(b->fd, F_GETFL);
+			fl &= ~O_NONBLOCK;
+			fcntl(b->fd, F_SETFL, fl);
+		};
+		shutdown(b->fd, SHUT_RDWR);
+		close(b->fd);
 	};
-	shutdown(fd, SHUT_RDWR);
-	close(fd);
 	return 1;
 };
 
