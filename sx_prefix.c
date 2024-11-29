@@ -698,20 +698,6 @@ sx_radix_node_aggregate(struct sx_radix_node* node)
 		printf(" %s%s%u,%u\n", node->isGlue?"Glue ":"",
 			node->isAggregate?"Aggregate ":"",node->aggregateLow,
 			node->aggregateHi);
-		if(node->r) {
-			printf("R-Tree: ");
-			sx_prefix_fprint(stdout,&node->r->prefix);
-			printf(" %s%s%u,%u\n", (node->r->isGlue)?"Glue ":"",
-				(node->r->isAggregate)?"Aggregate ":"",
-				node->r->aggregateLow,node->r->aggregateHi);
-			if(node->r->son) {
-			printf("R-Son: ");
-			sx_prefix_fprint(stdout,&node->r->son->prefix);
-			printf(" %s%s%u,%u\n",node->r->son->isGlue?"Glue ":"",
-				node->r->son->isAggregate?"Aggregate ":"",
-				node->r->son->aggregateLow,node->r->son->aggregateHi);
-			};
-		};
 		if(node->l) {
 			printf("L-Tree: ");
 			sx_prefix_fprint(stdout,&node->l->prefix);
@@ -724,6 +710,20 @@ sx_radix_node_aggregate(struct sx_radix_node* node)
 			printf(" %s%s%u,%u\n",node->l->son->isGlue?"Glue ":"",
 				node->l->son->isAggregate?"Aggregate ":"",
 				node->l->son->aggregateLow,node->l->son->aggregateHi);
+			};
+		};
+		if(node->r) {
+			printf("R-Tree: ");
+			sx_prefix_fprint(stdout,&node->r->prefix);
+			printf(" %s%s%u,%u\n", (node->r->isGlue)?"Glue ":"",
+				(node->r->isAggregate)?"Aggregate ":"",
+				node->r->aggregateLow,node->r->aggregateHi);
+			if(node->r->son) {
+			printf("R-Son: ");
+			sx_prefix_fprint(stdout,&node->r->son->prefix);
+			printf(" %s%s%u,%u\n",node->r->son->isGlue?"Glue ":"",
+				node->r->son->isAggregate?"Aggregate ":"",
+				node->r->son->aggregateLow,node->r->son->aggregateHi);
 			};
 		};
 	};
