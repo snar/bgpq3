@@ -81,6 +81,7 @@ usage(int ecode)
 	printf(" -X        : generate config for IOS XR (Cisco IOS by default)\n");
 	printf(" -x        : generate mixed-family (both IPv4 and IPv6) prefix "
 		"filters\n");
+	printf(" -z        : generate route-filter-list (Juniper only)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
 	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2024\n\n");
 	exit(ecode);
@@ -89,7 +90,7 @@ usage(int ecode)
 void
 exclusive()
 {
-	fprintf(stderr,"-E, -f <asnum>, -G <asnum>, -P and -t are mutually "
+	fprintf(stderr,"-E, -f <asnum>, -G <asnum>, -P, -t and -z are mutually "
 		"exclusive\n");
 	exit(1);
 };
