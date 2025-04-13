@@ -596,7 +596,12 @@ have3:
 				req->request,off,response);
 
 			for(c=recvbuffer; c<recvbuffer+togot;) {
-				size_t spn=strcspn(c," \n");
+				size_t spn;
+				if(c[0]==' ') {
+					c++;
+					continue;
+				};
+				spn=strcspn(c," \n");
 				if(spn) c[spn]=0;
 				if(c[0]==0) break;
 				req->callback(c, b, req);
@@ -746,7 +751,12 @@ have3:
 			response);
 
 		for(c=recvbuffer; c<recvbuffer+togot;) {
-			size_t spn=strcspn(c," \n");
+			size_t spn;
+			if (c[0]==' ') {
+				c++;
+				continue;
+			};
+			spn=strcspn(c," \n");
 			if(spn) c[spn]=0;
 			if(c[0]==0) break;
 			if(callback) callback(c, b, req);
