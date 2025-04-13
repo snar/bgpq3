@@ -372,7 +372,11 @@ bgpq_pipeline(struct bgpq_expander* b,
 	struct bgpq_request* bp=NULL;
 	va_list ap;
 	va_start(ap,fmt);
-	vsnprintf(request,sizeof(request),fmt,ap);
+	if (vsnprintf(request,sizeof(request),fmt,ap) >= sizeof(request)) {
+		sx_report(SX_FATAL, "Buffer too small to prepare request %s (%s)\n",
+			fmt, request);
+		exit(1);
+	};
 	va_end(ap);
 
 	SX_DEBUG(debug_expander,"expander: sending %s", request);
@@ -654,7 +658,11 @@ bgpq_expand_irrd(struct bgpq_expander* b,
 	struct bgpq_request *req;
 
 	va_start(ap,fmt);
-	vsnprintf(request,sizeof(request),fmt,ap);
+	if (vsnprintf(request,sizeof(request),fmt,ap) >= sizeof(request)) {
+		sx_report(SX_FATAL, "Buffer too small to prepare request %s (%s)\n",
+			fmt, request);
+		exit(1);
+	};
 	va_end(ap);
 
 	req = bgpq_request_alloc(request, callback, udata);

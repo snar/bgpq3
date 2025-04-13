@@ -1,6 +1,7 @@
 untagged yet:
     - cosmetic bugfix: missng -z documentation in usage() and exclusive().
     - handle rare cases with leading/middle spaces in IRRd answers.
+    - fail early when request can't fit buffer.
 
 0.1.37 (2024-04-01), for some reason never published
     - fix missing reference to config.h in sx_slentry.c
