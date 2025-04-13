@@ -1,7 +1,7 @@
 untagged yet:
 	- cosmetic bugfix: missng -z documentation in usage() and exclusive().
 
-0.1.37 (2024-04-01):
+0.1.37 (2024-04-01), for some reason never published
     - fix missing reference to config.h in sx_slentry.c
     - initial support for mixed address-family (-x) feature: this allows
     you to generate prefix-lists/route-filters/.. for IPv4 and IPv6 together.
