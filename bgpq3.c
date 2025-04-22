@@ -35,6 +35,7 @@ usage(int ecode)
 	printf(" -4        : generate IPv4 prefix-lists (default)\n");
 	printf(" -6        : generate IPv6 prefix-lists (IPv4 by default)\n");
 	printf(" -A        : try to aggregate prefix-lists/route-filters\n");
+	printf(" -a asn    : replacement asn for empty as-lists(JunOS)/prefix-lists(OpenBSD)\n");
 	printf(" -B        : generate OpenBGPD output (Cisco IOS by default)\n");
 	printf(" -b        : generate BIRD output (Cisco IOS by default)\n");
 	printf(" -D        : use asdot notation in as-path (Cisco only)\n");
@@ -72,7 +73,8 @@ usage(int ecode)
 	printf(" -s        : generate sequence numbers in prefix-lists (IOS only)\n");
 	printf(" -T        : disable pipelining (experimental, faster mode)\n");
 	printf(" -t        : generate as-sets for OpenBGPD (OpenBSD 6.4+), BIRD "
-		"and JSON formats\n");
+		"and JSON\n");
+	printf("             formats, as-list-groups for Juniper (JunOS 21+)\n");
 	printf(" -U        : generate config for Huawei (Cisco IOS by default)\n");
 	printf(" -W len    : specify max-entries on as-path line (use 0 for "
 		"infinity)\n");
@@ -394,6 +396,10 @@ main(int argc, char* argv[])
 			} else if(expander.vendor==V_NOKIA || expander.vendor==V_NOKIA_MD) {
 				expander.aswidth=8;
 			};
+		} else if(expander.generation==T_ASSET) {
+			if(expander.vendor==V_JUNIPER) {
+				expander.aswidth=7;
+			};
 		};
 	};
 
@@ -434,9 +440,10 @@ main(int argc, char* argv[])
 			" output only\n");
 	};
 	if(expander.generation==T_ASSET && expander.vendor!=V_JSON &&
-		expander.vendor!=V_OPENBGPD && expander.vendor!=V_BIRD) {
-		sx_report(SX_FATAL, "As-Sets (-t) supported for JSON (-j), OpenBGPD "
-			"(-B) and BIRD (-b) output only\n");
+		expander.vendor!=V_OPENBGPD && expander.vendor!=V_BIRD &&
+		expander.vendor!=V_JUNIPER) {
+		sx_report(SX_FATAL, "As-Sets/As-Lists (-t) supported for JSON (-j), "
+			"OpenBGPD (-B), BIRD (-b) and Juniper (-J) output only\n");
 	};
 
 	if(expander.asdot && expander.vendor!=V_CISCO) {

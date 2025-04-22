@@ -69,6 +69,7 @@ try to aggregate prefix-lists as much as possible (not all output
 formats supported).
 .It Fl a Ar asn
 specify what asn shall be denied in case of empty prefix-list (OpenBGPD)
+or included in empty as-list (JunOS).
 .It Fl B
 generate output in OpenBGPD format (default: Cisco)
 .It Fl b
@@ -119,7 +120,8 @@ generate sequence numbers in IOS-style prefix-lists.
 .It Fl S Ar sources
 use specified sources only (recommended: RADB,RIPE,APNIC).
 .It Fl t
-generate as-sets for OpenBGPD (OpenBSD 6.4+), BIRD and JSON formats.
+generate as-sets for OpenBGPD (OpenBSD 6.4+), BIRD and JSON formats,
+as-list-groups for Juniper (JunOS 21+).
 .It Fl T
 disable pipelining. 
 .It Fl W Ar len

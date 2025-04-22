@@ -42,7 +42,8 @@ supported).
 
 #### -a asn
 
-Specify ASN that shall be denied in case of empty prefix-list (OpenBGPD).
+Specify ASN that shall be denied in case of empty prefix-list (OpenBGPD)
+or included in empty as-list (JunOS).
 
 #### -B
 
@@ -149,7 +150,8 @@ Use specified database sources only (example: RIPE,APNIC,RADB).
 
 #### -t
 
-Generate as-sets for OpenBGPD (OpenBSD 6.4+), BIRD and JSON formats.
+Generate as-sets for OpenBGPD (OpenBSD 6.4+), BIRD and JSON formats,
+as-list-groups for Juniper (JunOS 21+).
 
 #### -T      
 

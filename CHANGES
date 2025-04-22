@@ -2,6 +2,9 @@ untagged yet:
     - cosmetic bugfix: missng -z documentation in usage() and exclusive().
     - handle rare cases with leading/middle spaces in IRRd answers.
     - fail early when request can't fit buffer.
+    - implement as-lists for JunOS (-t together with -J).
+    Note: empty as-lists are automatically removed, so it may make sense
+    to specify "replacement asn" with option -a <asn> in this mode.
 
 0.1.37 (2024-04-01), for some reason never published
     - fix missing reference to config.h in sx_slentry.c

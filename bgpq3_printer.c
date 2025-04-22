@@ -20,6 +20,7 @@ int bgpq3_print_json_aspath(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_bird_aspath(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_openbgpd_aspath(FILE* f, struct bgpq_expander* b);
 int bgpq3_print_openbgpd_asset(FILE* f, struct bgpq_expander* b);
+int bgpq3_print_juniper_aslist(FILE* f, struct bgpq_expander* b);
 
 int
 bgpq3_print_cisco_aspath(FILE* f, struct bgpq_expander* b)
@@ -675,9 +676,11 @@ bgpq3_print_asset(FILE* f, struct bgpq_expander* b)
 		return bgpq3_print_openbgpd_asset(f,b);
 	case V_BIRD:
 		return bgpq3_print_bird_aspath(f,b);
+	case V_JUNIPER:
+		return bgpq3_print_juniper_aslist(f,b);
 	default:
-		sx_report(SX_FATAL, "as-sets (-t) supported for JSON, OpenBGPD "
-			"and BIRD only\n");
+		sx_report(SX_FATAL, "as-sets/as-lists (-t) supported for JSON, "
+			"OpenBGPD, BIRD and Juniper only\n");
 		return -1;
 	};
 };
@@ -864,6 +867,67 @@ bgpq3_print_openbgpd_asset(FILE* f, struct bgpq_expander* b)
 		};
 	};
 	fprintf(f, "\n}\n");
+	return 0;
+};
+
+int
+bgpq3_print_juniper_aslist(FILE* f, struct bgpq_expander* b)
+{
+	int i, j, k, nc=0, lineNo=0;
+	uint32_t first=0, last=0;
+
+	fprintf(f, "policy-options {\nreplace:\n as-list-group %s {\n",
+		b->name?b->name:"NN");
+
+	for(k=0;k<65536;k++) {
+		if(!b->asn32s[k]) continue;
+
+		for(i=0;i<8192;i++) {
+			for(j=0;j<8;j++) {
+				if(b->asn32s[k][i]&(0x80>>j)) {
+					if (last && k*65536+i*8+j==(last+1)) {
+						last++;
+						continue;
+					} else if (last!=0 && last!=first) {
+						fprintf(f, "-%u", last);
+						first=0; last=0;
+						nc++;
+						if (nc==b->aswidth) {
+							nc=0; lineNo++;
+							fprintf(f, " ];\n");
+						};
+					};
+					if (!nc) {
+						fprintf(f, "  as-list a%4.4u members [ %u", lineNo,
+							k*65536+i*8+j);
+					} else {
+						fprintf(f, " %u", k*65536+i*8+j);
+					};
+					first=last=k*65536+i*8+j;
+					nc++;
+					if(nc==b->aswidth) {
+						nc=0;
+						first=last=0;
+						fprintf(f, " ];\n");
+						lineNo++;
+					};
+				};
+			};
+		};
+	};
+	if(last && last!=first) fprintf(f, "-%u", last);
+	if(nc) fprintf(f, " ];\n");
+	else if(lineNo==0) {
+		if(b->asnumber==0) {
+			fprintf(f, "  /* generated as-list is empty, use -a NNN "
+			"to set replacement asn */\n");
+		} else {
+			fprintf(f, "  /* generated as-list is empty, using "
+				"replacement from -a %d */\n", b->asnumber);
+			fprintf(f, "  as-list aNone members %d;\n", b->asnumber);
+		};
+	};
+	fprintf(f, " }\n}\n");
 	return 0;
 };
 
