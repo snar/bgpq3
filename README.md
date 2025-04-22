@@ -340,9 +340,8 @@ General recommendations:
 * use minimal set of RIR databases (only those in which you and your
 customers have registered route-objects). Keep RIR of your home region
 first in the list.
-* use non-RIR databases only when operating in LACNIC region (for some
-reason LACNIC does not export their data to RADB) or when you are unable
-to make your customers maintain their data in RIR databases.
+* use non-RIR databases only when you are unable to make your customers
+maintain their data in RIR databases.
 * avoid using RIPE-NONAUTH as trusted source: these records were created
 in RIPE database but for address space allocated to different RIR,
 so RIPE had no chance to check validity of this route.
