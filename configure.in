@@ -1,4 +1,4 @@
-AC_INIT([bgpq3],[0.1.37],[snar@snar.spb.ru])
+AC_INIT([bgpq3],[0.1.38],[snar@snar.spb.ru])
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
 AC_PROG_INSTALL

@@ -1,4 +1,4 @@
-untagged yet:
+0.1.38 (2025-05-11):
     - cosmetic bugfix: missng -z documentation in usage() and exclusive().
     - handle rare cases with leading/middle spaces in IRRd answers.
     - fail early when request can't fit buffer.

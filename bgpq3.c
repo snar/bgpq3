@@ -85,7 +85,7 @@ usage(int ecode)
 		"filters\n");
 	printf(" -z        : generate route-filter-list (Juniper only)\n");
 	printf("\n" PACKAGE_NAME " version: " PACKAGE_VERSION "\n");
-	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2024\n\n");
+	printf("Copyright(c) Alexandre Snarskii <snar@snar.spb.ru> 2007-2025\n\n");
 	exit(ecode);
 };
 
