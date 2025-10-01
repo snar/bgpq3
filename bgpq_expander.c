@@ -794,7 +794,7 @@ static int
 bgpq_connect(struct bgpq_expander *b)
 {
 	int fd, err, ret;
-	struct addrinfo hints, *res=NULL, *rp;
+	struct addrinfo hints, *res=NULL, *rp, *bres=NULL;
 	struct linger sl;
 
 	if (!b->connect)
@@ -804,8 +804,20 @@ bgpq_connect(struct bgpq_expander *b)
 	sl.l_linger = 5;
 	memset(&hints,0,sizeof(struct addrinfo));
 
-	hints.ai_socktype=SOCK_STREAM;
+	if(b->laddr) {
+		hints.ai_socktype=SOCK_STREAM;
+		hints.ai_flags=AI_NUMERICHOST|AI_ADDRCONFIG;
+		err=getaddrinfo(b->laddr,NULL,&hints,&bres);
+		if(err) {
+			sx_report(SX_ERROR,"Unable to parse local address %s: %s\n",
+				b->laddr, gai_strerror(err));
+			exit(1);
+		};
+		memset(&hints,0,sizeof(struct addrinfo));
+		hints.ai_family = bres->ai_family;
+	}
 
+	hints.ai_socktype=SOCK_STREAM;
 	err=getaddrinfo(b->server,b->port,&hints,&res);
 	if(err) {
 		sx_report(SX_ERROR,"Unable to resolve %s: %s\n",
@@ -821,6 +833,14 @@ bgpq_connect(struct bgpq_expander *b)
 				strerror(errno));
 			exit(1);
 		};
+		if(b->laddr && bres) {
+			err=bind(fd,bres->ai_addr,bres->ai_addrlen);
+			if(err==-1) {
+				sx_report(SX_ERROR,"Unable to bind local address %s to socket: %s\n",
+					b->laddr,strerror(errno));
+				exit(1);
+			}
+		}
 		if (setsockopt(fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(struct linger))) {
 			sx_report(SX_ERROR,"Unable to set linger on socket: %s\n",
 				strerror(errno));
@@ -846,6 +866,8 @@ bgpq_connect(struct bgpq_expander *b)
 		};
 		break;
 	};
+	if(bres)
+		freeaddrinfo(bres);
 	freeaddrinfo(res);
 
 	if(fd == -1) {

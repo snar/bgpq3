@@ -31,6 +31,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl h Ar host[:port]
+.Op Fl I Ar laddr
 .Op Fl S Ar sources
 .Op Fl EPz
 .Oo
@@ -90,6 +91,8 @@ generate output in user-defined format.
 generate output as-path access-list.
 .It Fl h Ar host[:port]
 host running IRRD database (default: whois.radb.net).
+.It Fl H Ar laddr
+local host source address used to connect to servers
 .It Fl J
 generate config for Juniper (default: Cisco).
 .It Fl j
