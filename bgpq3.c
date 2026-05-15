@@ -632,9 +632,9 @@ main(int argc, char* argv[])
 	};
 
 	if (expander.validate_asns && expander.generation != T_ASPATH &&
-		expander.generation != T_OASPATH) {
+		expander.generation != T_OASPATH && expander.generation != T_ASSET) {
 		sx_report(SX_FATAL, "Sorry, -w makes sense only for as-path (-f/-G) "
-			"generation\n");
+			"or as-set/as-list (-t) generation\n");
 	};
 	if(expander.generation==T_ASPATH && expander.asnumber==0 &&
 		(expander.vendor==V_OPENBGPD)) {
