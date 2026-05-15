@@ -44,9 +44,9 @@
     - initial support for Juniper route-filter-lists (JunOS 16.2+).
     - too large (>124bytes) sources list was not handled correctly.
     Reported by Pier Carlo Chiodi.
-	- initial support for Huawei format (prefix-lists and as-path filters)
-	New flag -U. Requested by Alexander Wagberg.
-	- fix ipv6 prefix-ranges. Reported by Jay Ford.
+    - initial support for Huawei format (prefix-lists and as-path filters)
+    New flag -U. Requested by Alexander Wagberg.
+    - fix ipv6 prefix-ranges. Reported by Jay Ford.
     - OpenBGPd change: -E now generates prefix-set instead of prefix-list.
     Based on submission by Denis Fondras
     - new option -w, allowing to 'validate' AS numbers included in as-path
@@ -54,7 +54,7 @@
     By default checks route[4] presence, to check route6 objects shall be
     used together with -6.
     - cleanup OpenBGPd prefix-sets. Submitted by Claudio Jeker.
-	- new flag -t: generate as-sets for OpenBGPD (OpenBSD 6.4+), BIRD and
+    - new flag -t: generate as-sets for OpenBGPD (OpenBSD 6.4+), BIRD and
     JSON formats. Based on submission by Claudio Jeker.
     - new flag -n: support for Nokia SR OS MD-CLI. Based on examples
     provided by Greg Hankins.
@@ -70,7 +70,7 @@
     Reported by Denis Fondras
 
 0.1.35-rc (2017-30-05)
-	- Nokia SR OS (formerly Alcatel-Lucent) support. Based on submission by
+    - Nokia SR OS (formerly Alcatel-Lucent) support. Based on submission by
     Michail Litvak.
     - sync man-page with readme.md
     - socket() EAFNOSUPPORT error handling
@@ -117,7 +117,7 @@ untagged yet (2016-05-10)
 0.1.32-rc3 (2015-07-01)
     - feature: option -s can be used to generate sequence numbers in IOS
       prefix-lists
-	- feature: option -F <fmt> can be used to generate output in user-defined
+    - feature: option -F <fmt> can be used to generate output in user-defined
       format. Only prefix-lists supported for now.
 
 0.1.32-rc2 (2015-07-01)
@@ -178,13 +178,13 @@ untagged yet (2016-05-10)
     there are no defined format for as-path in json, bgpq3 just creates
     simple object like following:
 
-		snar@fri:~/compile/bgpq3>./bgpq3 -j3f 20597 as-eltel
-		{"NN": [
-		  112,5495,6857,8377,20597,34102,35357,43951,
-		  52007,56764,197759,197888,198610,201499
-		]}
+        snar@fri:~/compile/bgpq3>./bgpq3 -j3f 20597 as-eltel
+        {"NN": [
+          112,5495,6857,8377,20597,34102,35357,43951,
+          52007,56764,197759,197888,198610,201499
+        ]}
 
-	Based on suggestion by Henrik Thostrup Jensen.
+    Based on suggestion by Henrik Thostrup Jensen.
     - -W len option documented.
 
 0.1.24   (2014-07-31)
