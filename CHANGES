@@ -1,4 +1,6 @@
 untagged yet
+    - implement -I laddr: bind to local address when connecting.
+    Mostly based on pull by Jochen Kornitzky with minor changes.
     - allow asn validation (-w) work for as-set/as-list output too.
 
 0.1.38 (2025-05-11):

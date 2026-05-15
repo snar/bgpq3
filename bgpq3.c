@@ -52,6 +52,7 @@ usage(int ecode)
 	printf(" -h host   : host running IRRD software (whois.radb.net by "
 		"default)\n"
 		"             (use host:port to specify alternate port)\n");
+	printf(" -I laddr  : bind to local address\n");
 	printf(" -J        : generate config for JunOS (Cisco IOS by default)\n");
 	printf(" -j        : generate JSON output (Cisco IOS by default)\n");
 	printf(" -M match  : extra match conditions for JunOS route-filters\n");
@@ -155,7 +156,7 @@ main(int argc, char* argv[])
 	if (getenv("IRRD_SOURCES"))
 		expander.sources=getenv("IRRD_SOURCES");
 
-	while((c=getopt(argc,argv,"2346a:AbBdDEF:HS:jJf:l:L:m:M:NnW:Ppr:R:G:tTh:UwXxsz"))
+	while((c=getopt(argc,argv,"2346a:AbBdDEF:HS:jJf:l:L:m:M:NnW:Ppr:R:G:tTh:I:UwXxsz"))
 		!=EOF) {
 	switch(c) {
 		case '2':
@@ -238,6 +239,9 @@ main(int argc, char* argv[])
 			};
 			break;
 		};
+		case 'I':
+			expander.laddr=optarg;
+			break;
 		case 'J': if(expander.vendor) vendor_exclusive();
 			expander.vendor=V_JUNIPER;
 			break;

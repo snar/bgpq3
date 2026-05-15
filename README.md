@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 ```
-	bgpq3 [-h host[:port]] [-S sources] [-EPz] [-f asn | -F fmt | -G asn | -t] [-2346ABbDdHJjNnpsUX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
+	bgpq3 [-h host[:port]] [-I laddr] [-S sources] [-EPz] [-f asn | -F fmt | -G asn | -t] [-2346ABbDdHJjNnpsUX] [-a asn] [-r len] [-R len] [-m max] [-W len] OBJECTS [...] EXCEPT OBJECTS
 ```
 
 DESCRIPTION
@@ -87,6 +87,10 @@ Hyperaggregation (supernets-only) mode.
 #### -h `host[:port]`
 
 Host running IRRD database (default: `whois.radb.net`).
+
+#### -I laddr
+
+Source address used to connect to servers.
 
 #### -J      
 
