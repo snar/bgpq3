@@ -21,7 +21,7 @@ sx_maxsockbuf(int s, int dir)
 	int optval=0, voptval;
 	int hiconf=-1, loconf=-1;
 	unsigned int voptlen;
-	int phase=0, iterations=0;
+	int phase=0;
 
 	if(s<0) { 
 		sx_report(SX_FATAL,"Unable to maximize sockbuf on invalid socket %i\n",
@@ -37,7 +37,6 @@ sx_maxsockbuf(int s, int dir)
 	};
 
 	for(;;) { 
-		iterations++;
 		if(phase==0) optval<<=1; 
 		else { 
 			if(optval==(hiconf+loconf)/2) break;
@@ -79,11 +78,6 @@ sx_maxsockbuf(int s, int dir)
 		sx_report(SX_ERROR,"getsockopt(final stage) failed: %s\n", 
 			strerror(errno));
 		return -1;
-	} else { 
-		/*
-		printf("Finally got %i bytes of recvspace in %i interations\n", 
-			voptval, iterations);
-		*/
 	};
 	return voptval;
 };
