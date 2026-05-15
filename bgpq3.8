@@ -40,7 +40,7 @@
 .Fl G Ar asn 
 .Fl t
 .Oc
-.Op Fl 2346ABbDdJjNnsXU
+.Op Fl 2346ABbDdJjHNnsXU
 .Op Fl a Ar asn
 .Op Fl r Ar len
 .Op Fl R Ar len
@@ -89,6 +89,8 @@ generate input as-path access-list (use 0 to not enforce first AS)
 generate output in user-defined format.
 .It Fl G Ar number
 generate output as-path access-list.
+.It Fl H
+hyperaggregation (supernets-only) mode.
 .It Fl h Ar host[:port]
 host running IRRD database (default: whois.radb.net).
 .It Fl I Ar laddr
